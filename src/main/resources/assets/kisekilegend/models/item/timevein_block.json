@@ -1,0 +1,6 @@
+{
+  "parent": "kisekilegend:block/timevein_block",
+  "textures": {
+    "all": "kisekilegend:block/timevein_block"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "parent": "kisekilegend:block/water_deepslate_ore",
+  "textures": {
+    "all": "kisekilegend:block/water_deepslate_ore"
+  }
+}

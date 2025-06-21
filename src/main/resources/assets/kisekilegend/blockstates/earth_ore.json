@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "": {
+      "model": "kisekilegend:block/earth_ore",
+      "render_type": "cutout"
+    }
+  }
+}

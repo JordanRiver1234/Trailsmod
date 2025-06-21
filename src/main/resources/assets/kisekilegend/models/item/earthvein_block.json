@@ -1,0 +1,6 @@
+{
+  "parent": "kisekilegend:block/earthvein_block",
+  "textures": {
+    "all": "kisekilegend:block/earthvein_block"
+  }
+}

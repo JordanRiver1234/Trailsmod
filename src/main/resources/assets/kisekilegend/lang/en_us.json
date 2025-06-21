@@ -1,0 +1,52 @@
+{
+  "item.kisekilegend.earth": "Earth sepith",
+  "item.kisekilegend.earth_mass": "Earth Mass",
+  "item.kisekilegend.water": "Water sepith",
+  "item.kisekilegend.water_mass": "Water Mass",
+  "item.kisekilegend.fire": "Fire sepith",
+  "item.kisekilegend.fire_mass": "Fire Mass",
+  "item.kisekilegend.wind": "Wind sepith",
+  "item.kisekilegend.wind_mass": "Wind Mass",
+  "item.kisekilegend.time": "Time sepith",
+  "item.kisekilegend.time_mass": "Time Mass",
+  "item.kisekilegend.space": "Space sepith",
+  "item.kisekilegend.space_mass": "Space Mass",
+  "item.kisekilegend.mirage": "Mirage sepith",
+  "item.kisekilegend.mirage_mass": "Mirage Mass",
+  "item.kisekilegend.sepith_mass": "Sepith Mass",
+
+  "block.kisekilegend.earthvein_block": "Earth Vein Block",
+  "block.kisekilegend.firevein_block": "Fire Vein Block",
+  "block.kisekilegend.miragevein_block": "Mirage Vein Block",
+  "block.kisekilegend.spacevein_block": "Space Vein Block",
+  "block.kisekilegend.timevein_block": "Time Vein Block",
+  "block.kisekilegend.watervein_block": "Water Vein Block",
+  "block.kisekilegend.windvein_block": "Wind Vein Block",
+
+
+  "block.kisekilegend.earth_ore": "Earth Vein Ore",
+  "block.kisekilegend.earth_deepslate_ore": "Earth Vein Deepslate Ore",
+  "block.kisekilegend.fire_ore": "Fire Vein Ore",
+  "block.kisekilegend.fire_deepslate_ore": "Fire Vein Deepslate Ore",
+  "block.kisekilegend.mirage_ore": "Mirage Vein Ore",
+  "block.kisekilegend.mirage_deepslate_ore": "Mirage Vein Deepslate Ore",
+  "block.kisekilegend.space_ore": "Space Vein Ore",
+  "block.kisekilegend.space_deepslate_ore": "Space Vein Deepslate Ore",
+  "block.kisekilegend.time_ore": "Time Vein Ore",
+  "block.kisekilegend.time_deepslate_ore": "Time Vein Deepslate Ore",
+  "block.kisekilegend.water_ore": "Water Vein Ore",
+  "block.kisekilegend.water_deepslate_ore": "Water Vein Deepslate Ore",
+  "block.kisekilegend.wind_ore": "Wind Vein Ore",
+  "block.kisekilegend.wind_deepslate_ore": "Wind Vein Deepslate Ore",
+
+
+
+
+
+
+
+
+  "creativetab.kisekilegend.sepith_items": "Sepith Items",
+  "creativetab.kisekilegend.sepith_blocks": "Sepith Blocks"
+
+}

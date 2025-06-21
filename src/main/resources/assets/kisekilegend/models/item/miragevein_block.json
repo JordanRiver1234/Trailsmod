@@ -1,0 +1,6 @@
+{
+  "parent": "kisekilegend:block/miragevein_block",
+  "textures": {
+    "all": "kisekilegend:block/miragevein_block"
+  }
+}

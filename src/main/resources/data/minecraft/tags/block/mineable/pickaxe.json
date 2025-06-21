@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "kisekilegend:earth_ore",
+    "kisekilegend:earth_deepslate_ore",
+    "kisekilegend:earthvein_block"
+  ]
+}

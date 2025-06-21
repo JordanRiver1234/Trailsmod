@@ -1,0 +1,6 @@
+{
+  "parent": "kisekilegend:block/windvein_block",
+  "textures": {
+    "all": "kisekilegend:block/windvein_block"
+  }
+}

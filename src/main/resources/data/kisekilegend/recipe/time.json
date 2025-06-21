@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "kisekilegend:timevein_block"
+    }
+  ],
+  "result": {
+    "count": 9,
+    "id": "kisekilegend:time"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "parent": "kisekilegend:block/time_ore",
+  "textures": {
+    "all": "kisekilegend:block/time_ore"
+  }
+}

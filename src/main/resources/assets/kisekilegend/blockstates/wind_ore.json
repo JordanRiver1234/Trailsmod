@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "": {
+      "model": "kisekilegend:block/wind_ore",
+      "render_type": "cutout"
+    }
+  }
+}

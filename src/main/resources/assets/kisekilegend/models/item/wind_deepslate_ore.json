@@ -1,0 +1,6 @@
+{
+  "parent": "kisekilegend:block/wind_deepslate_ore",
+  "textures": {
+    "all": "kisekilegend:block/wind_deepslate_ore"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "parent": "kisekilegend:block/spacevein_block",
+  "textures": {
+    "all": "kisekilegend:block/spacevein_block"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "parent": "kisekilegend:block/earth_ore",
+  "textures": {
+    "all": "kisekilegend:block/earth_ore"
+  }
+}

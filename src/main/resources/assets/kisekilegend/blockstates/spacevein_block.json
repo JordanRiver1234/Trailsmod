@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "": {
+      "model": "kisekilegend:block/spacevein_block",
+      "render_type": "cutout"
+    }
+  }
+}

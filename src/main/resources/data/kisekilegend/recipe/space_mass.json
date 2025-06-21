@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "cookingtime": 200,
+  "experience": 0.25,
+  "ingredient": {
+    "item": "kisekilegend:space"
+  },
+  "result": {
+    "id": "kisekilegend:space_mass"
+  }
+}

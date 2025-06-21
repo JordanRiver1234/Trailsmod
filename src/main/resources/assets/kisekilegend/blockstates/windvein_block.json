@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "": {
+      "model": "kisekilegend:block/windvein_block",
+      "render_type": "cutout"
+    }
+  }
+}

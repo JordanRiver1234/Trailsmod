@@ -1,0 +1,6 @@
+{
+  "parent": "kisekilegend:block/fire_deepslate_ore",
+  "textures": {
+    "all": "kisekilegend:block/fire_deepslate_ore"
+  }
+}
