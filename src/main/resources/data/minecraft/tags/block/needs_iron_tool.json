@@ -1,6 +1,14 @@
 {
   "replace": false,
   "values": [
-    "kisekilegend:earth_deepslate_ore"
+    "kisekilegend:earth_deepslate_ore",
+    "kisekilegend:fire_deepslate_ore",
+    "kisekilegend:mirage_deepslate_ore",
+    "kisekilegend:space_deepslate_ore",
+    "kisekilegend:time_deepslate_ore",
+    "kisekilegend:water_deepslate_ore",
+    "kisekilegend:wind_deepslate_ore"
+
+
   ]
 }

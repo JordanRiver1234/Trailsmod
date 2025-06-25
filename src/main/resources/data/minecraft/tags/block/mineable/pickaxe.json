@@ -3,6 +3,24 @@
   "values": [
     "kisekilegend:earth_ore",
     "kisekilegend:earth_deepslate_ore",
-    "kisekilegend:earthvein_block"
+    "kisekilegend:earthvein_block",
+    "kisekilegend:fire_ore",
+    "kisekilegend:fire_deepslate_ore",
+    "kisekilegend:firevein_block",
+    "kisekilegend:mirage_ore",
+    "kisekilegend:mirage_deepslate_ore",
+    "kisekilegend:miragevein_block",
+    "kisekilegend:space_ore",
+    "kisekilegend:space_deepslate_ore",
+    "kisekilegend:spacevein_block",
+    "kisekilegend:time_ore",
+    "kisekilegend:time_deepslate_ore",
+    "kisekilegend:timevein_block",
+    "kisekilegend:water_ore",
+    "kisekilegend:water_deepslate_ore",
+    "kisekilegend:watervein_block",
+    "kisekilegend:wind_ore",
+    "kisekilegend:wind_deepslate_ore",
+    "kisekilegend:windvein_block"
   ]
 }

@@ -6,6 +6,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
@@ -14,6 +15,19 @@ import net.minecraftforge.registries.RegistryObject;
 public class ModCreativeModeTabs {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, KisekiLegend.MOD_ID);
+
+    public static final RegistryObject<CreativeModeTab> ORBMENT_EQUIPMENT_TAB =
+            CREATIVE_MODE_TABS.register("orbment_equipment", () -> CreativeModeTab.builder()
+                    .icon(() -> ModItems.ORBMENT_ITEM.get().getDefaultInstance())
+                    .title(Component.translatable("itemGroup.kisekilegend.orbment_equipment"))
+                    .displayItems((parameters, output) -> {
+                        // Add Orbment and all Quartz
+                        output.accept(ModItems.ORBMENT_ITEM.get());
+                        for (RegistryObject<Item> item : ModItems.QUARTZ.values()) {
+                            output.accept(item.get());
+                        }
+                    })
+                    .build());
 
     public static final RegistryObject<CreativeModeTab> SEPITH_ITEMS_TAB = CREATIVE_MODE_TABS.register("sepith_items_tab",
             () -> CreativeModeTab.builder().icon(() -> new ItemStack(ModItems.SEPITH_MASS.get()))
@@ -27,6 +41,8 @@ public class ModCreativeModeTabs {
                         pOutput.accept(ModItems.WATER_MASS.get());
                         pOutput.accept(ModItems.WIND_MASS.get());
                         pOutput.accept(ModItems.TIME_MASS.get());
+
+                        pOutput.accept(ModItems.ORBMENT_ITEM.get());
 
                     }).build());
 

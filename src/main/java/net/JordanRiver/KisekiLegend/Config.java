@@ -1,5 +1,6 @@
 package net.JordanRiver.KisekiLegend;
 
+
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.common.ForgeConfigSpec;
@@ -42,6 +43,7 @@ public class Config
     public static int magicNumber;
     public static String magicNumberIntroduction;
     public static Set<Item> items;
+
 
     private static boolean validateItemName(final Object obj)
     {

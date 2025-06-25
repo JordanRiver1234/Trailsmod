@@ -2,10 +2,11 @@ package net.JordanRiver.KisekiLegend;
 
 import com.mojang.logging.LogUtils;
 import net.JordanRiver.KisekiLegend.block.ModBlocks;
+import net.JordanRiver.KisekiLegend.client.screen.OrbmentScreen;
 import net.JordanRiver.KisekiLegend.item.ModCreativeModeTabs;
 import net.JordanRiver.KisekiLegend.item.ModItems;
-import net.minecraft.client.renderer.ItemBlockRenderTypes;
-import net.minecraft.client.renderer.RenderType;
+import net.JordanRiver.KisekiLegend.menu.ModMenuTypes;
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
@@ -42,19 +43,29 @@ public class KisekiLegend
 
         ModCreativeModeTabs.register(modEventBus);
 
+
+
         ModItems.register(modEventBus);
         ModBlocks.register(modEventBus);
+        IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
+        ModMenuTypes.register(bus);
 
         // Register the item to a creative tab
         modEventBus.addListener(this::addCreative);
 
         // Register our mod's ForgeConfigSpec so that Forge can create and load the config file for us
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+
+
+
+
+
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
 
     }
+
 
     // Add the example block item to the building blocks tab
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
@@ -85,6 +96,8 @@ public class KisekiLegend
             event.accept(ModBlocks.WATERVEIN_BLOCK);
             event.accept(ModBlocks.WINDVEIN_BLOCK);
         }
+
+
     }
 
     // You can use SubscribeEvent and let the Event Bus discover methods to call
@@ -92,14 +105,16 @@ public class KisekiLegend
     public void onServerStarting(ServerStartingEvent event) {
     }
 
+
     // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
     @Mod.EventBusSubscriber(modid = MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     public static class ClientModEvents {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
-
-
+            MenuScreens.register(ModMenuTypes.ORBMENT_MENU.get(), OrbmentScreen::new);
 
         }
     }
 }
+
+
