@@ -2,12 +2,17 @@ package net.JordanRiver.KisekiLegend.items;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
-
+import net.minecraft.core.Registry;
 import javax.annotation.Nullable;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.registries.ForgeRegistries;
+
 import java.util.List;
 import java.util.Map;
 
@@ -16,6 +21,8 @@ public class QuartzItem extends Item {
     private final Map<String, Integer> sepith;
     private final String bonus;
     private final String effect;
+
+
 
     public QuartzItem(String element, Map<String, Integer> sepith, String bonus, String effect, Properties properties) {
         super(properties.stacksTo(10));
@@ -57,5 +64,11 @@ public class QuartzItem extends Item {
                 tooltip.add(Component.literal(" - " + entry.getKey() + ": " + entry.getValue()).withStyle(ChatFormatting.DARK_GREEN));
             }
         }
+    }
+
+
+    public String getQuartzId() {
+        var key = ForgeRegistries.ITEMS.getKey(this);
+        return key == null ? "" : key.getPath();
     }
 }

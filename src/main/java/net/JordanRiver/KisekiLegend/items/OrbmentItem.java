@@ -2,6 +2,7 @@ package net.JordanRiver.KisekiLegend.items;
 
 import net.JordanRiver.KisekiLegend.menu.OrbmentMenu;
 import net.JordanRiver.KisekiLegend.orbal.OrbmentComponent;
+import net.JordanRiver.KisekiLegend.items.SizedItemStackHandler;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
@@ -23,10 +24,8 @@ public class OrbmentItem extends Item {
     @Override
     public InteractionResultHolder<ItemStack> use(@NotNull Level level,
                                                   @NotNull Player player,
-                                                  @NotNull InteractionHand hand)
-    {
+                                                  @NotNull InteractionHand hand) {
         if (!level.isClientSide()) {
-            // Open our OrbmentMenu on the SERVER; Minecraft handles the client side automatically
             player.openMenu(new SimpleMenuProvider(
                     (windowId, inv, plyr) -> new OrbmentMenu(windowId, inv),
                     net.minecraft.network.chat.Component.literal("Orbment")
@@ -35,7 +34,7 @@ public class OrbmentItem extends Item {
         return InteractionResultHolder.success(player.getItemInHand(hand));
     }
 
-    public static void saveInventory( ItemStack stack,
+    public static void saveInventory(ItemStack stack,
                                      SizedItemStackHandler handler,
                                      int unlockedSlots,
                                      Level level) {

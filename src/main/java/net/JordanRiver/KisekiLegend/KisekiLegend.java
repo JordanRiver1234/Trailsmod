@@ -6,6 +6,7 @@ import net.JordanRiver.KisekiLegend.client.screen.OrbmentScreen;
 import net.JordanRiver.KisekiLegend.item.ModCreativeModeTabs;
 import net.JordanRiver.KisekiLegend.item.ModItems;
 import net.JordanRiver.KisekiLegend.menu.ModMenuTypes;
+import net.JordanRiver.KisekiLegend.orbal.OrbmentComponent;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.api.distmarker.Dist;
@@ -22,99 +23,70 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.slf4j.Logger;
 
-//Very important comment
-// The value here should match an entry in the META-INF/mods.toml file
 @Mod(KisekiLegend.MOD_ID)
-public class KisekiLegend
-{
-    // Define mod id in a common place for everything to reference
+public class KisekiLegend {
     public static final String MOD_ID = "kisekilegend";
-    // Directly reference a slf4j logger
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public KisekiLegend() {
-        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
-
-        // Register the commonSetup method for modloading
-        modEventBus.addListener(this::commonSetup);
-
-        // Register ourselves for server and other game events we are interested in
-        MinecraftForge.EVENT_BUS.register(this);
-
-        ModCreativeModeTabs.register(modEventBus);
-
-
-
-        ModItems.register(modEventBus);
-        ModBlocks.register(modEventBus);
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
+
+        bus.addListener(this::commonSetup);
+        bus.addListener(this::addCreative);
+
+        ModCreativeModeTabs.register(bus);
+        ModItems.register(bus);
+        ModBlocks.register(bus);
         ModMenuTypes.register(bus);
 
-        // Register the item to a creative tab
-        modEventBus.addListener(this::addCreative);
-
-        // Register our mod's ForgeConfigSpec so that Forge can create and load the config file for us
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC);
-
-
-
-
-
+        MinecraftForge.EVENT_BUS.register(this);
     }
 
-    private void commonSetup(final FMLCommonSetupEvent event) {
-
+    private void commonSetup(FMLCommonSetupEvent event) {
+        // No capability registration required in 1.21.1+
+        LOGGER.info("KisekiLegend mod setup complete.");
     }
 
-
-    // Add the example block item to the building blocks tab
-    private void addCreative(BuildCreativeModeTabContentsEvent event) {
-        if(event.getTabKey() == CreativeModeTabs.INGREDIENTS) {
-            event.accept(ModItems.EARTH);
-            event.accept(ModItems.EARTH_MASS);
-            event.accept(ModItems.WATER);
-            event.accept(ModItems.WATER_MASS);
-            event.accept(ModItems.FIRE);
-            event.accept(ModItems.FIRE_MASS);
-            event.accept(ModItems.WIND);
-            event.accept(ModItems.WIND_MASS);
-            event.accept(ModItems.TIME);
-            event.accept(ModItems.TIME_MASS);
-            event.accept(ModItems.SPACE);
-            event.accept(ModItems.SPACE_MASS);
-            event.accept(ModItems.MIRAGE);
-            event.accept(ModItems.MIRAGE_MASS);
-            event.accept(ModItems.SEPITH_MASS);
+    private void addCreative(BuildCreativeModeTabContentsEvent ev) {
+        if (ev.getTabKey() == CreativeModeTabs.INGREDIENTS) {
+            ev.accept(ModItems.EARTH);
+            ev.accept(ModItems.EARTH_MASS);
+            ev.accept(ModItems.WATER);
+            ev.accept(ModItems.WATER_MASS);
+            ev.accept(ModItems.FIRE);
+            ev.accept(ModItems.FIRE_MASS);
+            ev.accept(ModItems.WIND);
+            ev.accept(ModItems.WIND_MASS);
+            ev.accept(ModItems.TIME);
+            ev.accept(ModItems.TIME_MASS);
+            ev.accept(ModItems.SPACE);
+            ev.accept(ModItems.SPACE_MASS);
+            ev.accept(ModItems.MIRAGE);
+            ev.accept(ModItems.MIRAGE_MASS);
+            ev.accept(ModItems.SEPITH_MASS);
         }
-
-        if(event.getTabKey() == CreativeModeTabs.BUILDING_BLOCKS) {
-            event.accept(ModBlocks.EARTHVEIN_BLOCK);
-            event.accept(ModBlocks.FIREVEIN_BLOCK);
-            event.accept(ModBlocks.MIRAGEVEIN_BLOCK);
-            event.accept(ModBlocks.SPACEVEIN_BLOCK);
-            event.accept(ModBlocks.TIMEVEIN_BLOCK);
-            event.accept(ModBlocks.WATERVEIN_BLOCK);
-            event.accept(ModBlocks.WINDVEIN_BLOCK);
+        if (ev.getTabKey() == CreativeModeTabs.BUILDING_BLOCKS) {
+            ev.accept(ModBlocks.EARTHVEIN_BLOCK);
+            ev.accept(ModBlocks.FIREVEIN_BLOCK);
+            ev.accept(ModBlocks.MIRAGEVEIN_BLOCK);
+            ev.accept(ModBlocks.SPACEVEIN_BLOCK);
+            ev.accept(ModBlocks.TIMEVEIN_BLOCK);
+            ev.accept(ModBlocks.WATERVEIN_BLOCK);
+            ev.accept(ModBlocks.WINDVEIN_BLOCK);
         }
-
-
     }
 
-    // You can use SubscribeEvent and let the Event Bus discover methods to call
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
+        LOGGER.info("Server is starting!");
     }
 
-
-    // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
     @Mod.EventBusSubscriber(modid = MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
-    public static class ClientModEvents {
+    public static class ClientEvents {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
             MenuScreens.register(ModMenuTypes.ORBMENT_MENU.get(), OrbmentScreen::new);
-
         }
     }
 }
-
-
