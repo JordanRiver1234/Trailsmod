@@ -2,23 +2,36 @@ package net.JordanRiver.KisekiLegend.block;
 
 import net.JordanRiver.KisekiLegend.KisekiLegend;
 import net.JordanRiver.KisekiLegend.item.ModItems;
+
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DropExperienceBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
 import java.util.function.Supplier;
 
+import static net.minecraftforge.registries.ForgeRegistries.BLOCKS;
+
 public class ModBlocks {
     public static final DeferredRegister<Block> BlOCKS =
-            DeferredRegister.create(ForgeRegistries.BLOCKS, KisekiLegend.MOD_ID);
+            DeferredRegister.create(BLOCKS, KisekiLegend.MOD_ID);
+    public static final RegistryObject<Block> ORBMENT_MACHINE = registerBlock(
+            "orbment_machine",
+            () -> new OrbmentMachineBlock(
+                    BlockBehaviour.Properties
+                            .of()    // <- here!
+                            .strength(1f)
+                            .noOcclusion()
+            )
+    );
+
 
     public static final RegistryObject<Block> EARTHVEIN_BLOCK =  registerBlock( "earthvein_block",
             () -> new Block(BlockBehaviour.Properties.of()
@@ -90,8 +103,6 @@ public class ModBlocks {
     public static final RegistryObject<Block> WIND_DEEPSLATE_ORE = registerBlock("wind_deepslate_ore",
             () -> new DropExperienceBlock(UniformInt.of(3, 6), BlockBehaviour.Properties.of()
                     .strength(2f).noOcclusion().requiresCorrectToolForDrops().sound(SoundType.DEEPSLATE)));
-
-
 
 
 

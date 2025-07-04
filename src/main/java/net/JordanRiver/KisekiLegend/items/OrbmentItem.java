@@ -1,3 +1,4 @@
+// OrbmentItem.java
 package net.JordanRiver.KisekiLegend.items;
 
 import net.JordanRiver.KisekiLegend.menu.OrbmentMenu;
@@ -6,6 +7,7 @@ import net.JordanRiver.KisekiLegend.items.SizedItemStackHandler;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.SimpleMenuProvider;
@@ -14,6 +16,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.HitResult;
 import org.jetbrains.annotations.NotNull;
 
 public class OrbmentItem extends Item {
@@ -22,22 +25,19 @@ public class OrbmentItem extends Item {
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(@NotNull Level level,
-                                                  @NotNull Player player,
-                                                  @NotNull InteractionHand hand) {
-        if (!level.isClientSide()) {
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        // Only open GUI if player is not right-clicking on a block
+        HitResult target = player.pick(5.0D, 0.0F, false);
+        if (!level.isClientSide() && target.getType() == HitResult.Type.MISS) {
             player.openMenu(new SimpleMenuProvider(
                     (windowId, inv, plyr) -> new OrbmentMenu(windowId, inv),
-                    net.minecraft.network.chat.Component.literal("Orbment")
+                    Component.literal("Orbment")
             ));
         }
         return InteractionResultHolder.success(player.getItemInHand(hand));
     }
 
-    public static void saveInventory(ItemStack stack,
-                                     SizedItemStackHandler handler,
-                                     int unlockedSlots,
-                                     Level level) {
+    public static void saveInventory(ItemStack stack, SizedItemStackHandler handler, int unlockedSlots, Level level) {
         CustomData existing = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
         CompoundTag tag = existing.copyTag();
         tag.put("orbment_inventory", handler.serializeNBT(level.registryAccess()));

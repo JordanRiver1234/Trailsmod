@@ -30,7 +30,7 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
     private final int[] sepith = new int[7];
     private final SizedItemStackHandler inventory = new SizedItemStackHandler(MAX_SLOTS);
 
-    private static final Map<String, Integer> ELEMENT_INDEX = Map.of(
+    public static final Map<String, Integer> ELEMENT_INDEX = Map.of(
             "earth", 0, "water", 1, "wind", 2,
             "fire", 3, "space", 4, "mirage", 5, "time", 6
     );
@@ -128,7 +128,7 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
         }
     }
 
-    @Override
+
     public CompoundTag serializeNBT(HolderLookup.Provider provider) {
         CompoundTag root = new CompoundTag();
         root.putInt("UnlockedSlots", unlockedSlots);
@@ -149,7 +149,7 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
         return root;
     }
 
-    @Override
+
     public void deserializeNBT(HolderLookup.Provider provider, CompoundTag root) {
         unlockedSlots = root.getInt("UnlockedSlots");
         if (root.contains("QuartzSlots", Tag.TAG_COMPOUND)) {

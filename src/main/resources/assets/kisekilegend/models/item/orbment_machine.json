@@ -1,0 +1,6 @@
+{
+  "parent": "kisekilegend:block/orbment_machine",
+  "textures": {
+    "all": "kisekilegend:block/orbment_machine"
+  }
+}

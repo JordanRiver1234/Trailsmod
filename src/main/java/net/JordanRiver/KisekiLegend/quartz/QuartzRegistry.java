@@ -153,7 +153,7 @@ public class QuartzRegistry {
         MAP.put("range_1", new QuartzDefinition(
                 null, 0, 0,
                 (target, wearer) -> {
-                    // We won’t use this; we’ll do it on right-click instead.
+                    // We won’t useItemOn this; we’ll do it on right-click instead.
 
     }));
         MAP.put("eagle_eye", new QuartzDefinition(null, 0, 0, (target, wearer) -> {

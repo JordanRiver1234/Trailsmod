@@ -1,13 +1,16 @@
 package net.JordanRiver.KisekiLegend;
 
 import com.mojang.logging.LogUtils;
+
+import net.JordanRiver.KisekiLegend.block.ModBlockEntities;
 import net.JordanRiver.KisekiLegend.block.ModBlocks;
+
 import net.JordanRiver.KisekiLegend.client.screen.OrbmentScreen;
 import net.JordanRiver.KisekiLegend.item.ModCreativeModeTabs;
 import net.JordanRiver.KisekiLegend.item.ModItems;
 import net.JordanRiver.KisekiLegend.menu.ModMenuTypes;
-import net.JordanRiver.KisekiLegend.orbal.OrbmentComponent;
 import net.minecraft.client.gui.screens.MenuScreens;
+import net.JordanRiver.KisekiLegend.client.screen.OrbmentMachineScreen;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
@@ -33,10 +36,12 @@ public class KisekiLegend {
 
         bus.addListener(this::commonSetup);
         bus.addListener(this::addCreative);
+        ModBlockEntities.register(bus);
 
         ModCreativeModeTabs.register(bus);
         ModItems.register(bus);
         ModBlocks.register(bus);
+
         ModMenuTypes.register(bus);
 
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC);
@@ -74,6 +79,7 @@ public class KisekiLegend {
             ev.accept(ModBlocks.TIMEVEIN_BLOCK);
             ev.accept(ModBlocks.WATERVEIN_BLOCK);
             ev.accept(ModBlocks.WINDVEIN_BLOCK);
+            ev.accept(ModBlocks.ORBMENT_MACHINE);
         }
     }
 
@@ -82,11 +88,15 @@ public class KisekiLegend {
         LOGGER.info("Server is starting!");
     }
 
-    @Mod.EventBusSubscriber(modid = MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
-    public static class ClientEvents {
+    @Mod.EventBusSubscriber(modid = KisekiLegend.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+    public class ClientEvents {
+
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
+            // Register GUIs
+            MenuScreens.register(ModMenuTypes.ORBMENT_MACHINE.get(), OrbmentMachineScreen::new);
             MenuScreens.register(ModMenuTypes.ORBMENT_MENU.get(), OrbmentScreen::new);
+
         }
     }
 }
