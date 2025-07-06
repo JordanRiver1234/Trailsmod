@@ -156125,5 +156125,6 @@
 				"down": {"uv": [0, 0, 0, 0], "texture": "texture"}
 			}
 		}
-	]
+	],
+  "render_type": "cutout"
 }

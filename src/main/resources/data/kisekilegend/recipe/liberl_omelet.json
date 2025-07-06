@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:wheat" },
+    { "item": "minecraft:wheat" },
+    { "item": "minecraft:egg" },
+    { "item": "minecraft:egg" },
+    { "item": "minecraft:beef" }
+  ],
+  "result": {
+    "id": "kisekilegend:liberl_omelet",
+    "count": 1
+  }
+}

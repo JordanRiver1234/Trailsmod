@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 
 import net.JordanRiver.KisekiLegend.block.ModBlockEntities;
 import net.JordanRiver.KisekiLegend.block.ModBlocks;
+import net.JordanRiver.KisekiLegend.client.screen.OrbmentMachineRenderer;
 
 import net.JordanRiver.KisekiLegend.client.screen.OrbmentScreen;
 import net.JordanRiver.KisekiLegend.item.ModCreativeModeTabs;
@@ -11,6 +12,7 @@ import net.JordanRiver.KisekiLegend.item.ModItems;
 import net.JordanRiver.KisekiLegend.menu.ModMenuTypes;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.JordanRiver.KisekiLegend.client.screen.OrbmentMachineScreen;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
@@ -96,6 +98,7 @@ public class KisekiLegend {
             // Register GUIs
             MenuScreens.register(ModMenuTypes.ORBMENT_MACHINE.get(), OrbmentMachineScreen::new);
             MenuScreens.register(ModMenuTypes.ORBMENT_MENU.get(), OrbmentScreen::new);
+            BlockEntityRenderers.register(ModBlockEntities.ORBMENT_MACHINE.get(), OrbmentMachineRenderer::new);
 
         }
     }

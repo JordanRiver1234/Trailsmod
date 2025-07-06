@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:bread" },
+    { "item": "minecraft:egg" },
+    { "item": "minecraft:sweet_berries" },
+    { "item": "minecraft:cooked_salmon" }
+  ],
+  "result": {
+    "id": "kisekilegend:salubrious_oatmeal",
+    "count": 1
+  }
+}

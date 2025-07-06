@@ -1,8 +1,8 @@
 {
   "variants": {
-    "": {
-      "model": "kisekilegend:block/orbment_machine",
-      "render_type": "cutout"
-    }
+    "facing=north": { "model": "kisekilegend:block/orbment_machine", "y": 180 },
+    "facing=south": { "model": "kisekilegend:block/orbment_machine", "y": 0 },
+    "facing=west":  { "model": "kisekilegend:block/orbment_machine", "y": 270 },
+    "facing=east":  { "model": "kisekilegend:block/orbment_machine", "y": 90 }
   }
 }

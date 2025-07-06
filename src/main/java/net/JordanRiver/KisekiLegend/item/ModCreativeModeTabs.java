@@ -42,7 +42,15 @@ public class ModCreativeModeTabs {
                         pOutput.accept(ModItems.WIND_MASS.get());
                         pOutput.accept(ModItems.TIME_MASS.get());
 
-                        pOutput.accept(ModItems.ORBMENT_ITEM.get());
+                        pOutput.accept(ModItems.EARTH.get());
+                        pOutput.accept(ModItems.WATER.get());
+                        pOutput.accept(ModItems.FIRE.get());
+                        pOutput.accept(ModItems.WIND.get());
+                        pOutput.accept(ModItems.TIME.get());
+                        pOutput.accept(ModItems.SPACE.get());
+                        pOutput.accept(ModItems.MIRAGE.get());
+
+                        // Orbment Machine BlockItem (must be registered!)
 
                     }).build());
 
@@ -74,15 +82,31 @@ public class ModCreativeModeTabs {
                         pOutput.accept(ModBlocks.WIND_ORE.get());
                         pOutput.accept(ModBlocks.WIND_DEEPSLATE_ORE.get());
 
-
-
-
-
-
+                        pOutput.accept(ModBlocks.ORBMENT_MACHINE.get());
 
 
 
                     }).build());
+
+    public static final RegistryObject<CreativeModeTab> KISEKI_FOODS_TAB = CREATIVE_MODE_TABS.register("kiseki_foods_tab",
+            () -> CreativeModeTab.builder()
+                    .icon(() -> ModItems.POT_O_MEAT.get().getDefaultInstance()) // Use any food item as icon
+                    .title(Component.translatable("creativetab.kisekilegend.kiseki_foods"))
+                    .displayItems((parameters, output) -> {
+                        output.accept(ModItems.POT_O_MEAT.get());
+                        output.accept(ModItems.BOUILLABAISSE.get());
+                        output.accept(ModItems.CHEFS_CURRY.get());
+                        output.accept(ModItems.WILD_VEGGIE_POT.get());
+                        output.accept(ModItems.SALUBRIOUS_OATMEAL.get());
+                        output.accept(ModItems.JENIS_LUNCH.get());
+                        output.accept(ModItems.LIBERL_OMELET.get());
+                        output.accept(ModItems.DIEHARD_PAELLA.get());
+                        output.accept(ModItems.CHEESE_RISOTTO.get());
+                        output.accept(ModItems.WHOLESOME_PASTA.get());
+                        output.accept(ModItems.ABADDON_POTLUCK.get());
+                    })
+                    .build()
+    );
 
 
 

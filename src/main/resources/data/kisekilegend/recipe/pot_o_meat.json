@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:cooked_porkchop" },
+    { "item": "minecraft:cooked_porkchop" },
+    { "item": "minecraft:cooked_salmon" },
+    { "item": "minecraft:cooked_salmon" },
+    { "item": "minecraft:cooked_chicken" },
+    { "item": "minecraft:cooked_chicken" },
+    { "item": "minecraft:beef" },
+    { "item": "minecraft:beef" },
+    { "item": "minecraft:honey_bottle" }
+  ],
+  "result": {
+    "id": "kisekilegend:pot_o_meat",
+    "count": 1
+  }
+}

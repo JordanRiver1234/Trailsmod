@@ -8,6 +8,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.SlotItemHandler;
@@ -17,19 +18,23 @@ public class OrbmentMachineMenu extends AbstractContainerMenu {
     private final OrbmentMachineBlockEntity machine;
 
     public OrbmentMachineMenu(int id, Inventory playerInv, FriendlyByteBuf buf) {
-        this(id, playerInv,
-                (OrbmentMachineBlockEntity) playerInv.player.level().getBlockEntity(buf.readBlockPos())
+        this(id,
+                playerInv,
+                (OrbmentMachineBlockEntity) playerInv.player.level()
+                        .getBlockEntity(buf.readBlockPos())
         );
     }
 
     public OrbmentMachineMenu(int id, Inventory playerInv, OrbmentMachineBlockEntity machine) {
         super(ModMenuTypes.ORBMENT_MACHINE.get(), id);
-        this.access = ContainerLevelAccess.create(machine.getLevel(), machine.getBlockPos());
+        this.access = ContainerLevelAccess.create(
+                machine.getLevel(), machine.getBlockPos()
+        );
         this.machine = machine;
 
         // Expose the machine's orbment as slot 0 at (8,8)
         IItemHandlerModifiable handler = new IItemHandlerModifiable() {
-            @Override public int getSlots() { return 1; }
+            @Override public int getSlots()                    { return 1; }
             @Override public ItemStack getStackInSlot(int slot) { return machine.getOrbment(); }
             @Override public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
                 if (!simulate) machine.setOrbment(stack);
@@ -40,7 +45,7 @@ public class OrbmentMachineMenu extends AbstractContainerMenu {
                 if (!simulate) machine.setOrbment(ItemStack.EMPTY);
                 return out;
             }
-            @Override public int getSlotLimit(int slot) { return 1; }
+            @Override public int getSlotLimit(int slot)         { return 1; }
             @Override public boolean isItemValid(int slot, ItemStack stack) {
                 return stack.getItem() instanceof OrbmentItem;
             }
@@ -53,7 +58,12 @@ public class OrbmentMachineMenu extends AbstractContainerMenu {
         // Player inventory (3 rows)
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
-                this.addSlot(new Slot(playerInv, col + row * 9 + 9, 8 + col * 18, 214 + row * 18));
+                this.addSlot(new Slot(
+                        playerInv,
+                        col + row * 9 + 9,
+                        8 + col * 18,
+                        214 + row * 18
+                ));
             }
         }
         // Hotbar
@@ -65,7 +75,8 @@ public class OrbmentMachineMenu extends AbstractContainerMenu {
     @Override
     public boolean stillValid(Player player) {
         return access.evaluate((level, pos) ->
-                        level.getBlockEntity(pos) == machine && player.distanceToSqr(pos.getCenter()) <= 64.0,
+                        level.getBlockEntity(pos) == machine
+                                && player.distanceToSqr(pos.getCenter()) <= 64.0,
                 true
         );
     }
@@ -78,8 +89,8 @@ public class OrbmentMachineMenu extends AbstractContainerMenu {
     @Override
     public boolean clickMenuButton(Player player, int id) {
         if (id == 0) {
-            // Use 1 Sepith Mass per unlock instead of 5
             machine.tryUnlockSlotWithSepith(player, 1);
+            broadcastChanges();
             return true;
         } else if (id == 1) {
             machine.tryConvertFullSetToSepith(player);
@@ -87,18 +98,20 @@ public class OrbmentMachineMenu extends AbstractContainerMenu {
         }
         return false;
     }
+    @Override
+    public void broadcastChanges() {
+        super.broadcastChanges();
+        this.slots.get(0).setChanged(); // Force GUI slot 0 (orbment) to recheck
+    }
 
-    /**
-     * Returns the underlying BlockEntity.
-     */
+    /** Returns the underlying BlockEntity. */
     public OrbmentMachineBlockEntity getMachine() {
         return machine;
     }
 
-    /**
-     * Convenience: get the current orbment stack.
-     */
+    /** Convenience: get the current orbment stack. */
     public ItemStack getOrbmentStack() {
         return machine.getOrbment();
     }
+
 }

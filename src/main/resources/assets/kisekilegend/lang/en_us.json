@@ -102,9 +102,23 @@
   "block.kisekilegend.wind_deepslate_ore": "Wind Vein Deepslate Ore",
   "block.kisekilegend.orbment_machine": "Orbment Machine",
 
+  "creativetab.kisekilegend.kiseki_foods": "Kiseki Foods",
+  "item.kisekilegend.pot_o_meat": "Pot O' Meat",
+  "item.kisekilegend.bouillabaisse": "Bouillabaisse",
+  "item.kisekilegend.chefs_curry": "Chef's Curry",
+  "item.kisekilegend.wild_veggie_pot": "Wild Veggie Pot",
+  "item.kisekilegend.salubrious_oatmeal": "Salubrious Oatmeal",
+  "item.kisekilegend.jenis_lunch": "Jenis Lunch",
+  "item.kisekilegend.liberl_omelet": "Liberl Omelet",
+  "item.kisekilegend.cheese_risotto": "Cheese Risotto",
+  "item.kisekilegend.wholesome_pasta": "Wholesome Pasta",
+  "item.kisekilegend.abaddon_potluck": "Abaddon Potluck",
+  "item.kisekilegend.diehard_paella": "Diehard Paella",
 
 
-
+  "category.kisekilegend.foods":  "Kiseki Foods",
+  "category.kisekilegend.quartz": "Orbment Quartz",
+  "category.kisekilegend.misc":   "Miscellaneous",
 
 
 

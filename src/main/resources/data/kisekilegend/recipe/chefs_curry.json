@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:carrot" },
+    { "item": "minecraft:carrot" },
+    { "item": "minecraft:baked_potato" },
+    { "item": "minecraft:baked_potato" },
+    { "item": "minecraft:beetroot" },
+    { "item": "minecraft:beetroot" },
+    { "item": "minecraft:bread" },
+    { "item": "minecraft:bread" },
+    { "item": "minecraft:beef" }
+  ],
+  "result": {
+    "id": "kisekilegend:chefs_curry",
+    "count": 1
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:wheat" },
+    { "item": "minecraft:wheat" },
+    { "item": "minecraft:beef" },
+    { "item": "minecraft:beef" },
+    { "item": "minecraft:milk_bucket" },
+    { "item": "minecraft:egg" }
+  ],
+  "result": {
+    "id": "kisekilegend:jenis_lunch",
+    "count": 1
+  }
+}

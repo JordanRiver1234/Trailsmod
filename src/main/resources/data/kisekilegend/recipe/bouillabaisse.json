@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:bone" },
+    { "item": "minecraft:bone" },
+    { "item": "minecraft:bone" },
+    { "item": "minecraft:cooked_salmon" },
+    { "item": "minecraft:cooked_salmon" },
+    { "item": "minecraft:beetroot" },
+    { "item": "minecraft:beetroot" },
+    { "item": "minecraft:carrot" },
+    { "item": "minecraft:carrot" }
+  ],
+  "result": {
+    "id": "kisekilegend:bouillabaisse",
+    "count": 1
+  }
+}

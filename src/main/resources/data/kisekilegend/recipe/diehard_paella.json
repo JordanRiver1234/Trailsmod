@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:dried_kelp" },
+    { "item": "minecraft:bread" },
+    { "item": "minecraft:dried_kelp" }
+  ],
+  "result": {
+    "id": "kisekilegend:diehard_paella",
+    "count": 1
+  }
+}

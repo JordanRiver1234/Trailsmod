@@ -20,7 +20,7 @@ public class ModItems {
     public static final DeferredRegister<Item> ITEMS =
             DeferredRegister.create(ForgeRegistries.ITEMS, KisekiLegend.MOD_ID);
 
-    public static final RegistryObject<Item> EARTH = ITEMS.register("earth", () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> EARTH = ITEMS.register("earth", () -> new Item(new Item.Properties())) ;
     public static final RegistryObject<Item> WATER = ITEMS.register("water", () -> new Item(new Item.Properties()));
     public static final RegistryObject<Item> FIRE = ITEMS.register("fire", () -> new Item(new Item.Properties()));
     public static final RegistryObject<Item> WIND = ITEMS.register("wind", () -> new Item(new Item.Properties()));
@@ -44,6 +44,32 @@ public class ModItems {
             new ElementalMassItem("space", new Item.Properties()));
     public static final RegistryObject<Item> MIRAGE_MASS = ITEMS.register("mirage_mass", () ->
             new ElementalMassItem("mirage", new Item.Properties()));
+
+    public static final RegistryObject<Item> POT_O_MEAT = ITEMS.register("pot_o_meat",
+            () -> new Item(new Item.Properties().food(ModFoodProperties.POT_O_MEAT)));
+    public static final RegistryObject<Item> BOUILLABAISSE = ITEMS.register("bouillabaisse", () ->
+            new Item(new Item.Properties().food(ModFoodProperties.BOUILLABAISSE)));
+    public static final RegistryObject<Item> CHEFS_CURRY = ITEMS.register("chefs_curry", () ->
+            new Item(new Item.Properties().food(ModFoodProperties.CHEFS_CURRY)));
+    public static final RegistryObject<Item> WILD_VEGGIE_POT = ITEMS.register("wild_veggie_pot",
+            () -> new Item(new Item.Properties().food(ModFoodProperties.WILD_VEGGIE_POT)));
+    public static final RegistryObject<Item> SALUBRIOUS_OATMEAL = ITEMS.register("salubrious_oatmeal",
+            () -> new Item(new Item.Properties().food(ModFoodProperties.SALUBRIOUS_OATMEAL)));
+    public static final RegistryObject<Item> JENIS_LUNCH = ITEMS.register("jenis_lunch",
+            () -> new Item(new Item.Properties().food(ModFoodProperties.JENIS_LUNCH)));
+    public static final RegistryObject<Item> LIBERL_OMELET = ITEMS.register("liberl_omelet",
+            () -> new Item(new Item.Properties().food(ModFoodProperties.LIBERL_OMELET)));
+    public static final RegistryObject<Item> CHEESE_RISOTTO  = ITEMS.register("cheese_risotto",
+            () -> new Item(new Item.Properties().food(ModFoodProperties.CHEESE_RISOTTO)));
+    public static final RegistryObject<Item> ABADDON_POTLUCK  = ITEMS.register("abaddon_potluck",
+            () -> new Item(new Item.Properties().food(ModFoodProperties.ABADDON_POTLUCK)));
+    public static final RegistryObject<Item> WHOLESOME_PASTA  = ITEMS.register("wholesome_pasta",
+            () -> new Item(new Item.Properties().food(ModFoodProperties.WHOLESOME_PASTA)));
+    public static final RegistryObject<Item> DIEHARD_PAELLA  = ITEMS.register("diehard_paella",
+            () -> new Item(new Item.Properties().food(ModFoodProperties.DIEHARD_PAELLA)));
+
+
+
 
 
 
