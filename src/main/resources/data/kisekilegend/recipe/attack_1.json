@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:stone_sword" },
+    { "item": "kisekilegend:fire" }
+  ],
+  "result": { "id": "kisekilegend:attack_1", "count": 1 }
+}

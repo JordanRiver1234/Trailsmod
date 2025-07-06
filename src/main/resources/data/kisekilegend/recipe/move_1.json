@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:rabbit_foot" },
+    { "item": "kisekilegend:space" }
+  ],
+  "result": { "id": "kisekilegend:move_1", "count": 1 }
+}

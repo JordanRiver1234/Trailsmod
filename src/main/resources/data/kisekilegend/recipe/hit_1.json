@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:arrow" },
+    { "item": "minecraft:arrow" },
+    { "item": "kisekilegend:mirage" }
+  ],
+  "result": { "id": "kisekilegend:hit_1", "count": 1 }
+}

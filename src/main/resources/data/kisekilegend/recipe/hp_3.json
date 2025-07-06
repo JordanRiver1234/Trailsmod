@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:dried_kelp_block" },
+    { "item": "kisekilegend:hp_2" },
+    { "item": "kisekilegend:water" },
+    { "item": "kisekilegend:water" },
+    { "item": "kisekilegend:water" },
+    { "item": "kisekilegend:water" },
+    { "item": "kisekilegend:water_mass" }
+  ],
+  "result": { "id": "kisekilegend:hp_3", "count": 1 }
+}

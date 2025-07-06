@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:iron_ingot" },
+    { "item": "kisekilegend:shield_1" },
+    { "item": "kisekilegend:wind" },
+    { "item": "kisekilegend:wind" },
+    { "item": "kisekilegend:wind_mass" }
+  ],
+  "result": { "id": "kisekilegend:shield_2", "count": 1 }
+}

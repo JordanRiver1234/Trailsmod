@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:golden_sword" },
+    { "item": "kisekilegend:attack_1" },
+    { "item": "kisekilegend:fire" },
+    { "item": "kisekilegend:fire" },
+    { "item": "kisekilegend:fire_mass" }
+  ],
+  "result": { "id": "kisekilegend:attack_2", "count": 1 }
+}

@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:dirt" },
+    { "item": "minecraft:fermented_spider_eye" },
+    { "item": "kisekilegend:earth" },
+    { "item": "kisekilegend:earth" },
+    { "item": "kisekilegend:earth_mass" }
+  ],
+  "result": { "id": "kisekilegend:mute", "count": 1 }
+}

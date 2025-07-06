@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:pufferfish" },
+    { "item": "minecraft:pufferfish" },
+    { "item": "kisekilegend:fire" },
+    { "item": "kisekilegend:fire" },
+    { "item": "kisekilegend:fire_mass" }
+  ],
+  "result": { "id": "kisekilegend:confuse", "count": 1 }
+}

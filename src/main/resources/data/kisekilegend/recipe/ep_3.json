@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:lapis_block" },
+    { "item": "kisekilegend:ep_2" },
+    { "item": "kisekilegend:mirage" },
+    { "item": "kisekilegend:mirage" },
+    { "item": "kisekilegend:mirage" },
+    { "item": "kisekilegend:time_mass" },
+    { "item": "kisekilegend:space_mass" }
+  ],
+  "result": { "id": "kisekilegend:ep_3", "count": 1 }
+}

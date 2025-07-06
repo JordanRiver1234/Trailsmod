@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:slime_ball" },
+    { "item": "minecraft:slime_ball" },
+    { "item": "kisekilegend:fire" },
+    { "item": "kisekilegend:fire" },
+    { "item": "kisekilegend:fire_mass" }
+  ],
+  "result": { "id": "kisekilegend:seal", "count": 1 }
+}

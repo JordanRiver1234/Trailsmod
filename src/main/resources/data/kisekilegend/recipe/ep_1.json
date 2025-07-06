@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:lapis_lazuli" },
+    { "item": "minecraft:lapis_lazuli" },
+    { "item": "kisekilegend:mirage" }
+  ],
+  "result": { "id": "kisekilegend:ep_1", "count": 1 }
+}

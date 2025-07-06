@@ -28,6 +28,7 @@ public class ModBlocks {
                     BlockBehaviour.Properties
                             .of()    // <- here!
                             .strength(1f)
+                            .noLootTable()
                             .noOcclusion()
             )
     );

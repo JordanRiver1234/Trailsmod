@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:redstone_block" },
+    { "item": "kisekilegend:ep_cut_2" },
+    { "item": "kisekilegend:space" },
+    { "item": "kisekilegend:space" },
+    { "item": "kisekilegend:space_mass" },
+    { "item": "kisekilegend:time_mass" },
+    { "item": "kisekilegend:mirage_mass" }
+  ],
+  "result": { "id": "kisekilegend:ep_cut_3", "count": 1 }
+}

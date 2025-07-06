@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:quartz" },
+    { "item": "kisekilegend:water" },
+    { "item": "kisekilegend:water_mass" }
+  ],
+  "result": { "id": "kisekilegend:mind_1", "count": 1 }
+}

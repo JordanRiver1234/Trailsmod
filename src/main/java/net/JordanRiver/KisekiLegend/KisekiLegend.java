@@ -7,6 +7,7 @@ import net.JordanRiver.KisekiLegend.block.ModBlocks;
 import net.JordanRiver.KisekiLegend.client.screen.OrbmentMachineRenderer;
 
 import net.JordanRiver.KisekiLegend.client.screen.OrbmentScreen;
+import net.JordanRiver.KisekiLegend.datagen.ModDatapackEntries;
 import net.JordanRiver.KisekiLegend.item.ModCreativeModeTabs;
 import net.JordanRiver.KisekiLegend.item.ModItems;
 import net.JordanRiver.KisekiLegend.menu.ModMenuTypes;
@@ -16,6 +17,8 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.data.DatapackBuiltinEntriesProvider;
+import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -28,6 +31,8 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.slf4j.Logger;
 
+import java.util.Set;
+
 @Mod(KisekiLegend.MOD_ID)
 public class KisekiLegend {
     public static final String MOD_ID = "kisekilegend";
@@ -35,7 +40,7 @@ public class KisekiLegend {
 
     public KisekiLegend() {
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
-
+        bus.addListener(this::gatherData);
         bus.addListener(this::commonSetup);
         bus.addListener(this::addCreative);
         ModBlockEntities.register(bus);
@@ -48,6 +53,8 @@ public class KisekiLegend {
 
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC);
         MinecraftForge.EVENT_BUS.register(this);
+
+
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
@@ -102,4 +109,19 @@ public class KisekiLegend {
 
         }
     }
+    private void gatherData(final GatherDataEvent event) {
+        if (event.includeServer()) {
+            // this is exactly what Kaupenjoe does under the hood:
+            event.getGenerator().addProvider(
+                    true,
+                    new DatapackBuiltinEntriesProvider(
+                            event.getGenerator().getPackOutput(),
+                            event.getLookupProvider(),
+                            ModDatapackEntries.BUILDER,
+                            Set.of(MOD_ID)
+                    )
+            );
+        }
+    }
+
 }

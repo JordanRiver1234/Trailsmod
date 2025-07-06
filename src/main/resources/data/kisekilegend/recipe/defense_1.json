@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:dirt" },
+    { "item": "kisekilegend:earth" }
+  ],
+  "result": { "id": "kisekilegend:defense_1", "count": 1 }
+}
