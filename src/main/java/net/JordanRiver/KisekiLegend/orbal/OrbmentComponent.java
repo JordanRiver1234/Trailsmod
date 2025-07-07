@@ -23,8 +23,54 @@ import net.minecraftforge.common.util.INBTSerializable;
 import java.util.*;
 
 public class OrbmentComponent implements INBTSerializable<CompoundTag> {
-    public static final Capability<OrbmentComponent> CAPABILITY = CapabilityManager.get(new CapabilityToken<>() {});
+    public static final Capability<OrbmentComponent> CAPABILITY =
+            CapabilityManager.get(new CapabilityToken<>() {});
+
     public static final int MAX_SLOTS = 6;
+
+    // ---- EP system ----
+    private static final int BASE_MAX_EP = 270;
+    private int currentEP = BASE_MAX_EP;
+
+    /**
+     * @return current EP (magic points).
+     */
+    public int getCurrentEP() {
+        return this.currentEP;
+    }
+
+    /**
+     * @return maximum EP = 300 + unlockedSlots * 30
+     */
+    public int getMaxEP() {
+        return BASE_MAX_EP + unlockedSlots * 30;
+    }
+
+    /**
+     * Try to consume 'amount' EP. Returns true if enough EP was available.
+     */
+    public boolean useEP(int amount) {
+        if (amount <= this.currentEP) {
+            this.currentEP -= amount;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Regenerate EP by 1 point, up to max.
+     */
+    public void regenerateEP() {
+        this.currentEP = Math.min(getMaxEP(), this.currentEP + 1);
+    }
+    public void fillToMaxEP() {
+        this.currentEP = getMaxEP();
+    }
+    public void setCurrentEP(int ep) {
+        this.currentEP = Math.min(ep, getMaxEP());
+    }
+
+    // --------------------
 
     private int unlockedSlots = 1;
     private final int[] sepith = new int[7];
@@ -38,8 +84,8 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
     public boolean hasQuartz(String quartzId) {
         for (int i = 0; i < inventory.getSlots(); i++) {
             ItemStack s = inventory.getStackInSlot(i);
-            if (s.getItem() instanceof QuartzItem qi &&
-                    quartzId.equals(qi.getQuartzId())) {
+            if (s.getItem() instanceof QuartzItem qi
+                    && quartzId.equals(qi.getQuartzId())) {
                 return true;
             }
         }
@@ -119,7 +165,6 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
                 slotted.add(qi.getQuartzId());
             }
         }
-
         for (String id : slotted) {
             QuartzDefinition def = QuartzRegistry.get(id);
             if (def != null) {
@@ -128,10 +173,12 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
         }
     }
 
-
+    @Override
     public CompoundTag serializeNBT(HolderLookup.Provider provider) {
         CompoundTag root = new CompoundTag();
         root.putInt("UnlockedSlots", unlockedSlots);
+        root.putInt("CurrentEP", this.currentEP);
+
         CompoundTag slots = new CompoundTag();
         for (int i = 0; i < inventory.getSlots(); i++) {
             ItemStack s = inventory.getStackInSlot(i);
@@ -149,9 +196,11 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
         return root;
     }
 
-
+    @Override
     public void deserializeNBT(HolderLookup.Provider provider, CompoundTag root) {
         unlockedSlots = root.getInt("UnlockedSlots");
+        this.currentEP   = root.getInt("CurrentEP");
+
         if (root.contains("QuartzSlots", Tag.TAG_COMPOUND)) {
             CompoundTag slots = root.getCompound("QuartzSlots");
             for (String k : slots.getAllKeys()) {
