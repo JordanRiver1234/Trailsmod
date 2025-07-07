@@ -1,0 +1,19 @@
+[06Jul2025 14:56:14.716] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forge_userdev_data, --assetIndex, 17, --assetsDir, C:\Users\felic\.gradle\caches\forge_gradle\assets, --gameDir, ., --mod, kisekilegend, --all, --output, C:\Users\felic\Downloads\Trails mod\src\generated\resources, --existing, C:\Users\felic\Downloads\Trails mod\src\main\resources]
+[06Jul2025 14:56:14.725] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: JVM identified as Eclipse Adoptium OpenJDK 64-Bit Server VM 21.0.7+6-LTS
+[06Jul2025 14:56:14.725] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher 10.2.1 starting: java version 21.0.7 by Eclipse Adoptium; OS Windows 11 arch amd64 version 10.0
+[06Jul2025 14:56:14.993] [main/INFO] [net.minecraftforge.fml.loading.ImmediateWindowHandler/]: ImmediateWindowProvider not loading because launch target is forge_userdev_data
+[06Jul2025 14:56:15.255] [main/INFO] [mixin/]: SpongePowered MIXIN Subsystem Version=0.8.7 Source=jar:file:///C:/Users/felic/.gradle/caches/modules-2/files-2.1/org.spongepowered/mixin/0.8.7/8ab114ac385e6dbdad5efafe28aba4df8120915f/mixin-0.8.7.jar!/ Service=ModLauncher Env=UNKNOWN
+[06Jul2025 14:56:16.821] [main/INFO] [net.minecraftforge.fml.loading.moddiscovery.JarInJarDependencyLocator/]: No dependencies to load found. Skipping!
+[06Jul2025 14:56:18.179] [main/INFO] [cpw.mods.modlauncher.LaunchServiceHandler/MODLAUNCHER]: Launching target 'forge_userdev_data' with arguments [--gameDir, ., --assetsDir, C:\Users\felic\.gradle\caches\forge_gradle\assets, --assetIndex, 17, --mod, kisekilegend, --all, --output, C:\Users\felic\Downloads\Trails mod\src\generated\resources, --existing, C:\Users\felic\Downloads\Trails mod\src\main\resources]
+[06Jul2025 14:56:27.963] [modloading-worker-0/INFO] [net.minecraftforge.common.ForgeMod/FORGEMOD]: Forge mod loading, version 52.0.16, for MC 1.21.1 with MCP 20240808.132146
+[06Jul2025 14:56:27.963] [modloading-worker-0/INFO] [net.minecraftforge.common.MinecraftForge/FORGE]: MinecraftForge v52.0.16 Initialized
+[06Jul2025 14:56:28.012] [modloading-worker-0/INFO] [net.minecraftforge.common.ForgeMod/FORGEMOD]: Opening jdk.naming.dns/com.sun.jndi.dns to java.naming
+[06Jul2025 14:56:28.266] [modloading-worker-0/INFO] [mezz.jei.library.load.PluginCaller/]: Sending ConfigManager...
+[06Jul2025 14:56:28.277] [modloading-worker-0/INFO] [mezz.jei.library.load.PluginCaller/]: Sending ConfigManager took 8.827 milliseconds
+[06Jul2025 14:56:29.006] [main/INFO] [net.minecraftforge.data.loading.DatagenModLoader/]: Initializing Data Gatherer for mods [kisekilegend]
+[06Jul2025 14:56:29.128] [main/WARN] [net.minecraft.server.packs.VanillaPackResourcesBuilder/]: Assets URL 'union:/C:/Users/felic/.gradle/caches/forge_gradle/minecraft_user_repo/net/minecraftforge/forge/1.21.1-52.0.16_mapped_official_1.21/forge-1.21.1-52.0.16_mapped_official_1.21.jar%230!/assets/.mcassetsroot' uses unexpected schema
+[06Jul2025 14:56:29.132] [main/WARN] [net.minecraft.server.packs.VanillaPackResourcesBuilder/]: Assets URL 'union:/C:/Users/felic/.gradle/caches/forge_gradle/minecraft_user_repo/net/minecraftforge/forge/1.21.1-52.0.16_mapped_official_1.21/forge-1.21.1-52.0.16_mapped_official_1.21.jar%230!/data/.mcassetsroot' uses unexpected schema
+[06Jul2025 14:56:29.460] [main/INFO] [net.minecraft.data.DataGenerator/]: Starting provider: Registries
+[06Jul2025 14:56:29.942] [main/INFO] [net.minecraft.data.DataGenerator/]: Registries finished after 479 ms
+[06Jul2025 14:56:29.944] [main/INFO] [net.minecraft.data.DataGenerator/]: All providers took: 481 ms
+[06Jul2025 14:56:29.956] [main/INFO] [net.minecraft.data.HashCache/]: Caching: total files: 34, old count: 34, new count: 35, removed stale: 0, written: 0
