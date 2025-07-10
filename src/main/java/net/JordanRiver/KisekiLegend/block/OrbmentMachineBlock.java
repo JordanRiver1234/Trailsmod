@@ -173,7 +173,7 @@ public class OrbmentMachineBlock extends Block implements EntityBlock {
     }
 
     /**
-     * When the block is broken or replaced, drop any stored Orbment
+     * When the blocks.json is broken or replaced, drop any stored Orbment
      * so that it never disappears.
      */
     @Override

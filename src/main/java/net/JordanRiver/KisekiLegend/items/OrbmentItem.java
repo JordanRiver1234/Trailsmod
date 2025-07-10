@@ -26,7 +26,7 @@ public class OrbmentItem extends Item {
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-        // Only open GUI if player is not right-clicking on a block
+        // Only open GUI if player is not right-clicking on a blocks.json
         HitResult target = player.pick(5.0D, 0.0F, false);
         if (!level.isClientSide() && target.getType() == HitResult.Type.MISS) {
             player.openMenu(new SimpleMenuProvider(

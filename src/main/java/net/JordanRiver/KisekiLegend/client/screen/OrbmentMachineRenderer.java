@@ -29,7 +29,7 @@ public class OrbmentMachineRenderer implements BlockEntityRenderer<OrbmentMachin
 // ✅ Center & lower
         poseStack.translate(0.5, 0.28, 0.5);
 
-// ✅ Rotate based on block facing
+// ✅ Rotate based on blocks.json facing
         Direction facing = entity.getBlockState().getValue(OrbmentMachineBlock.FACING);
         float rotationY = switch (facing) {
             case NORTH -> 0f;

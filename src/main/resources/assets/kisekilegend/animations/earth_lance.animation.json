@@ -1,0 +1,56 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.kisekilegend.earth_lance_cast": {
+			"loop": false,
+			"animation_length": 1,
+			"bones": {
+				"voxel_file": {
+					"rotation": {
+						"vector": [-57.36912, -2.3483, -0.8676]
+					},
+					"position": {
+						"0.0": {
+							"vector": [0, -27, 0]
+						},
+						"0.0833": {
+							"vector": [0, -18, 0]
+						}
+					}
+				},
+				"voxel_file2": {
+					"rotation": {
+						"vector": [-57.5, 0, 0]
+					},
+					"position": {
+						"0.0": {
+							"vector": [0, -27, -16]
+						},
+						"0.3333": {
+							"vector": [0, -12, -16]
+						}
+					}
+				},
+				"voxel_file3": {
+					"rotation": {
+						"0.5": {
+							"vector": [-67.5, 0, 0]
+						},
+						"0.75": {
+							"vector": [-40, 0, 0]
+						}
+					},
+					"position": {
+						"0.5": {
+							"vector": [0, -27, -44]
+						},
+						"0.75": {
+							"vector": [0, 2, -44]
+						}
+					}
+				}
+			}
+		}
+	},
+	"geckolib_format_version": 2
+}

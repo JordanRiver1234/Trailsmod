@@ -4,16 +4,21 @@ import com.mojang.logging.LogUtils;
 
 import net.JordanRiver.KisekiLegend.block.ModBlockEntities;
 import net.JordanRiver.KisekiLegend.block.ModBlocks;
+import net.JordanRiver.KisekiLegend.client.ArtInputHandler;
 import net.JordanRiver.KisekiLegend.client.screen.OrbmentMachineRenderer;
 
 import net.JordanRiver.KisekiLegend.client.screen.OrbmentScreen;
 import net.JordanRiver.KisekiLegend.datagen.ModDatapackEntries;
+import net.JordanRiver.KisekiLegend.entity.GeckoSpellEntity;
+import net.JordanRiver.KisekiLegend.entity.ModEntities;
 import net.JordanRiver.KisekiLegend.item.ModCreativeModeTabs;
 import net.JordanRiver.KisekiLegend.item.ModItems;
 import net.JordanRiver.KisekiLegend.menu.ModMenuTypes;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.JordanRiver.KisekiLegend.client.screen.OrbmentMachineScreen;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
@@ -24,11 +29,14 @@ import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.RegistryObject;
 import org.slf4j.Logger;
 
 import java.util.Set;
@@ -37,13 +45,22 @@ import java.util.Set;
 public class KisekiLegend {
     public static final String MOD_ID = "kisekilegend";
     public static final Logger LOGGER = LogUtils.getLogger();
+    public static final DeferredRegister<EntityType<?>> ENTITIES =
+            DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, MOD_ID);
+    public static final RegistryObject<EntityType<GeckoSpellEntity>> SPELL = ModEntities.SPELL;
+
+
+
 
     public KisekiLegend() {
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
+
         bus.addListener(this::gatherData);
         bus.addListener(this::commonSetup);
         bus.addListener(this::addCreative);
+        ENTITIES.register(bus);
         ModBlockEntities.register(bus);
+        ModEntities.register(bus);
 
         ModCreativeModeTabs.register(bus);
         ModItems.register(bus);
@@ -60,6 +77,20 @@ public class KisekiLegend {
     private void commonSetup(FMLCommonSetupEvent event) {
         // No capability registration required in 1.21.1+
         LOGGER.info("KisekiLegend mod setup complete.");
+    }
+
+    private void gatherData(GatherDataEvent event) {
+        if (event.includeServer()) {
+            event.getGenerator().addProvider(
+                    true,
+                    new DatapackBuiltinEntriesProvider(
+                            event.getGenerator().getPackOutput(),
+                            event.getLookupProvider(),
+                            ModDatapackEntries.BUILDER,
+                            Set.of(MOD_ID)
+                    )
+            );
+        }
     }
 
     private void addCreative(BuildCreativeModeTabContentsEvent ev) {
@@ -106,22 +137,9 @@ public class KisekiLegend {
             MenuScreens.register(ModMenuTypes.ORBMENT_MACHINE.get(), OrbmentMachineScreen::new);
             MenuScreens.register(ModMenuTypes.ORBMENT_MENU.get(), OrbmentScreen::new);
             BlockEntityRenderers.register(ModBlockEntities.ORBMENT_MACHINE.get(), OrbmentMachineRenderer::new);
+            MinecraftForge.EVENT_BUS.register(ArtInputHandler.class);
 
         }
     }
-    private void gatherData(final GatherDataEvent event) {
-        if (event.includeServer()) {
-            // this is exactly what Kaupenjoe does under the hood:
-            event.getGenerator().addProvider(
-                    true,
-                    new DatapackBuiltinEntriesProvider(
-                            event.getGenerator().getPackOutput(),
-                            event.getLookupProvider(),
-                            ModDatapackEntries.BUILDER,
-                            Set.of(MOD_ID)
-                    )
-            );
-        }
-    }
-
 }
+

@@ -1,31 +1,70 @@
 package net.JordanRiver.KisekiLegend.client;
 
 import net.JordanRiver.KisekiLegend.KisekiLegend;
+import net.JordanRiver.KisekiLegend.orbal.ArtsRegistry;
 import net.minecraft.client.KeyMapping;
-import org.lwjgl.glfw.GLFW;
-import net.minecraftforge.api.distmarker.Dist;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
+import net.minecraftforge.client.event.RegisterTextureAtlasSpriteLoadersEvent;
+import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.common.Mod;
+
+
+
+import org.lwjgl.glfw.GLFW;
+import software.bernie.geckolib.event.GeoRenderEvent;
+
 
 @Mod.EventBusSubscriber(
         modid = KisekiLegend.MOD_ID,
-        bus   = Mod.EventBusSubscriber.Bus.MOD,
-        value = Dist.CLIENT
-)
+        bus = Mod.EventBusSubscriber.Bus.MOD,
+        value = Dist.CLIENT)
 public class ClientSetup {
-    // toggle‐HUD key
-    public static final KeyMapping TOGGLE_EP_HUD = new KeyMapping(
-            "key.kisekilegend.toggle_ep",
-            GLFW.GLFW_KEY_P,
-            "key.categories.kisekilegend"
-    );
 
-    public static boolean showEP = true;
+    public static final KeyMapping TOGGLE_EP_HUD;
+    public static final KeyMapping TOGGLE_ART_SELECT;
+    public static final KeyMapping ART_NEXT;
+    public static final KeyMapping ART_PREV;
 
-    /** Forge now fires a RegisterKeyMappingsEvent for key‐binding registration. */
+
+    static {
+        TOGGLE_EP_HUD = new KeyMapping("key.kisekilegend.toggle_ep", GLFW.GLFW_KEY_P, "key.categories.kisekilegend");
+        TOGGLE_ART_SELECT = new KeyMapping("key.kisekilegend.art_select", GLFW.GLFW_KEY_R, "key.categories.kisekilegend");
+        ART_NEXT = new KeyMapping("key.kisekilegend.art_next", GLFW.GLFW_KEY_PERIOD, "key.categories.kisekilegend");
+        ART_PREV = new KeyMapping("key.kisekilegend.art_prev", GLFW.GLFW_KEY_COMMA, "key.categories.kisekilegend");
+    }
+
     @SubscribeEvent
     public static void onRegisterKeyMappings(RegisterKeyMappingsEvent ev) {
         ev.register(TOGGLE_EP_HUD);
+        ev.register(TOGGLE_ART_SELECT);
+        ev.register(ART_NEXT);
+        ev.register(ART_PREV);
     }
+
+    @SubscribeEvent
+    public static void onRegisterLayers(EntityRenderersEvent.RegisterLayerDefinitions event) {
+
+    }
+
+
+
+
+
+
+
+
+
+    // For art selector + EP bar
+    public static boolean showEP = true;
+    public static boolean artSelectMode = false;
+    public static int selectedArtIdx = 0;
+
+
 }
+
