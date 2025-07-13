@@ -91,27 +91,12 @@ public class OrbmentItem extends Item implements GeoItem {
                 }
                 return this.renderer;
             }
+
+            public BakedModel getCustomModel() {
+                // Return null to use default model system for hotbar
+                return null;
+            }
         });
-    }
-
-    @Override
-    public void onCraftedBy(ItemStack stack, Level level, Player player) {
-        // Don't automatically set custom model data here - let the handler manage it
-        super.onCraftedBy(stack, level, player);
-    }
-
-    // Create stack with 3D model for hand rendering
-    public static ItemStack get3DStack() {
-        ItemStack stack = new ItemStack(ModItems.ORBMENT_ITEM.get());
-        stack.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(1));
-        return stack;
-    }
-
-    // Create stack with 2D model for GUI/hotbar
-    public static ItemStack get2DStack() {
-        ItemStack stack = new ItemStack(ModItems.ORBMENT_ITEM.get());
-        // Don't set custom model data - uses default 2D model
-        return stack;
     }
 
     @Override
@@ -119,10 +104,7 @@ public class OrbmentItem extends Item implements GeoItem {
         return cache;
     }
 
-    /**
-     * Write only the inventory & slot count (no EP) back to the stack.
-     * (Kept for backward compatibility if you ever need it.)
-     */
+    // Rest of your existing methods...
     public static void saveInventory(ItemStack stack, SizedItemStackHandler handler, int unlockedSlots, Level level) {
         CustomData existing = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
         CompoundTag tag = existing.copyTag();
@@ -131,18 +113,12 @@ public class OrbmentItem extends Item implements GeoItem {
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
     }
 
-    /**
-     * Write the entire OrbmentComponent (slots, inventory, AND currentEP) back into the stack.
-     */
     public static void saveComponent(ItemStack stack, OrbmentComponent component, Level level) {
         CustomData existing = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
         CompoundTag tag = existing.copyTag();
 
-        // 1) unlocked slots & inventory:
         tag.put("orbment_inventory", component.getInventory().serializeNBT(level.registryAccess()));
         tag.putInt("orbment_unlocked", component.getUnlockedSlots());
-
-        // 2) current EP:
         tag.putInt("CurrentEP", component.getCurrentEP());
 
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
@@ -155,19 +131,16 @@ public class OrbmentItem extends Item implements GeoItem {
             CustomData data = stack.get(DataComponents.CUSTOM_DATA);
             CompoundTag tag = data.copyTag();
 
-            // unlocked slots
             if (tag.contains("orbment_unlocked", Tag.TAG_INT)) {
                 component.setUnlockedSlots(tag.getInt("orbment_unlocked"));
             }
 
-            // inventory
             if (tag.contains("orbment_inventory", Tag.TAG_COMPOUND)) {
                 SizedItemStackHandler handler = new SizedItemStackHandler(OrbmentMenu.ORBMENT_SLOT_COUNT);
                 handler.deserializeNBT(level.registryAccess(), tag.getCompound("orbment_inventory"));
                 component.setInventory(handler);
             }
 
-            // restore EP if present
             if (tag.contains("CurrentEP", Tag.TAG_INT)) {
                 component.setCurrentEP(tag.getInt("CurrentEP"));
             }

@@ -26,28 +26,31 @@ public class OrbmentModelHandler {
         // Check main hand
         ItemStack mainHand = player.getMainHandItem();
         if (mainHand.getItem() instanceof OrbmentItem) {
-            ensureHandModel(mainHand, true); // true = in active hand
+            ensureHandModel(mainHand);
+        } else {
+            // Remove 3D model from non-hand items
+            removeHandModel(mainHand);
         }
 
         // Check off hand
         ItemStack offHand = player.getOffhandItem();
         if (offHand.getItem() instanceof OrbmentItem) {
-            ensureHandModel(offHand, true); // true = in active hand
+            ensureHandModel(offHand);
+        } else {
+            removeHandModel(offHand);
         }
 
-        // Check hotbar items (but not the currently held item)
+        // Remove 3D model from hotbar items that are not in hand
         for (int i = 0; i < 9; i++) {
             ItemStack hotbarStack = player.getInventory().getItem(i);
-            if (hotbarStack.getItem() instanceof OrbmentItem) {
-                // Only process if it's NOT the currently held item
-                if (hotbarStack != mainHand && hotbarStack != offHand) {
-                    ensureHotbarModel(hotbarStack);
-                }
+            if (hotbarStack.getItem() instanceof OrbmentItem &&
+                    hotbarStack != mainHand && hotbarStack != offHand) {
+                removeHandModel(hotbarStack);
             }
         }
     }
 
-    private static void ensureHandModel(ItemStack stack, boolean inHand) {
+    private static void ensureHandModel(ItemStack stack) {
         // When in hand, should have custom model data = 1 for 3D rendering
         if (!stack.has(DataComponents.CUSTOM_MODEL_DATA) ||
                 stack.get(DataComponents.CUSTOM_MODEL_DATA).value() != 1) {
@@ -55,11 +58,10 @@ public class OrbmentModelHandler {
         }
     }
 
-    private static void ensureHotbarModel(ItemStack stack) {
-        // When in hotbar (but not in hand), should have custom model data = 0 or none for 2D rendering
-        if (stack.has(DataComponents.CUSTOM_MODEL_DATA) &&
-                stack.get(DataComponents.CUSTOM_MODEL_DATA).value() == 1) {
-            stack.remove(DataComponents.CUSTOM_MODEL_DATA); // Remove to use default 2D model
+    private static void removeHandModel(ItemStack stack) {
+        // Remove custom model data for 2D rendering
+        if (stack.has(DataComponents.CUSTOM_MODEL_DATA)) {
+            stack.remove(DataComponents.CUSTOM_MODEL_DATA);
         }
     }
 }
