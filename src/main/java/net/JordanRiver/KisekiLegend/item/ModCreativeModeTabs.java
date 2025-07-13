@@ -19,18 +19,19 @@ public class ModCreativeModeTabs {
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, KisekiLegend.MOD_ID);
 
     // In ModCreativeModeTabs.java, update the ORBMENT_EQUIPMENT_TAB registration:
+// In ModCreativeModeTabs.java, update the ORBMENT_EQUIPMENT_TAB registration:
     public static final RegistryObject<CreativeModeTab> ORBMENT_EQUIPMENT_TAB =
             CREATIVE_MODE_TABS.register("orbment_equipment", () -> CreativeModeTab.builder()
                     .icon(() -> {
                         ItemStack stack = new ItemStack(ModItems.ORBMENT_ITEM.get());
-                        stack.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(1));
+                        // Don't set custom model data for GUI icon - keeps it 2D
                         return stack;
                     })
                     .title(Component.translatable("itemGroup.kisekilegend.orbment_equipment"))
                     .displayItems((parameters, output) -> {
-                        // Add 3D Orbment
+                        // Add 2D Orbment for creative menu
                         ItemStack orbmentStack = new ItemStack(ModItems.ORBMENT_ITEM.get());
-                        orbmentStack.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(1));
+                        // Don't set custom model data here either
                         output.accept(orbmentStack);
 
                         // Add all Quartz

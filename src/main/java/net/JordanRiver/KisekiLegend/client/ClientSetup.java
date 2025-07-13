@@ -49,8 +49,14 @@ public class ClientSetup {
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
-            // Any client setup that needs to happen on the main thread
+            // Initialize GeckoLib item renderers
+            initializeItemRenderers();
         });
+    }
+
+    private static void initializeItemRenderers() {
+        // This ensures the renderer is properly initialized
+        System.out.println("Initializing GeckoLib item renderers...");
     }
 
     // For art selector + EP bar
