@@ -38,15 +38,13 @@ import java.util.function.Consumer;
 
 public class OrbmentItem extends Item implements GeoItem {
     private static final RawAnimation CAST_ANIM = RawAnimation.begin().then("cast", Animation.LoopType.LOOP);
+    private static final RawAnimation IDLE_ANIM = RawAnimation.begin().then("idle", Animation.LoopType.LOOP);
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     public OrbmentItem(Properties properties) {
         super(properties);
-
-        // Register the renderer in GeckoLib's system
     }
-
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
@@ -58,7 +56,6 @@ public class OrbmentItem extends Item implements GeoItem {
                 if (level instanceof ServerLevel serverLevel) {
                     // Trigger animation server-side (syncs to client)
                     triggerAnim(player, GeoItem.getOrAssignId(stack, serverLevel), "cast_controller", "cast");
-
                 }
                 // Add your spell-casting logic here (e.g., schedule cast)
                 return InteractionResultHolder.success(stack);
@@ -79,18 +76,20 @@ public class OrbmentItem extends Item implements GeoItem {
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
         controllers.add(new AnimationController<>(this, "cast_controller", 0, state -> PlayState.STOP)
                 .triggerableAnim("cast", CAST_ANIM)
-                .triggerableAnim("idle", RawAnimation.begin().then("idle", Animation.LoopType.LOOP)));
-
+                .triggerableAnim("idle", IDLE_ANIM));
     }
 
     @Override
     public void initializeClient(Consumer<IClientItemExtensions> consumer) {
         consumer.accept(new IClientItemExtensions() {
-            private final BlockEntityWithoutLevelRenderer renderer = new OrbmentItemRenderer();
+            private OrbmentItemRenderer renderer;
 
             @Override
             public BlockEntityWithoutLevelRenderer getCustomRenderer() {
-                return renderer;
+                if (this.renderer == null) {
+                    this.renderer = new OrbmentItemRenderer();
+                }
+                return this.renderer;
             }
         });
     }
@@ -99,12 +98,6 @@ public class OrbmentItem extends Item implements GeoItem {
     public AnimatableInstanceCache getAnimatableInstanceCache() {
         return cache;
     }
-
-
-
-
-    // Rest of your existing methods (saveInventory, saveComponent, loadComponent)...
-
 
     /**
      * Write only the inventory & slot count (no EP) back to the stack.

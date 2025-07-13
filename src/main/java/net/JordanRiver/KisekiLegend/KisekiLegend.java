@@ -6,22 +6,19 @@ import net.JordanRiver.KisekiLegend.block.ModBlockEntities;
 import net.JordanRiver.KisekiLegend.block.ModBlocks;
 import net.JordanRiver.KisekiLegend.client.ArtInputHandler;
 import net.JordanRiver.KisekiLegend.client.ClientSetup;
-import net.JordanRiver.KisekiLegend.client.renderer.item.OrbmentItemRenderer;
 import net.JordanRiver.KisekiLegend.client.screen.OrbmentMachineRenderer;
 import net.JordanRiver.KisekiLegend.client.AuraRenderer;
 import net.JordanRiver.KisekiLegend.client.MagicCircleRenderer;
 import net.JordanRiver.KisekiLegend.particle.ModParticles;
-import software.bernie.geckolib.network.GeckoLibNetworkingForge;
-import software.bernie.geckolib.renderer.GeoItemRenderer;
-import software.bernie.geckolib.GeckoLib;
 import net.JordanRiver.KisekiLegend.client.screen.OrbmentScreen;
 import net.JordanRiver.KisekiLegend.datagen.ModDatapackEntries;
 import net.JordanRiver.KisekiLegend.entity.ModEntities;
 import net.JordanRiver.KisekiLegend.item.ModCreativeModeTabs;
 import net.JordanRiver.KisekiLegend.item.ModItems;
 import net.JordanRiver.KisekiLegend.menu.ModMenuTypes;
-import software.bernie.geckolib.GeckoLib;
 import net.minecraft.client.gui.screens.MenuScreens;
+
+
 import net.JordanRiver.KisekiLegend.client.screen.OrbmentMachineScreen;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.entity.EntityRenderers;
@@ -34,7 +31,6 @@ import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
@@ -50,40 +46,27 @@ public class KisekiLegend {
     public static final String MOD_ID = "kisekilegend";
     public static final Logger LOGGER = LogUtils.getLogger();
 
-
-
-
-
     public KisekiLegend() {
-
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
         bus.addListener(this::gatherData);
         bus.addListener(this::commonSetup);
         bus.addListener(this::addCreative);
+
         ModBlockEntities.register(bus);
         ModEntities.register(bus);
-
-
-
         ModParticles.PARTICLES.register(bus);
         ModCreativeModeTabs.register(bus);
         ModItems.register(bus);
         ModBlocks.register(bus);
-
         ModMenuTypes.register(bus);
 
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC);
         MinecraftForge.EVENT_BUS.register(this);
-
-
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
         LOGGER.info("KisekiLegend mod setup complete.");
-
-
     }
-
 
     private void gatherData(GatherDataEvent event) {
         if (event.includeServer()) {
@@ -134,37 +117,28 @@ public class KisekiLegend {
         LOGGER.info("Server is starting!");
     }
 
-
     @Mod.EventBusSubscriber(modid = KisekiLegend.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
-    public class ClientEvents {
+    public static class ClientEvents {
 
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
             // Register GUIs
             MenuScreens.register(ModMenuTypes.ORBMENT_MACHINE.get(), OrbmentMachineScreen::new);
             MenuScreens.register(ModMenuTypes.ORBMENT_MENU.get(), OrbmentScreen::new);
+
+            // Register Block Entity Renderers
             BlockEntityRenderers.register(ModBlockEntities.ORBMENT_MACHINE.get(), OrbmentMachineRenderer::new);
+
+            // Register Entity Renderers
             EntityRenderers.register(ModEntities.AURA_ENTITY.get(), AuraRenderer::new);
             EntityRenderers.register(ModEntities.MAGIC_CIRCLE_ENTITY.get(), MagicCircleRenderer::new);
 
+            // Register input handler
             MinecraftForge.EVENT_BUS.register(ArtInputHandler.class);
 
-            event.enqueueWork(() -> {
-                GeoItemRenderer.registerRendererFor(ModItems.ORBMENT_ITEM.get(), OrbmentItemRenderer::new);
-            });
-
-
-
-
-
+            // Note: GeoItemRenderer registration is now handled in the item's initializeClient method
+            // No need to register it here anymore in 1.21.1 with GeckoLib 4.7.6
 
         }
-
-
-
-
-
-
     }
-
-    }
+}
