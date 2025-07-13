@@ -2,14 +2,12 @@ package net.JordanRiver.KisekiLegend.item;
 
 import net.JordanRiver.KisekiLegend.KisekiLegend;
 import net.JordanRiver.KisekiLegend.block.ModBlocks;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomModelData;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.RegistryObject;
@@ -18,23 +16,13 @@ public class ModCreativeModeTabs {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, KisekiLegend.MOD_ID);
 
-    // In ModCreativeModeTabs.java, update the ORBMENT_EQUIPMENT_TAB registration:
-// In ModCreativeModeTabs.java, update the ORBMENT_EQUIPMENT_TAB registration:
     public static final RegistryObject<CreativeModeTab> ORBMENT_EQUIPMENT_TAB =
             CREATIVE_MODE_TABS.register("orbment_equipment", () -> CreativeModeTab.builder()
-                    .icon(() -> {
-                        ItemStack stack = new ItemStack(ModItems.ORBMENT_ITEM.get());
-                        // Don't set custom model data for GUI icon - keeps it 2D
-                        return stack;
-                    })
+                    .icon(() -> ModItems.ORBMENT_ITEM.get().getDefaultInstance())
                     .title(Component.translatable("itemGroup.kisekilegend.orbment_equipment"))
                     .displayItems((parameters, output) -> {
-                        // Add 2D Orbment for creative menu
-                        ItemStack orbmentStack = new ItemStack(ModItems.ORBMENT_ITEM.get());
-                        // Don't set custom model data here either
-                        output.accept(orbmentStack);
-
-                        // Add all Quartz
+                        // Add Orbment and all Quartz
+                        output.accept(ModItems.ORBMENT_ITEM.get());
                         for (RegistryObject<Item> item : ModItems.QUARTZ.values()) {
                             output.accept(item.get());
                         }

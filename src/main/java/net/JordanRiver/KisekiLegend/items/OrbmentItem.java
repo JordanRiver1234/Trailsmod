@@ -2,33 +2,27 @@ package net.JordanRiver.KisekiLegend.items;
 
 import net.JordanRiver.KisekiLegend.KisekiLegend;
 import net.JordanRiver.KisekiLegend.client.renderer.item.OrbmentItemRenderer;
-import net.JordanRiver.KisekiLegend.item.ModItems;
 import net.JordanRiver.KisekiLegend.menu.OrbmentMenu;
 import net.JordanRiver.KisekiLegend.orbal.OrbmentComponent;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
-import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.SimpleMenuProvider;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
-import net.minecraft.world.item.component.CustomModelData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.HitResult;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.animatable.GeoItem;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
@@ -44,6 +38,7 @@ public class OrbmentItem extends Item implements GeoItem {
 
     public OrbmentItem(Properties properties) {
         super(properties);
+        System.out.println("OrbmentItem initialized");
     }
 
     @Override
@@ -51,13 +46,14 @@ public class OrbmentItem extends Item implements GeoItem {
         HitResult target = player.pick(5.0D, 0.0F, false);
         ItemStack stack = player.getItemInHand(hand);
 
+        System.out.println("Using orbment in context: " + hand + ", Item: " + stack.getItem());
+
         if (target.getType() == HitResult.Type.MISS) {  // Air click
             if (player.isShiftKeyDown()) {  // Shift-right-click: Trigger spell casting animation
                 if (level instanceof ServerLevel serverLevel) {
                     // Trigger animation server-side (syncs to client)
                     triggerAnim(player, GeoItem.getOrAssignId(stack, serverLevel), "cast_controller", "cast");
                 }
-                // Add your spell-casting logic here (e.g., schedule cast)
                 return InteractionResultHolder.success(stack);
             } else {  // Non-shift air click: Open menu
                 if (!level.isClientSide()) {
@@ -88,13 +84,9 @@ public class OrbmentItem extends Item implements GeoItem {
             public BlockEntityWithoutLevelRenderer getCustomRenderer() {
                 if (this.renderer == null) {
                     this.renderer = new OrbmentItemRenderer();
+                    System.out.println("Registering OrbmentItemRenderer for OrbmentItem");
                 }
                 return this.renderer;
-            }
-
-            public BakedModel getCustomModel() {
-                // Return null to use default model system for hotbar
-                return null;
             }
         });
     }
@@ -104,7 +96,6 @@ public class OrbmentItem extends Item implements GeoItem {
         return cache;
     }
 
-    // Rest of your existing methods...
     public static void saveInventory(ItemStack stack, SizedItemStackHandler handler, int unlockedSlots, Level level) {
         CustomData existing = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
         CompoundTag tag = existing.copyTag();

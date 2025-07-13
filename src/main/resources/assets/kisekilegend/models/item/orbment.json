@@ -1,31 +1,4 @@
 {
-  "parent": "item/generated",
-  "textures": {
-    "layer0": "kisekilegend:item/orbment"
-  },
-  "overrides": [
-    {
-      "predicate": {
-        "custom_model_data": 1
-      },
-      "model": "kisekilegend:item/orbment_3d"
-    }
-  ],
-  "display": {
-    "gui": {
-      "rotation": [0, 0, 0],
-      "translation": [0, 0, 0],
-      "scale": [1, 1, 1]
-    },
-    "fixed": {
-      "rotation": [0, 0, 0],
-      "translation": [0, 0, 0],
-      "scale": [1, 1, 1]
-    },
-    "ground": {
-      "rotation": [0, 0, 0],
-      "translation": [0, 0, 0],
-      "scale": [0.5, 0.5, 0.5]
-    }
-  }
+  "parent": "builtin/entity"
+
 }
