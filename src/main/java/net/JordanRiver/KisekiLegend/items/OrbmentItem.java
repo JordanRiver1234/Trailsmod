@@ -1,41 +1,122 @@
-// src/main/java/net/JordanRiver/KisekiLegend/items/OrbmentItem.java
 package net.JordanRiver.KisekiLegend.items;
 
+import net.JordanRiver.KisekiLegend.KisekiLegend;
+import net.JordanRiver.KisekiLegend.client.renderer.item.OrbmentItemRenderer;
+import net.JordanRiver.KisekiLegend.item.ModItems;
 import net.JordanRiver.KisekiLegend.menu.OrbmentMenu;
 import net.JordanRiver.KisekiLegend.orbal.OrbmentComponent;
-import net.JordanRiver.KisekiLegend.items.SizedItemStackHandler;
+import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
+import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.component.CustomModelData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.HitResult;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import software.bernie.geckolib.animatable.GeoItem;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.*;
+import software.bernie.geckolib.util.GeckoLibUtil;
 
-public class OrbmentItem extends Item {
-    public OrbmentItem(Properties props) {
-        super(props.stacksTo(1));
+import java.util.function.Consumer;
+
+public class OrbmentItem extends Item implements GeoItem {
+    private static final RawAnimation CAST_ANIM = RawAnimation.begin().then("cast", Animation.LoopType.LOOP);
+
+    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+
+    public OrbmentItem(Properties properties) {
+        super(properties);
+
+        // Register the renderer in GeckoLib's system
     }
+
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-        // Only open GUI if player is not right-clicking on a blocks.json
         HitResult target = player.pick(5.0D, 0.0F, false);
-        if (!level.isClientSide() && target.getType() == HitResult.Type.MISS) {
-            player.openMenu(new SimpleMenuProvider(
-                    (windowId, inv, plyr) -> new OrbmentMenu(windowId, inv),
-                    Component.literal("Orbment")
-            ));
+        ItemStack stack = player.getItemInHand(hand);
+
+        if (target.getType() == HitResult.Type.MISS) {  // Air click
+            if (player.isShiftKeyDown()) {  // Shift-right-click: Trigger spell casting animation
+                if (level instanceof ServerLevel serverLevel) {
+                    // Trigger animation server-side (syncs to client)
+                    triggerAnim(player, GeoItem.getOrAssignId(stack, serverLevel), "cast_controller", "cast");
+
+                }
+                // Add your spell-casting logic here (e.g., schedule cast)
+                return InteractionResultHolder.success(stack);
+            } else {  // Non-shift air click: Open menu
+                if (!level.isClientSide()) {
+                    player.openMenu(new SimpleMenuProvider(
+                            (windowId, inv, plyr) -> new OrbmentMenu(windowId, inv),
+                            Component.literal("Orbment")
+                    ));
+                }
+                return InteractionResultHolder.success(stack);
+            }
         }
-        return InteractionResultHolder.success(player.getItemInHand(hand));
+        return InteractionResultHolder.pass(stack);  // If clicking block, do nothing or handle separately
     }
+
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>(this, "cast_controller", 0, state -> PlayState.STOP)
+                .triggerableAnim("cast", CAST_ANIM)
+                .triggerableAnim("idle", RawAnimation.begin().then("idle", Animation.LoopType.LOOP)));
+
+    }
+
+    @Override
+    public void initializeClient(Consumer<IClientItemExtensions> consumer) {
+        consumer.accept(new IClientItemExtensions() {
+            private final BlockEntityWithoutLevelRenderer renderer = new OrbmentItemRenderer();
+
+            @Override
+            public BlockEntityWithoutLevelRenderer getCustomRenderer() {
+                return renderer;
+            }
+        });
+    }
+
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return cache;
+    }
+
+    public static ItemStack createOrbmentStack() {
+        ItemStack stack = new ItemStack(ModItems.ORBMENT_ITEM.get());
+        stack.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(1));
+        return stack;
+    }
+
+    @Override
+    public void onCraftedBy(ItemStack stack, Level level, Player player) {
+        stack.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(1));
+        super.onCraftedBy(stack, level, player);
+    }
+
+
+
+
+    // Rest of your existing methods (saveInventory, saveComponent, loadComponent)...
+
 
     /**
      * Write only the inventory & slot count (no EP) back to the stack.

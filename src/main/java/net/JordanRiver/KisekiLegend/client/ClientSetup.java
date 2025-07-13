@@ -1,23 +1,19 @@
 package net.JordanRiver.KisekiLegend.client;
 
 import net.JordanRiver.KisekiLegend.KisekiLegend;
-import net.JordanRiver.KisekiLegend.orbal.ArtsRegistry;
+import net.JordanRiver.KisekiLegend.client.renderer.item.OrbmentItemRenderer;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.client.model.geom.ModelLayerLocation;
-import net.minecraft.client.renderer.texture.TextureAtlas;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
-import net.minecraftforge.client.event.RegisterTextureAtlasSpriteLoadersEvent;
-import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.common.Mod;
+import net.JordanRiver.KisekiLegend.item.ModItems;
 
+import software.bernie.geckolib.renderer.GeoItemRenderer;
 
-
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import org.lwjgl.glfw.GLFW;
-import software.bernie.geckolib.event.GeoRenderEvent;
 
 
 @Mod.EventBusSubscriber(
@@ -51,6 +47,11 @@ public class ClientSetup {
     public static void onRegisterLayers(EntityRenderersEvent.RegisterLayerDefinitions event) {
 
     }
+    @SubscribeEvent
+    public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        // This is how you register GeoItemRenderers now
+    }
+
 
 
 

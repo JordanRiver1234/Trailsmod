@@ -1,10 +1,13 @@
 package net.JordanRiver.KisekiLegend.client;
 
 import net.JordanRiver.KisekiLegend.KisekiLegend;
+import net.JordanRiver.KisekiLegend.entity.AuraEntity;
 import net.JordanRiver.KisekiLegend.entity.GeckoSpellEntity;
+import net.JordanRiver.KisekiLegend.entity.MagicCircleEntity;
 import net.JordanRiver.KisekiLegend.items.OrbmentItem;
 import net.JordanRiver.KisekiLegend.orbal.ArtsRegistry.ArtDefinition;
 import net.JordanRiver.KisekiLegend.orbal.SpawnStyle;
+import net.JordanRiver.KisekiLegend.particle.ModParticles;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -25,17 +28,24 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Mod.EventBusSubscriber(modid = KisekiLegend.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class CastScheduler {
-    private record PendingCast(UUID playerId, ArtDefinition art, int ticksLeft, long scheduleTime) {}
+    private record PendingCast(UUID playerId, ArtDefinition art, int ticksLeft, long scheduleTime, AuraEntity aura, MagicCircleEntity circle) {}
 
     private static final Map<UUID, PendingCast> PENDING = new ConcurrentHashMap<>();
     private static final int MAX_SPELL_LIFETIME = 12000; // 10 minutes max
     private static int cleanupTimer = 0;
 
-    /** Queue a delayed cast */
     public static void scheduleCast(Player player, ArtDefinition art) {
-        if (player == null || art == null) return;
+        if (player == null || art == null) {
+            System.out.println("Failed to schedule cast: player or art is null");
+            return;
+        }
+        if (!(player.level() instanceof ServerLevel)) {
+            System.out.println("Cannot schedule cast: not on server side");
+            return;
+        }
+        // Rest of the method remains unchanged
 
-        // Cancel any existing cast for this player
+        // Cancel any existing cast
         cancelCast(player.getUUID());
 
         // Play casting sound
@@ -47,11 +57,34 @@ public class CastScheduler {
                 0.8f, 1.2f
         );
 
+        // Spawn aura and magic circle entities
+        AuraEntity aura = null;
+        MagicCircleEntity circle = null;
+        if (player.level() instanceof ServerLevel serverLevel) {
+            aura = new AuraEntity(serverLevel, player);
+            circle = new MagicCircleEntity(serverLevel, player);
+            if (serverLevel.addFreshEntity(aura)) {
+                System.out.println("Successfully added AuraEntity " + aura.getId() + " at " + aura.position());
+            } else {
+                System.out.println("Failed to add AuraEntity for player: " + player.getName().getString());
+            }
+            if (serverLevel.addFreshEntity(circle)) {
+                System.out.println("Successfully added MagicCircleEntity " + circle.getId() + " at " + circle.position());
+            } else {
+                System.out.println("Failed to add MagicCircleEntity for player: " + player.getName().getString());
+            }
+        } else {
+            System.out.println("Failed to spawn entities: level is not ServerLevel");
+            return;
+        }
+
         PendingCast pendingCast = new PendingCast(
                 player.getUUID(),
                 art,
                 Math.max(1, art.getCastDelayTicks()),
-                System.currentTimeMillis()
+                System.currentTimeMillis(),
+                aura,
+                circle
         );
 
         PENDING.put(player.getUUID(), pendingCast);
@@ -59,29 +92,34 @@ public class CastScheduler {
         System.out.println("Scheduled cast for " + player.getName().getString() +
                 ": " + art.name() + " in " + art.getCastDelayTicks() + " ticks");
     }
-
-    /** Cancel a pending cast */
     public static void cancelCast(UUID playerId) {
-        PendingCast removed = PENDING.remove(playerId);
-        if (removed != null) {
-            System.out.println("Cancelled pending cast for player: " + playerId);
+        synchronized (PENDING) {
+            PendingCast removed = PENDING.remove(playerId);
+            if (removed != null) {
+                if (removed.aura != null) {
+                    removed.aura.discard();
+                    System.out.println("Discarded AuraEntity for player: " + playerId);
+                }
+                if (removed.circle != null) {
+                    removed.circle.discard();
+                    System.out.println("Discarded MagicCircleEntity for player: " + playerId);
+                }
+                System.out.println("Cancelled pending cast for player: " + playerId);
+            }
         }
     }
 
-    /** Check if player has a pending cast */
     public static boolean hasPendingCast(UUID playerId) {
         return PENDING.containsKey(playerId);
     }
 
     @SubscribeEvent
     public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
-        // Clean up pending casts when player disconnects
         cancelCast(event.getEntity().getUUID());
     }
 
     @SubscribeEvent
     public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
-        // Cancel casts on respawn to prevent issues
         cancelCast(event.getEntity().getUUID());
     }
 
@@ -89,7 +127,6 @@ public class CastScheduler {
     public static void onServerTick(TickEvent.ServerTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
 
-        // Periodic cleanup every 5 seconds
         cleanupTimer++;
         if (cleanupTimer >= 100) {
             cleanupTimer = 0;
@@ -97,32 +134,60 @@ public class CastScheduler {
             cleanupStaleCasts();
         }
 
-        // Process pending casts
-        Iterator<Map.Entry<UUID, PendingCast>> iterator = PENDING.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<UUID, PendingCast> entry = iterator.next();
-            PendingCast pendingCast = entry.getValue();
+        synchronized (PENDING) {
+            Iterator<Map.Entry<UUID, PendingCast>> iterator = PENDING.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<UUID, PendingCast> entry = iterator.next();
+                PendingCast pendingCast = entry.getValue();
 
-            int remainingTicks = pendingCast.ticksLeft - 1;
+                int remainingTicks = pendingCast.ticksLeft - 1;
 
-            if (remainingTicks <= 0) {
-                // Time to execute the cast
-                iterator.remove();
-                executeCast(event.getServer(), pendingCast);
-            } else {
-                // Update remaining ticks
-                entry.setValue(new PendingCast(
-                        pendingCast.playerId,
-                        pendingCast.art,
-                        remainingTicks,
-                        pendingCast.scheduleTime
-                ));
+                ServerPlayer player = event.getServer().getPlayerList().getPlayer(pendingCast.playerId);
+                if (player != null && player.serverLevel() instanceof ServerLevel serverLevel) {
+                    for (int i = 0; i < 5; i++) {
+                        double offsetX = serverLevel.random.nextGaussian() * 0.2;
+                        double offsetY = 0.5 + serverLevel.random.nextGaussian() * 0.1;
+                        double offsetZ = serverLevel.random.nextGaussian() * 0.2;
+                        serverLevel.sendParticles(ModParticles.BLUE_FLOW.get(), player.getX() + offsetX, player.getY() + offsetY, player.getZ() + offsetZ, 1, 0.0, 0.1, 0.0, 0.0);
+                    }
+                    // Verify entities are still alive
+                    if (pendingCast.aura != null && !pendingCast.aura.isAlive()) {
+                        System.out.println("AuraEntity is not alive for player: " + pendingCast.playerId);
+                    }
+                    if (pendingCast.circle != null && !pendingCast.circle.isAlive()) {
+                        System.out.println("MagicCircleEntity is not alive for player: " + pendingCast.playerId);
+                    }
+                    System.out.println("Processing cast for player: " + pendingCast.playerId + ", ticks left: " + remainingTicks + ", aura alive: " + (pendingCast.aura != null && pendingCast.aura.isAlive()) + ", circle alive: " + (pendingCast.circle != null && pendingCast.circle.isAlive()));
+                } else {
+                    System.out.println("Player not found or invalid level for pending cast: " + pendingCast.playerId);
+                }
+
+                if (remainingTicks <= 0) {
+                    iterator.remove();
+                    if (pendingCast.aura != null) {
+                        pendingCast.aura.discard();
+                        System.out.println("Discarded AuraEntity at cast execution for player: " + pendingCast.playerId);
+                    }
+                    if (pendingCast.circle != null) {
+                        pendingCast.circle.discard();
+                        System.out.println("Discarded MagicCircleEntity at cast execution for player: " + pendingCast.playerId);
+                    }
+                    executeCast(event.getServer(), pendingCast);
+                } else {
+                    entry.setValue(new PendingCast(
+                            pendingCast.playerId,
+                            pendingCast.art,
+                            remainingTicks,
+                            pendingCast.scheduleTime,
+                            pendingCast.aura,
+                            pendingCast.circle
+                    ));
+                }
             }
         }
     }
 
     private static void executeCast(net.minecraft.server.MinecraftServer server, PendingCast pendingCast) {
-        // Find the player across all levels
         ServerPlayer player = server.getPlayerList().getPlayer(pendingCast.playerId);
         if (player == null) {
             System.out.println("Cannot execute cast - player not found: " + pendingCast.playerId);
@@ -135,13 +200,11 @@ public class CastScheduler {
             return;
         }
 
-        // Verify player still has orbment equipped
         if (!(player.getMainHandItem().getItem() instanceof OrbmentItem)) {
             System.out.println("Cannot execute cast - player no longer has orbment equipped");
             return;
         }
 
-        // Parse damage safely
         int damage = 1;
         try {
             String powerStr = pendingCast.art.power();
@@ -152,27 +215,23 @@ public class CastScheduler {
             System.out.println("Invalid damage value for art: " + pendingCast.art.name());
         }
 
-        // Create the spell entity
         String artKey = pendingCast.art.name().toLowerCase().replace(' ', '_');
         GeckoSpellEntity spell = new GeckoSpellEntity(level, player, damage, artKey);
 
-        // Position the spell based on type
         Vec3 lookVector = player.getLookAngle();
 
         if (pendingCast.art.style() == SpawnStyle.GROUND) {
-            // Ground spell: spawn in front of player on ground
             Vec3 spawnPos = player.position().add(lookVector.scale(2.5));
             int groundX = Mth.floor(spawnPos.x);
             int groundZ = Mth.floor(spawnPos.z);
             int groundY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, groundX, groundZ);
 
-            spell.setPos(spawnPos.x, groundY, spawnPos.z); // Lowered Y offset
+            spell.setPos(spawnPos.x, groundY, spawnPos.z);
             spell.setDeltaMovement(Vec3.ZERO);
             spell.setNoGravity(true);
             float playerYaw = Mth.wrapDegrees(player.getYRot());
             if (artKey.equals("earth_lance")) {
-                // Conditional rotation: add 180 only for east/west facing to keep those correct, no add for north/south to fix reversal
-                if (Math.abs(playerYaw) >= 45 && Math.abs(playerYaw) <= 135) { // Facing east or west (yaw between -135 to -45 or 45 to 135)
+                if (Math.abs(playerYaw) >= 45 && Math.abs(playerYaw) <= 135) {
                     spell.setYRot(player.getYRot() + 180f);
                 } else {
                     spell.setYRot(player.getYRot());
@@ -181,16 +240,26 @@ public class CastScheduler {
                 spell.setYRot(player.getYRot());
             }
             spell.setXRot(0f);
-        } else {
-            // Projectile spell: spawn at player eye level
+        } else if (pendingCast.art.style() == SpawnStyle.AOE_CENTERED) {
+            Vec3 spawnPos = player.position().add(0, 5.0, 0);
+            spell.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
+            spell.setDeltaMovement(Vec3.ZERO);
+            spell.setNoGravity(true);
+            spell.setYRot(player.getYRot());
+            spell.setXRot(0f);
+        } else if (pendingCast.art.style() == SpawnStyle.BOUNCING_PROJECTILE) {
             Vec3 eyePos = player.getEyePosition();
             spell.setPos(eyePos.x, eyePos.y - 0.2, eyePos.z);
-            double projectileSpeed = artKey.equals("stone_hammer") ? 1.0 : 2.0; // Decreased speed for stone_hammer
+            spell.setDeltaMovement(lookVector.normalize().scale(2.0));
+            spell.setRotationFromLook(lookVector);
+        } else {
+            Vec3 eyePos = player.getEyePosition();
+            spell.setPos(eyePos.x, eyePos.y - 0.2, eyePos.z);
+            double projectileSpeed = artKey.equals("stone_hammer") ? 0.5 : 1.0;
             spell.setDeltaMovement(lookVector.normalize().scale(projectileSpeed));
             spell.setRotationFromLook(lookVector);
         }
 
-        // Play cast completion sound
         level.playSound(
                 null,
                 player.getX(), player.getY(), player.getZ(),
@@ -199,7 +268,6 @@ public class CastScheduler {
                 1.0f, 1.0f
         );
 
-        // Add to world
         level.addFreshEntity(spell);
 
         System.out.println("Successfully spawned spell: " + artKey +
@@ -214,10 +282,8 @@ public class CastScheduler {
             var entities = level.getAllEntities();
             for (var entity : entities) {
                 if (entity instanceof GeckoSpellEntity spell) {
-                    // Remove spells that have been alive too long or are invalid
                     boolean shouldRemove = false;
                     String reason = "";
-
                     if (spell.tickCount > MAX_SPELL_LIFETIME) {
                         shouldRemove = true;
                         reason = "exceeded max lifetime";
@@ -228,18 +294,40 @@ public class CastScheduler {
                         shouldRemove = true;
                         reason = "marked for removal";
                     }
-
                     if (shouldRemove) {
                         spell.discard();
                         removedCount++;
                         System.out.println("Removed orphaned spell entity: " + reason);
                     }
+                } else if (entity instanceof AuraEntity aura) {
+                    // Only discard AuraEntity if not tied to an active PendingCast
+                    boolean isActive = PENDING.values().stream()
+                            .anyMatch(pending -> pending.aura != null && pending.aura.equals(aura));
+                    if (!isActive) {
+                        aura.discard();
+                        removedCount++;
+                        System.out.println("Removed orphaned AuraEntity: " + aura.getType().getDescriptionId());
+                    }
+                } else if (entity instanceof MagicCircleEntity circle) {
+                    // Only discard MagicCircleEntity if not tied to an active PendingCast
+                    boolean isActive = PENDING.values().stream()
+                            .anyMatch(pending -> pending.circle != null && pending.circle.equals(circle));
+                    if (!isActive) {
+                        circle.discard();
+                        removedCount++;
+                        System.out.println("Removed orphaned MagicCircleEntity: " + circle.getType().getDescriptionId());
+                    }
                 }
             }
         }
 
+        if (PENDING.size() > 10) { // Arbitrary limit, adjust as needed
+            cancelCast(PENDING.keySet().iterator().next());
+            System.out.println("Removed oldest cast due to entity limit");
+        }
+
         if (removedCount > 0) {
-            System.out.println("Cleanup removed " + removedCount + " orphaned spell entities");
+            System.out.println("Cleanup removed " + removedCount + " orphaned entities");
         }
     }
 
@@ -247,16 +335,25 @@ public class CastScheduler {
         long currentTime = System.currentTimeMillis();
         int removedCount = 0;
 
-        Iterator<Map.Entry<UUID, PendingCast>> iterator = PENDING.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<UUID, PendingCast> entry = iterator.next();
-            PendingCast cast = entry.getValue();
+        synchronized (PENDING) {
+            Iterator<Map.Entry<UUID, PendingCast>> iterator = PENDING.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<UUID, PendingCast> entry = iterator.next();
+                PendingCast cast = entry.getValue();
 
-            // Remove casts that have been pending for more than 30 seconds
-            if (currentTime - cast.scheduleTime > 30000) {
-                iterator.remove();
-                removedCount++;
-                System.out.println("Removed stale cast for player: " + cast.playerId);
+                if (currentTime - cast.scheduleTime > 30000) {
+                    if (cast.aura != null) {
+                        cast.aura.discard();
+                        System.out.println("Discarded stale AuraEntity for player: " + cast.playerId);
+                    }
+                    if (cast.circle != null) {
+                        cast.circle.discard();
+                        System.out.println("Discarded stale MagicCircleEntity for player: " + cast.playerId);
+                    }
+                    iterator.remove();
+                    removedCount++;
+                    System.out.println("Removed stale cast for player: " + cast.playerId);
+                }
             }
         }
 
@@ -265,12 +362,10 @@ public class CastScheduler {
         }
     }
 
-    /** Debug method to get pending cast count */
     public static int getPendingCastCount() {
         return PENDING.size();
     }
 
-    /** Debug method to clear all pending casts */
     public static void clearAllPendingCasts() {
         PENDING.clear();
         System.out.println("Cleared all pending casts");

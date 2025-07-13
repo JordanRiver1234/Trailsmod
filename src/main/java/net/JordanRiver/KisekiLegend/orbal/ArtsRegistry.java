@@ -35,8 +35,8 @@ public class ArtsRegistry {
             new ArtDefinition("Stone Hammer", Map.of("earth", 1), "10 EP", "1 AT", "10", SpawnStyle.PROJECTILE,"Earth - Single - Attack"),
             new ArtDefinition("Earth Lance", Map.of("earth", 5), "20 EP", "1 AT", "50", SpawnStyle.GROUND, "Earth - Single - Attack"),
             new ArtDefinition("Petrify Breath", Map.of("earth", 3), "30 EP", "1 AT", "20", SpawnStyle.PROJECTILE,"Earth - Single - Attack [Petrify 20%]"),
-            new ArtDefinition("Stone Impact", Map.of("earth", 3, "space", 2), "250 EP", "5 AT", "10", SpawnStyle.PROJECTILE,"Earth - Area (M) - Attack"),
-            new ArtDefinition("Titanic Roar", Map.of("earth", 8, "space", 4), "450 EP", "10 AT", "30", SpawnStyle.PROJECTILE,"Earth - Area (All) - Attack"),
+            new ArtDefinition("Stone Impact", Map.of("earth", 3, "space", 2), "250 EP", "5 AT", "10", SpawnStyle.BOUNCING_PROJECTILE,"Earth - Area (M) - Attack"),
+            new ArtDefinition("Titanic Roar", Map.of("earth", 8, "space", 4), "450 EP", "10 AT", "30", SpawnStyle.AOE_CENTERED,"Earth - Area (All) - Attack"),
 
             // Water Attack Arts
             new ArtDefinition("Aqua Bleed", Map.of("water", 1), "10 EP", "1 AT", "10", SpawnStyle.PROJECTILE,"Water - Single - Attack"),
