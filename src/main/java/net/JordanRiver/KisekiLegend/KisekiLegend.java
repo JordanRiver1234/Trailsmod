@@ -149,7 +149,9 @@ public class KisekiLegend {
 
             MinecraftForge.EVENT_BUS.register(ArtInputHandler.class);
 
-
+            event.enqueueWork(() -> {
+                GeoItemRenderer.registerRendererFor(ModItems.ORBMENT_ITEM.get(), OrbmentItemRenderer::new);
+            });
 
 
 

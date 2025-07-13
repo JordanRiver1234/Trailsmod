@@ -100,18 +100,6 @@ public class OrbmentItem extends Item implements GeoItem {
         return cache;
     }
 
-    public static ItemStack createOrbmentStack() {
-        ItemStack stack = new ItemStack(ModItems.ORBMENT_ITEM.get());
-        stack.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(1));
-        return stack;
-    }
-
-    @Override
-    public void onCraftedBy(ItemStack stack, Level level, Player player) {
-        stack.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(1));
-        super.onCraftedBy(stack, level, player);
-    }
-
 
 
 
