@@ -96,18 +96,8 @@ public class OrbmentItem extends Item implements GeoItem {
 
     @Override
     public void onCraftedBy(ItemStack stack, Level level, Player player) {
-        // Only set custom model data when in hand/world, not in GUI
-        if (shouldUse3DModel(stack)) {
-            stack.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(1));
-        }
+        // Don't automatically set custom model data here - let the handler manage it
         super.onCraftedBy(stack, level, player);
-    }
-
-    // Helper method to determine if we should use 3D model
-    private boolean shouldUse3DModel(ItemStack stack) {
-        // You can add more logic here if needed
-        // For now, we'll rely on the model override system
-        return true;
     }
 
     // Create stack with 3D model for hand rendering
@@ -117,7 +107,7 @@ public class OrbmentItem extends Item implements GeoItem {
         return stack;
     }
 
-    // Create stack with 2D model for GUI
+    // Create stack with 2D model for GUI/hotbar
     public static ItemStack get2DStack() {
         ItemStack stack = new ItemStack(ModItems.ORBMENT_ITEM.get());
         // Don't set custom model data - uses default 2D model
