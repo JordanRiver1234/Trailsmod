@@ -93,7 +93,20 @@ public class OrbmentItem extends Item implements GeoItem {
             }
         });
     }
+    // Add this method to your OrbmentItem class
+    @Override
+    public void onCraftedBy(ItemStack stack, Level level, Player player) {
+        // Set CustomModelData to 1 to trigger the 3D model override
+        stack.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(1));
+        super.onCraftedBy(stack, level, player);
+    }
 
+    // Also add this method to ensure newly created stacks get the 3D model
+    public static ItemStack getDefaultStack() {
+        ItemStack stack = new ItemStack(ModItems.ORBMENT_ITEM.get());
+        stack.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(1));
+        return stack;
+    }
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() {
         return cache;

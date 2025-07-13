@@ -2,19 +2,18 @@ package net.JordanRiver.KisekiLegend.client;
 
 import net.JordanRiver.KisekiLegend.KisekiLegend;
 import net.JordanRiver.KisekiLegend.client.renderer.item.OrbmentItemRenderer;
+import net.JordanRiver.KisekiLegend.items.OrbmentItem;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.component.CustomModelData;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.common.Mod;
 import net.JordanRiver.KisekiLegend.item.ModItems;
-
-import software.bernie.geckolib.renderer.GeoItemRenderer;
-
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import org.lwjgl.glfw.GLFW;
-
 
 @Mod.EventBusSubscriber(
         modid = KisekiLegend.MOD_ID,
@@ -26,7 +25,6 @@ public class ClientSetup {
     public static final KeyMapping TOGGLE_ART_SELECT;
     public static final KeyMapping ART_NEXT;
     public static final KeyMapping ART_PREV;
-
 
     static {
         TOGGLE_EP_HUD = new KeyMapping("key.kisekilegend.toggle_ep", GLFW.GLFW_KEY_P, "key.categories.kisekilegend");
@@ -45,27 +43,18 @@ public class ClientSetup {
 
     @SubscribeEvent
     public static void onRegisterLayers(EntityRenderersEvent.RegisterLayerDefinitions event) {
-
+        // Register any layer definitions here if needed
     }
+
     @SubscribeEvent
-    public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
-        // This is how you register GeoItemRenderers now
+    public static void onClientSetup(FMLClientSetupEvent event) {
+        event.enqueueWork(() -> {
+            // Any client setup that needs to happen on the main thread
+        });
     }
-
-
-
-
-
-
-
-
-
 
     // For art selector + EP bar
     public static boolean showEP = true;
     public static boolean artSelectMode = false;
     public static int selectedArtIdx = 0;
-
-
 }
-
