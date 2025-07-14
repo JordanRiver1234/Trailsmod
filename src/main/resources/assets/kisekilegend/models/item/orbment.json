@@ -1,6 +1,5 @@
 {
-  "parent": "builtin/entity",
-  "textures": {
-    "layer0": "kisekilegend:item/orbment_icon"
-  }
+  "parent": "builtin/entity"
+
+
 }

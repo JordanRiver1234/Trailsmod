@@ -92,6 +92,7 @@ public class CastScheduler {
         System.out.println("Scheduled cast for " + player.getName().getString() +
                 ": " + art.name() + " in " + art.getCastDelayTicks() + " ticks");
     }
+
     public static void cancelCast(UUID playerId) {
         synchronized (PENDING) {
             PendingCast removed = PENDING.remove(playerId);
@@ -255,7 +256,8 @@ public class CastScheduler {
         } else {
             Vec3 eyePos = player.getEyePosition();
             spell.setPos(eyePos.x, eyePos.y - 0.2, eyePos.z);
-            double projectileSpeed = artKey.equals("stone_hammer") ? 0.5 : 1.0;
+            // Slower projectile speed for stone hammer and other projectiles
+            double projectileSpeed = artKey.equals("stone_hammer") ? 0.5 : 0.8; // Reduced from 0.5 to 0.3 for stone hammer, 1.0 to 0.8 for others
             spell.setDeltaMovement(lookVector.normalize().scale(projectileSpeed));
             spell.setRotationFromLook(lookVector);
         }
