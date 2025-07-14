@@ -18,7 +18,7 @@ import net.JordanRiver.KisekiLegend.item.ModItems;
 import net.JordanRiver.KisekiLegend.menu.ModMenuTypes;
 import net.minecraft.client.gui.screens.MenuScreens;
 
-
+import net.JordanRiver.KisekiLegend.client.MagicCircleRenderer;
 import net.JordanRiver.KisekiLegend.client.screen.OrbmentMachineScreen;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.entity.EntityRenderers;

@@ -65,6 +65,11 @@ public class AuraEntity extends Entity implements GeoEntity {
                         int groundY = level().getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int)owner.getX(), (int)owner.getZ());
                         setPos(owner.getX(), groundY + 0.1, owner.getZ());
                         setRot(owner.getYRot(), 0);
+
+                        // Add debug logging for client-side rendering
+                        if (tickCount % 20 == 0) { // Log every second
+                            System.out.println("Client AuraEntity tick - Position: " + position() + ", Owner: " + owner.getName().getString());
+                        }
                     }
                 } catch (IllegalArgumentException e) {
                     System.err.println("Invalid UUID string for AuraEntity: " + ownerUuidStr);
@@ -73,7 +78,7 @@ public class AuraEntity extends Entity implements GeoEntity {
             return;
         }
 
-        // Server side logic
+        // Server side logic remains the same...
         if (level() == null || isRemoved()) {
             return;
         }
