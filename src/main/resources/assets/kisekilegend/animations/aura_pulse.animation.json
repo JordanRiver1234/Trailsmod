@@ -3,23 +3,13 @@
 	"animations": {
 		"animation.kisekilegend.aura_pulse": {
 			"loop": true,
-			"animation_length": 1.0417,
+			"animation_length": 2.75,
 			"bones": {
 				"voxel_file": {
-					"rotation": {
-						"vector": ["math.sin(query.anim_time * 60) * 3", 0, "math.sin(query.anim_time * 120) * 5"]
-					},
-					"scale": {
-						"0.0": {
-							"vector": [1, 1, 1]
-						},
-						"0.25": {
-							"vector": [1, 1.4, 1]
-						}
-					}
+					"rotation": ["math.sin(query.anim_time * 60) * 3", 0, "math.sin(query.anim_time * 120) * 5"],
+					"position": [0, 12, 0]
 				}
 			}
 		}
-	},
-	"geckolib_format_version": 2
+	}
 }

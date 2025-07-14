@@ -43,14 +43,20 @@ public class ClientSetup {
         ev.register(ART_NEXT);
         ev.register(ART_PREV);
     }
+
     @SubscribeEvent
     public static void registerParticleProviders(RegisterParticleProvidersEvent event) {
         KisekiLegend.LOGGER.info("Registering particle providers...");
+        KisekiLegend.LOGGER.info("Particle type: " + ModParticles.BLUE_FLOW.get());
 
-        event.registerSpriteSet(ModParticles.BLUE_FLOW.get(), BlueFlowParticle.Provider::new);
-
-        KisekiLegend.LOGGER.info("Particle providers registered successfully");
+        try {
+            event.registerSpriteSet(ModParticles.BLUE_FLOW.get(), BlueFlowParticle.Provider::new);
+            KisekiLegend.LOGGER.info("Successfully registered BlueFlowParticle provider");
+        } catch (Exception e) {
+            KisekiLegend.LOGGER.error("Failed to register BlueFlowParticle provider", e);
+        }
     }
+
     @SubscribeEvent
     public static void onRegisterLayers(EntityRenderersEvent.RegisterLayerDefinitions event) {
         // Register any layer definitions here if needed
@@ -59,6 +65,7 @@ public class ClientSetup {
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
+            KisekiLegend.LOGGER.info("Client setup starting...");
             // Initialize GeckoLib item renderers
             initializeItemRenderers();
         });
@@ -66,7 +73,7 @@ public class ClientSetup {
 
     private static void initializeItemRenderers() {
         // This ensures the renderer is properly initialized
-        System.out.println("Initializing GeckoLib item renderers...");
+        KisekiLegend.LOGGER.info("Initializing GeckoLib item renderers...");
     }
 
     // For art selector + EP bar
