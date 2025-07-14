@@ -122,23 +122,24 @@ public class KisekiLegend {
 
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
-            // Register GUIs
-            MenuScreens.register(ModMenuTypes.ORBMENT_MACHINE.get(), OrbmentMachineScreen::new);
-            MenuScreens.register(ModMenuTypes.ORBMENT_MENU.get(), OrbmentScreen::new);
+            event.enqueueWork(() -> {
+                // Register GUIs
+                MenuScreens.register(ModMenuTypes.ORBMENT_MACHINE.get(), OrbmentMachineScreen::new);
+                MenuScreens.register(ModMenuTypes.ORBMENT_MENU.get(), OrbmentScreen::new);
 
-            // Register Block Entity Renderers
-            BlockEntityRenderers.register(ModBlockEntities.ORBMENT_MACHINE.get(), OrbmentMachineRenderer::new);
+                // Register Block Entity Renderers
+                BlockEntityRenderers.register(ModBlockEntities.ORBMENT_MACHINE.get(), OrbmentMachineRenderer::new);
 
-            // Register Entity Renderers
-            EntityRenderers.register(ModEntities.AURA_ENTITY.get(), AuraRenderer::new);
-            EntityRenderers.register(ModEntities.MAGIC_CIRCLE_ENTITY.get(), MagicCircleRenderer::new);
+                // Register Entity Renderers - CRITICAL: This must be in enqueueWork!
+                EntityRenderers.register(ModEntities.AURA_ENTITY.get(), AuraRenderer::new);
+                EntityRenderers.register(ModEntities.MAGIC_CIRCLE_ENTITY.get(), MagicCircleRenderer::new);
 
-            // Register input handler
+                LOGGER.info("Registered AuraRenderer for: " + ModEntities.AURA_ENTITY.get().getDescriptionId());
+                LOGGER.info("Registered MagicCircleRenderer for: " + ModEntities.MAGIC_CIRCLE_ENTITY.get().getDescriptionId());
+            });
+
+            // Register input handler (this can be outside enqueueWork)
             MinecraftForge.EVENT_BUS.register(ArtInputHandler.class);
-
-            // Note: GeoItemRenderer registration is now handled in the item's initializeClient method
-            // No need to register it here anymore in 1.21.1 with GeckoLib 4.7.6
-
         }
     }
 }

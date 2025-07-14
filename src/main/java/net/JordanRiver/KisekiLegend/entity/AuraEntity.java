@@ -32,16 +32,18 @@ public class AuraEntity extends Entity implements GeoEntity {
         this.entityData.set(OWNER_UUID, player.getUUID().toString());
         int groundY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int)player.getX(), (int)player.getZ());
         setPos(player.getX(), groundY, player.getZ());
+        System.out.println("AuraEntity created for player: " + player.getName().getString() + " at " + this.position());
     }
+
     public AuraEntity(Level level, double x, double y, double z) {
         super(ModEntities.AURA_ENTITY.get(), level);
         this.setPos(x, y, z);
     }
+
     public UUID getOwnerUUID() {
         String str = this.getEntityData().get(OWNER_UUID);
         return str.isEmpty() ? null : UUID.fromString(str);
     }
-
 
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
@@ -56,12 +58,16 @@ public class AuraEntity extends Entity implements GeoEntity {
             // On client side, just update position to follow owner
             String ownerUuidStr = entityData.get(OWNER_UUID);
             if (!ownerUuidStr.isEmpty()) {
-                UUID ownerUuid = UUID.fromString(ownerUuidStr);
-                Player owner = level().getPlayerByUUID(ownerUuid);
-                if (owner != null) {
-                    int groundY = level().getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int)owner.getX(), (int)owner.getZ());
-                    setPos(owner.getX(), groundY, owner.getZ());
-                    setRot(owner.getYRot(), 0);
+                try {
+                    UUID ownerUuid = UUID.fromString(ownerUuidStr);
+                    Player owner = level().getPlayerByUUID(ownerUuid);
+                    if (owner != null) {
+                        int groundY = level().getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int)owner.getX(), (int)owner.getZ());
+                        setPos(owner.getX(), groundY + 0.1, owner.getZ());
+                        setRot(owner.getYRot(), 0);
+                    }
+                } catch (IllegalArgumentException e) {
+                    System.err.println("Invalid UUID string for AuraEntity: " + ownerUuidStr);
                 }
             }
             return;
@@ -77,6 +83,7 @@ public class AuraEntity extends Entity implements GeoEntity {
         Player owner = ownerUuid != null ? level().getPlayerByUUID(ownerUuid) : null;
 
         if (owner == null || !CastScheduler.hasPendingCast(ownerUuid)) {
+            System.out.println("AuraEntity discarding - owner: " + (owner != null) + ", hasPendingCast: " + (ownerUuid != null && CastScheduler.hasPendingCast(ownerUuid)));
             discard();
             return;
         }
@@ -115,5 +122,14 @@ public class AuraEntity extends Entity implements GeoEntity {
     @Override
     protected void addAdditionalSaveData(net.minecraft.nbt.CompoundTag tag) {
         tag.putString("OwnerUUID", entityData.get(OWNER_UUID));
+    }
+
+    // Add this method to ensure proper spawning
+    @Override
+    public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
+        super.onSyncedDataUpdated(key);
+        if (OWNER_UUID.equals(key)) {
+            System.out.println("AuraEntity owner UUID synced: " + entityData.get(OWNER_UUID));
+        }
     }
 }

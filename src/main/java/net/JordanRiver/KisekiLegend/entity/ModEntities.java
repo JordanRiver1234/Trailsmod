@@ -24,17 +24,18 @@ public class ModEntities {
     public static final RegistryObject<EntityType<AuraEntity>> AURA_ENTITY = ENTITIES.register("aura_entity",
             () -> EntityType.Builder.<AuraEntity>of(AuraEntity::new, MobCategory.MISC)
                     .sized(1.0f, 1.0f)
-                    .clientTrackingRange(10)
+                    .clientTrackingRange(32) // Increased tracking range
                     .updateInterval(1)
+                    .setShouldReceiveVelocityUpdates(false) // Aura doesn't need velocity updates
                     .build(ResourceLocation.fromNamespaceAndPath(KisekiLegend.MOD_ID, "aura_entity").toString()));
 
     public static final RegistryObject<EntityType<MagicCircleEntity>> MAGIC_CIRCLE_ENTITY = ENTITIES.register("magic_circle_entity",
             () -> EntityType.Builder.<MagicCircleEntity>of(MagicCircleEntity::new, MobCategory.MISC)
                     .sized(2.0f, 0.1f)
-                    .clientTrackingRange(10)
+                    .clientTrackingRange(32) // Increased tracking range
                     .updateInterval(1)
+                    .setShouldReceiveVelocityUpdates(false) // Magic circle doesn't need velocity updates
                     .build(ResourceLocation.fromNamespaceAndPath(KisekiLegend.MOD_ID, "magic_circle_entity").toString()));
-
 
     public static void register(IEventBus bus) {
         ENTITIES.register(bus);

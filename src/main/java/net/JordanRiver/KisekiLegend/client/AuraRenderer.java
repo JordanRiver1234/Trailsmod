@@ -39,4 +39,5 @@ public class AuraRenderer extends GeoEntityRenderer<AuraEntity> {
         super.render(entity, entityYaw, partialTicks, poseStack, bufferSource, packedLight);
         LOGGER.debug("Finished rendering AuraEntity {}", entity.getId());
     }
+
 }
