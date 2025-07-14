@@ -31,7 +31,7 @@ public class AuraEntity extends Entity implements GeoEntity {
         this(ModEntities.AURA_ENTITY.get(), level);
         this.entityData.set(OWNER_UUID, player.getUUID().toString());
         int groundY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int)player.getX(), (int)player.getZ());
-        setPos(player.getX(), groundY, player.getZ());
+        setPos(player.getX(), groundY + 0.1, player.getZ());
         System.out.println("AuraEntity created for player: " + player.getName().getString() + " at " + this.position());
     }
 
@@ -55,21 +55,16 @@ public class AuraEntity extends Entity implements GeoEntity {
         super.tick();
 
         if (level().isClientSide) {
-            // On client side, just update position to follow owner
+            // Client-side: Just follow the owner without expensive calculations
             String ownerUuidStr = entityData.get(OWNER_UUID);
             if (!ownerUuidStr.isEmpty()) {
                 try {
                     UUID ownerUuid = UUID.fromString(ownerUuidStr);
                     Player owner = level().getPlayerByUUID(ownerUuid);
                     if (owner != null) {
-                        int groundY = level().getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int)owner.getX(), (int)owner.getZ());
-                        setPos(owner.getX(), groundY + 0.1, owner.getZ());
+                        // Simple position following on client
+                        setPos(owner.getX(), owner.getY(), owner.getZ());
                         setRot(owner.getYRot(), 0);
-
-                        // Add debug logging for client-side rendering
-                        if (tickCount % 20 == 0) { // Log every second
-                            System.out.println("Client AuraEntity tick - Position: " + position() + ", Owner: " + owner.getName().getString());
-                        }
                     }
                 } catch (IllegalArgumentException e) {
                     System.err.println("Invalid UUID string for AuraEntity: " + ownerUuidStr);
@@ -78,7 +73,7 @@ public class AuraEntity extends Entity implements GeoEntity {
             return;
         }
 
-        // Server side logic remains the same...
+        // Server side logic
         if (level() == null || isRemoved()) {
             return;
         }
@@ -93,13 +88,18 @@ public class AuraEntity extends Entity implements GeoEntity {
             return;
         }
 
-        // Update position to follow owner
+        // Update position to follow owner (server authoritative)
         double ownerX = owner.getX();
         double ownerZ = owner.getZ();
         if (!Double.isNaN(ownerX) && !Double.isNaN(ownerZ)) {
             int groundY = level().getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int)ownerX, (int)ownerZ);
             setPos(owner.getX(), groundY + 0.1, owner.getZ());
             setRot(owner.getYRot(), 0);
+
+            // Force synchronization to client
+            if (tickCount % 5 == 0) { // Sync every 5 ticks
+                level().broadcastEntityEvent(this, (byte) 1);
+            }
         }
     }
 
@@ -129,12 +129,22 @@ public class AuraEntity extends Entity implements GeoEntity {
         tag.putString("OwnerUUID", entityData.get(OWNER_UUID));
     }
 
-    // Add this method to ensure proper spawning
     @Override
     public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
         super.onSyncedDataUpdated(key);
         if (OWNER_UUID.equals(key)) {
             System.out.println("AuraEntity owner UUID synced: " + entityData.get(OWNER_UUID));
         }
+    }
+
+    // Add visibility and culling methods
+    @Override
+    public boolean shouldRenderAtSqrDistance(double distance) {
+        return distance < 4096.0; // Render within 64 blocks
+    }
+
+    @Override
+    public boolean isPickable() {
+        return false;
     }
 }

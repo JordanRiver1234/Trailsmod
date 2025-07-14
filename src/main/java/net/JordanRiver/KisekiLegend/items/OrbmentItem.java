@@ -31,7 +31,7 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 import java.util.function.Consumer;
 
 public class OrbmentItem extends Item implements GeoItem {
-    private static final RawAnimation CAST_ANIM = RawAnimation.begin().then("cast", Animation.LoopType.LOOP);
+    private static final RawAnimation CAST_ANIM = RawAnimation.begin().then("cast", Animation.LoopType.PLAY_ONCE);
     private static final RawAnimation IDLE_ANIM = RawAnimation.begin().then("idle", Animation.LoopType.LOOP);
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
@@ -51,8 +51,14 @@ public class OrbmentItem extends Item implements GeoItem {
         if (target.getType() == HitResult.Type.MISS) {  // Air click
             if (player.isShiftKeyDown()) {  // Shift-right-click: Trigger spell casting animation
                 if (level instanceof ServerLevel serverLevel) {
-                    // Trigger animation server-side (syncs to client)
-                    triggerAnim(player, GeoItem.getOrAssignId(stack, serverLevel), "cast_controller", "cast");
+                    // Get or assign ID first, then trigger animation
+                    long id = GeoItem.getOrAssignId(stack, serverLevel);
+                    System.out.println("Triggering animation for orbment ID: " + id);
+
+                    // Small delay to ensure entity sync
+                    serverLevel.getServer().execute(() -> {
+                        triggerAnim(player, id, "cast_controller", "cast");
+                    });
                 }
                 return InteractionResultHolder.success(stack);
             } else {  // Non-shift air click: Open menu
@@ -70,7 +76,11 @@ public class OrbmentItem extends Item implements GeoItem {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "cast_controller", 0, state -> PlayState.STOP)
+        controllers.add(new AnimationController<>(this, "cast_controller", 0, state -> {
+            // Default to idle animation
+            state.getController().setAnimation(IDLE_ANIM);
+            return PlayState.CONTINUE;
+        })
                 .triggerableAnim("cast", CAST_ANIM)
                 .triggerableAnim("idle", IDLE_ANIM));
     }

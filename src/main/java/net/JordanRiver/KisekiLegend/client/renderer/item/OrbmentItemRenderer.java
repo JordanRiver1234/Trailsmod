@@ -33,7 +33,7 @@ public class OrbmentItemRenderer extends GeoItemRenderer<OrbmentItem> {
         switch (context) {
             case GUI -> {
                 // Increased scale for hotbar/GUI - adjust these values as needed
-                poseStack.scale(1.8f, 1.8f, 1.8f);
+                poseStack.scale(1.5f, 1.5f, 1.5f);
 
                 // Rotate for GUI context (side-to-side rotation)
                 poseStack.mulPose(com.mojang.math.Axis.YP.rotationDegrees(90.0f));

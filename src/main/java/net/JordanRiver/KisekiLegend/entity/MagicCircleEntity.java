@@ -32,12 +32,13 @@ public class MagicCircleEntity extends Entity implements GeoEntity {
         this.entityData.set(OWNER_UUID, player.getUUID().toString());
         int groundY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int)player.getX(), (int)player.getZ());
         setPos(player.getX(), groundY, player.getZ());
+        System.out.println("MagicCircleEntity created for player: " + player.getName().getString() + " at " + this.position());
     }
+
     public MagicCircleEntity(Level level, double x, double y, double z) {
         super(ModEntities.MAGIC_CIRCLE_ENTITY.get(), level);
         this.setPos(x, y, z);
     }
-
 
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
@@ -49,15 +50,19 @@ public class MagicCircleEntity extends Entity implements GeoEntity {
         super.tick();
 
         if (level().isClientSide) {
-            // On client side, just update position to follow owner
+            // Client-side: Just follow the owner without expensive calculations
             String ownerUuidStr = entityData.get(OWNER_UUID);
             if (!ownerUuidStr.isEmpty()) {
-                UUID ownerUuid = UUID.fromString(ownerUuidStr);
-                Player owner = level().getPlayerByUUID(ownerUuid);
-                if (owner != null) {
-                    int groundY = level().getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int)owner.getX(), (int)owner.getZ());
-                    setPos(owner.getX(), groundY, owner.getZ());
-                    setRot(owner.getYRot(), 0);
+                try {
+                    UUID ownerUuid = UUID.fromString(ownerUuidStr);
+                    Player owner = level().getPlayerByUUID(ownerUuid);
+                    if (owner != null) {
+                        // Simple position following on client
+                        setPos(owner.getX(), owner.getY(), owner.getZ());
+                        setRot(owner.getYRot(), 0);
+                    }
+                } catch (IllegalArgumentException e) {
+                    System.err.println("Invalid UUID string for MagicCircleEntity: " + ownerUuidStr);
                 }
             }
             return;
@@ -73,14 +78,20 @@ public class MagicCircleEntity extends Entity implements GeoEntity {
         Player owner = ownerUuid != null ? level().getPlayerByUUID(ownerUuid) : null;
 
         if (owner == null || !CastScheduler.hasPendingCast(ownerUuid)) {
+            System.out.println("MagicCircleEntity discarding - owner: " + (owner != null) + ", hasPendingCast: " + (ownerUuid != null && CastScheduler.hasPendingCast(ownerUuid)));
             discard();
             return;
         }
 
-        // Update position to follow owner
+        // Update position to follow owner (server authoritative)
         int groundY = level().getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int)owner.getX(), (int)owner.getZ());
         setPos(owner.getX(), groundY, owner.getZ());
         setRot(owner.getYRot(), 0);
+
+        // Force synchronization to client
+        if (tickCount % 5 == 0) { // Sync every 5 ticks
+            level().broadcastEntityEvent(this, (byte) 1);
+        }
     }
 
     @Override
@@ -107,5 +118,16 @@ public class MagicCircleEntity extends Entity implements GeoEntity {
     @Override
     protected void addAdditionalSaveData(net.minecraft.nbt.CompoundTag tag) {
         tag.putString("OwnerUUID", entityData.get(OWNER_UUID));
+    }
+
+    // Add visibility and culling methods
+    @Override
+    public boolean shouldRenderAtSqrDistance(double distance) {
+        return distance < 4096.0; // Render within 64 blocks
+    }
+
+    @Override
+    public boolean isPickable() {
+        return false;
     }
 }
