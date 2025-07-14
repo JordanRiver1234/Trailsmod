@@ -1,113 +1,137 @@
 package net.JordanRiver.KisekiLegend.entity;
 
 import net.JordanRiver.KisekiLegend.KisekiLegend;
-import net.JordanRiver.KisekiLegend.client.CastScheduler;
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.EntityDataSerializers;
+import net.JordanRiver.KisekiLegend.particle.ModParticles;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.Vec3;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animatable.instance.SingletonAnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
+import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.UUID;
 
 public class AuraEntity extends Entity implements GeoEntity {
-    private static final EntityDataAccessor<String> OWNER_UUID = SynchedEntityData.defineId(AuraEntity.class, EntityDataSerializers.STRING);
-    private final AnimatableInstanceCache cache = new SingletonAnimatableInstanceCache(this);
+    private static final Logger LOGGER = LogManager.getLogger();
+    private static final RawAnimation PULSE_ANIM = RawAnimation.begin().then("pulse", Animation.LoopType.LOOP);
 
-    public AuraEntity(EntityType<? extends AuraEntity> type, Level level) {
-        super(type, level);
-        this.noCulling = true;
+    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+    private UUID ownerUUID;
+    private int lifespan = 0;
+    private static final int MAX_LIFESPAN = 200; // 10 seconds at 20 TPS
+
+    public AuraEntity(EntityType<? extends AuraEntity> entityType, Level level) {
+        super(entityType, level);
         this.setNoGravity(true);
+        LOGGER.info("AuraEntity created with EntityType: {}", entityType.getDescriptionId());
     }
 
-    public AuraEntity(Level level, Player player) {
+    public AuraEntity(ServerLevel level, Player owner) {
         this(ModEntities.AURA_ENTITY.get(), level);
-        this.entityData.set(OWNER_UUID, player.getUUID().toString());
-        int groundY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int)player.getX(), (int)player.getZ());
-        setPos(player.getX(), groundY + 0.1, player.getZ());
-        System.out.println("AuraEntity created for player: " + player.getName().getString() + " at " + this.position());
-    }
+        this.ownerUUID = owner.getUUID();
 
-    public AuraEntity(Level level, double x, double y, double z) {
-        super(ModEntities.AURA_ENTITY.get(), level);
-        this.setPos(x, y, z);
-    }
+        // Position the aura around the player's torso
+        Vec3 playerPos = owner.position();
+        this.setPos(playerPos.x, playerPos.y + 1.0, playerPos.z); // At chest level
+        this.setYRot(owner.getYRot());
+        this.setXRot(0);
 
-    public UUID getOwnerUUID() {
-        String str = this.getEntityData().get(OWNER_UUID);
-        return str.isEmpty() ? null : UUID.fromString(str);
-    }
-
-    @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        builder.define(OWNER_UUID, "");
+        LOGGER.info("AuraEntity positioned at: {} for owner: {}", this.position(), owner.getName().getString());
     }
 
     @Override
     public void tick() {
         super.tick();
 
-        if (level().isClientSide) {
-            // Client-side: Just follow the owner without expensive calculations
-            String ownerUuidStr = entityData.get(OWNER_UUID);
-            if (!ownerUuidStr.isEmpty()) {
-                try {
-                    UUID ownerUuid = UUID.fromString(ownerUuidStr);
-                    Player owner = level().getPlayerByUUID(ownerUuid);
-                    if (owner != null) {
-                        // Simple position following on client
-                        setPos(owner.getX(), owner.getY(), owner.getZ());
-                        setRot(owner.getYRot(), 0);
-                    }
-                } catch (IllegalArgumentException e) {
-                    System.err.println("Invalid UUID string for AuraEntity: " + ownerUuidStr);
+        lifespan++;
+
+        // Remove if too old or owner is gone
+        if (lifespan > MAX_LIFESPAN || (ownerUUID != null && level().getPlayerByUUID(ownerUUID) == null)) {
+            LOGGER.info("AuraEntity {} removing due to lifespan or missing owner", this.getId());
+            this.discard();
+            return;
+        }
+
+        // Keep the aura centered on the owner's torso
+        if (ownerUUID != null && level().getPlayerByUUID(ownerUUID) instanceof Player owner) {
+            Vec3 ownerPos = owner.position();
+            Vec3 targetPos = new Vec3(ownerPos.x, ownerPos.y + 1.0, ownerPos.z);
+            Vec3 currentPos = this.position();
+            Vec3 lerpedPos = currentPos.lerp(targetPos, 0.3); // Smooth following
+
+            this.setPos(lerpedPos.x, lerpedPos.y, lerpedPos.z);
+            this.setYRot(owner.getYRot());
+
+            // Spawn particles around the aura on server side
+            if (level() instanceof ServerLevel serverLevel) {
+                // Spawn particles in a circle around the aura
+                for (int i = 0; i < 3; i++) {
+                    double angle = (System.currentTimeMillis() / 500.0 + i * 2.0943951023931953) % (2 * Math.PI); // 120 degrees apart
+                    double radius = 0.8 + Math.sin(System.currentTimeMillis() / 1000.0) * 0.2; // Pulsing radius
+
+                    double offsetX = Math.cos(angle) * radius;
+                    double offsetZ = Math.sin(angle) * radius;
+                    double offsetY = Math.sin(System.currentTimeMillis() / 800.0) * 0.3; // Floating motion
+
+                    serverLevel.sendParticles(
+                            ModParticles.BLUE_FLOW.get(),
+                            lerpedPos.x + offsetX,
+                            lerpedPos.y + offsetY,
+                            lerpedPos.z + offsetZ,
+                            1,
+                            0.0, 0.05, 0.0,
+                            0.02
+                    );
                 }
-            }
-            return;
-        }
 
-        // Server side logic
-        if (level() == null || isRemoved()) {
-            return;
-        }
-
-        String ownerUuidStr = entityData.get(OWNER_UUID);
-        UUID ownerUuid = ownerUuidStr.isEmpty() ? null : UUID.fromString(ownerUuidStr);
-        Player owner = ownerUuid != null ? level().getPlayerByUUID(ownerUuid) : null;
-
-        if (owner == null || !CastScheduler.hasPendingCast(ownerUuid)) {
-            System.out.println("AuraEntity discarding - owner: " + (owner != null) + ", hasPendingCast: " + (ownerUuid != null && CastScheduler.hasPendingCast(ownerUuid)));
-            discard();
-            return;
-        }
-
-        // Update position to follow owner (server authoritative)
-        double ownerX = owner.getX();
-        double ownerZ = owner.getZ();
-        if (!Double.isNaN(ownerX) && !Double.isNaN(ownerZ)) {
-            int groundY = level().getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int)ownerX, (int)ownerZ);
-            setPos(owner.getX(), groundY + 0.1, owner.getZ());
-            setRot(owner.getYRot(), 0);
-
-            // Force synchronization to client
-            if (tickCount % 5 == 0) { // Sync every 5 ticks
-                level().broadcastEntityEvent(this, (byte) 1);
+                // Additional central particles
+                serverLevel.sendParticles(
+                        ModParticles.BLUE_FLOW.get(),
+                        lerpedPos.x,
+                        lerpedPos.y,
+                        lerpedPos.z,
+                        2,
+                        0.2, 0.2, 0.2,
+                        0.01
+                );
             }
         }
     }
 
     @Override
-    public void registerControllers(AnimatableManager.ControllerRegistrar regs) {
-        regs.add(new AnimationController<>(this, "auraController", 0, state -> {
-            state.getController().setAnimation(RawAnimation.begin()
-                    .then("animation.kisekilegend.aura_pulse", Animation.LoopType.LOOP));
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        // Empty implementation for 1.21.1 compatibility
+        // Add any synched data definitions here if needed
+    }
+
+    @Override
+    protected void readAdditionalSaveData(CompoundTag compound) {
+        if (compound.hasUUID("OwnerUUID")) {
+            this.ownerUUID = compound.getUUID("OwnerUUID");
+        }
+        this.lifespan = compound.getInt("Lifespan");
+    }
+
+    @Override
+    protected void addAdditionalSaveData(CompoundTag compound) {
+        if (this.ownerUUID != null) {
+            compound.putUUID("OwnerUUID", this.ownerUUID);
+        }
+        compound.putInt("Lifespan", this.lifespan);
+    }
+
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>(this, "aura_controller", 0, state -> {
+            state.getController().setAnimation(PULSE_ANIM);
             return PlayState.CONTINUE;
         }));
     }
@@ -117,34 +141,20 @@ public class AuraEntity extends Entity implements GeoEntity {
         return cache;
     }
 
-    @Override
-    protected void readAdditionalSaveData(net.minecraft.nbt.CompoundTag tag) {
-        if (tag.contains("OwnerUUID")) {
-            entityData.set(OWNER_UUID, tag.getString("OwnerUUID"));
-        }
+    public UUID getOwnerUUID() {
+        return ownerUUID;
+    }
+
+    public void setOwnerUUID(UUID ownerUUID) {
+        this.ownerUUID = ownerUUID;
+    }
+
+    public int getLifespan() {
+        return lifespan;
     }
 
     @Override
-    protected void addAdditionalSaveData(net.minecraft.nbt.CompoundTag tag) {
-        tag.putString("OwnerUUID", entityData.get(OWNER_UUID));
-    }
-
-    @Override
-    public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
-        super.onSyncedDataUpdated(key);
-        if (OWNER_UUID.equals(key)) {
-            System.out.println("AuraEntity owner UUID synced: " + entityData.get(OWNER_UUID));
-        }
-    }
-
-    // Add visibility and culling methods
-    @Override
-    public boolean shouldRenderAtSqrDistance(double distance) {
-        return distance < 4096.0; // Render within 64 blocks
-    }
-
-    @Override
-    public boolean isPickable() {
-        return false;
+    public boolean isAlive() {
+        return super.isAlive() && lifespan < MAX_LIFESPAN;
     }
 }

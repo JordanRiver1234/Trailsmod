@@ -3,11 +3,14 @@ package net.JordanRiver.KisekiLegend.client;
 import net.JordanRiver.KisekiLegend.KisekiLegend;
 import net.JordanRiver.KisekiLegend.client.renderer.item.OrbmentItemRenderer;
 import net.JordanRiver.KisekiLegend.items.OrbmentItem;
+import net.JordanRiver.KisekiLegend.particle.BlueFlowParticle;
+import net.JordanRiver.KisekiLegend.particle.ModParticles;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.component.CustomModelData;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
+import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.common.Mod;
@@ -40,7 +43,14 @@ public class ClientSetup {
         ev.register(ART_NEXT);
         ev.register(ART_PREV);
     }
+    @SubscribeEvent
+    public static void registerParticleProviders(RegisterParticleProvidersEvent event) {
+        KisekiLegend.LOGGER.info("Registering particle providers...");
 
+        event.registerSpriteSet(ModParticles.BLUE_FLOW.get(), BlueFlowParticle.Provider::new);
+
+        KisekiLegend.LOGGER.info("Particle providers registered successfully");
+    }
     @SubscribeEvent
     public static void onRegisterLayers(EntityRenderersEvent.RegisterLayerDefinitions event) {
         // Register any layer definitions here if needed

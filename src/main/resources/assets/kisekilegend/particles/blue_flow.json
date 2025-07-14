@@ -1,5 +1,8 @@
 {
   "textures": [
-    "kisekilegend:particle/blue_flow"
+    "kisekilegend:particle/blue_flow_0",
+    "kisekilegend:particle/blue_flow_1",
+    "kisekilegend:particle/blue_flow_2",
+    "kisekilegend:particle/blue_flow_3"
   ]
 }

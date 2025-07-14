@@ -1,104 +1,108 @@
 package net.JordanRiver.KisekiLegend.entity;
 
 import net.JordanRiver.KisekiLegend.KisekiLegend;
-import net.JordanRiver.KisekiLegend.client.CastScheduler;
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.Vec3;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animatable.instance.SingletonAnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
+import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.UUID;
 
 public class MagicCircleEntity extends Entity implements GeoEntity {
-    private static final EntityDataAccessor<String> OWNER_UUID = SynchedEntityData.defineId(MagicCircleEntity.class, EntityDataSerializers.STRING);
-    private final AnimatableInstanceCache cache = new SingletonAnimatableInstanceCache(this);
+    private static final Logger LOGGER = LogManager.getLogger();
+    private static final RawAnimation CAST_ANIM = RawAnimation.begin().then("cast", Animation.LoopType.LOOP);
 
-    public MagicCircleEntity(EntityType<? extends MagicCircleEntity> type, Level level) {
-        super(type, level);
-        this.noCulling = true;
+    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+    private UUID ownerUUID;
+    private int lifespan = 0;
+    private static final int MAX_LIFESPAN = 200; // 10 seconds at 20 TPS
+
+    public MagicCircleEntity(EntityType<? extends MagicCircleEntity> entityType, Level level) {
+        super(entityType, level);
         this.setNoGravity(true);
+        LOGGER.info("MagicCircleEntity created with EntityType: {}", entityType.getDescriptionId());
     }
 
-    public MagicCircleEntity(Level level, Player player) {
+    public MagicCircleEntity(ServerLevel level, Player owner) {
         this(ModEntities.MAGIC_CIRCLE_ENTITY.get(), level);
-        this.entityData.set(OWNER_UUID, player.getUUID().toString());
-        int groundY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int)player.getX(), (int)player.getZ());
-        setPos(player.getX(), groundY, player.getZ());
-        System.out.println("MagicCircleEntity created for player: " + player.getName().getString() + " at " + this.position());
-    }
+        this.ownerUUID = owner.getUUID();
 
-    public MagicCircleEntity(Level level, double x, double y, double z) {
-        super(ModEntities.MAGIC_CIRCLE_ENTITY.get(), level);
-        this.setPos(x, y, z);
-    }
+        // Position the magic circle at the player's feet, centered on the ground
+        Vec3 playerPos = owner.position();
+        double groundY = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                (int) playerPos.x, (int) playerPos.z);
 
-    @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        builder.define(OWNER_UUID, "");
+        this.setPos(playerPos.x, groundY + 0.1, playerPos.z); // Slightly above ground to avoid z-fighting
+        this.setYRot(0); // Always face north for consistency
+        this.setXRot(0); // Flat on the ground
+
+        LOGGER.info("MagicCircleEntity positioned at: {} for owner: {}", this.position(), owner.getName().getString());
     }
 
     @Override
     public void tick() {
         super.tick();
 
-        if (level().isClientSide) {
-            // Client-side: Just follow the owner without expensive calculations
-            String ownerUuidStr = entityData.get(OWNER_UUID);
-            if (!ownerUuidStr.isEmpty()) {
-                try {
-                    UUID ownerUuid = UUID.fromString(ownerUuidStr);
-                    Player owner = level().getPlayerByUUID(ownerUuid);
-                    if (owner != null) {
-                        // Simple position following on client
-                        setPos(owner.getX(), owner.getY(), owner.getZ());
-                        setRot(owner.getYRot(), 0);
-                    }
-                } catch (IllegalArgumentException e) {
-                    System.err.println("Invalid UUID string for MagicCircleEntity: " + ownerUuidStr);
-                }
-            }
+        lifespan++;
+
+        // Remove if too old or owner is gone
+        if (lifespan > MAX_LIFESPAN || (ownerUUID != null && level().getPlayerByUUID(ownerUUID) == null)) {
+            LOGGER.info("MagicCircleEntity {} removing due to lifespan or missing owner", this.getId());
+            this.discard();
             return;
         }
 
-        // Server side logic
-        if (level() == null || isRemoved()) {
-            return;
-        }
+        // Keep the circle centered on the owner's feet
+        if (ownerUUID != null && level().getPlayerByUUID(ownerUUID) instanceof Player owner) {
+            Vec3 ownerPos = owner.position();
+            double groundY = level().getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                    (int) ownerPos.x, (int) ownerPos.z);
 
-        String ownerUuidStr = entityData.get(OWNER_UUID);
-        UUID ownerUuid = ownerUuidStr.isEmpty() ? null : UUID.fromString(ownerUuidStr);
-        Player owner = ownerUuid != null ? level().getPlayerByUUID(ownerUuid) : null;
+            // Smoothly move the circle to follow the player
+            Vec3 targetPos = new Vec3(ownerPos.x, groundY + 0.1, ownerPos.z);
+            Vec3 currentPos = this.position();
+            Vec3 lerpedPos = currentPos.lerp(targetPos, 0.2); // Smooth following
 
-        if (owner == null || !CastScheduler.hasPendingCast(ownerUuid)) {
-            System.out.println("MagicCircleEntity discarding - owner: " + (owner != null) + ", hasPendingCast: " + (ownerUuid != null && CastScheduler.hasPendingCast(ownerUuid)));
-            discard();
-            return;
-        }
-
-        // Update position to follow owner (server authoritative)
-        int groundY = level().getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int)owner.getX(), (int)owner.getZ());
-        setPos(owner.getX(), groundY, owner.getZ());
-        setRot(owner.getYRot(), 0);
-
-        // Force synchronization to client
-        if (tickCount % 5 == 0) { // Sync every 5 ticks
-            level().broadcastEntityEvent(this, (byte) 1);
+            this.setPos(lerpedPos.x, lerpedPos.y, lerpedPos.z);
         }
     }
 
     @Override
-    public void registerControllers(AnimatableManager.ControllerRegistrar regs) {
-        regs.add(new AnimationController<>(this, "circleController", 0, state -> {
-            state.getController().setAnimation(RawAnimation.begin()
-                    .then("animation.kisekilegend.magic_circle", Animation.LoopType.LOOP));
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        // Empty implementation for 1.21.1 compatibility
+        // Add any synched data definitions here if needed
+    }
+
+    @Override
+    protected void readAdditionalSaveData(CompoundTag compound) {
+        if (compound.hasUUID("OwnerUUID")) {
+            this.ownerUUID = compound.getUUID("OwnerUUID");
+        }
+        this.lifespan = compound.getInt("Lifespan");
+    }
+
+    @Override
+    protected void addAdditionalSaveData(CompoundTag compound) {
+        if (this.ownerUUID != null) {
+            compound.putUUID("OwnerUUID", this.ownerUUID);
+        }
+        compound.putInt("Lifespan", this.lifespan);
+    }
+
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>(this, "magic_circle_controller", 0, state -> {
+            state.getController().setAnimation(CAST_ANIM);
             return PlayState.CONTINUE;
         }));
     }
@@ -108,26 +112,20 @@ public class MagicCircleEntity extends Entity implements GeoEntity {
         return cache;
     }
 
-    @Override
-    protected void readAdditionalSaveData(net.minecraft.nbt.CompoundTag tag) {
-        if (tag.contains("OwnerUUID")) {
-            entityData.set(OWNER_UUID, tag.getString("OwnerUUID"));
-        }
+    public UUID getOwnerUUID() {
+        return ownerUUID;
+    }
+
+    public void setOwnerUUID(UUID ownerUUID) {
+        this.ownerUUID = ownerUUID;
+    }
+
+    public int getLifespan() {
+        return lifespan;
     }
 
     @Override
-    protected void addAdditionalSaveData(net.minecraft.nbt.CompoundTag tag) {
-        tag.putString("OwnerUUID", entityData.get(OWNER_UUID));
-    }
-
-    // Add visibility and culling methods
-    @Override
-    public boolean shouldRenderAtSqrDistance(double distance) {
-        return distance < 4096.0; // Render within 64 blocks
-    }
-
-    @Override
-    public boolean isPickable() {
-        return false;
+    public boolean isAlive() {
+        return super.isAlive() && lifespan < MAX_LIFESPAN;
     }
 }
