@@ -7,9 +7,20 @@
 			"bones": {
 				"voxel_file": {
 					"rotation": ["math.sin(query.anim_time * 60) * 3", 0, "math.sin(query.anim_time * 120) * 5"],
-					"position": [0, 12, 0]
+					"position": [0, -5, 0]
+				}
+			}
+		},
+		"pulse": {
+			"loop": true,
+			"animation_length": 2.75,
+			"bones": {
+				"voxel_file": {
+					"rotation": ["math.sin(query.anim_time * 60) * 3", 0, "math.sin(query.anim_time * 120) * 5"],
+					"position": [0, -5, 0]
 				}
 			}
 		}
-	}
+	},
+	"geckolib_format_version": 2
 }

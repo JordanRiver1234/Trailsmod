@@ -131,7 +131,9 @@ public class AuraEntity extends Entity implements GeoEntity {
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
         controllers.add(new AnimationController<>(this, "aura_controller", 0, state -> {
+            // Force the animation to play
             state.getController().setAnimation(PULSE_ANIM);
+            LOGGER.debug("Setting pulse animation for AuraEntity {}", this.getId());
             return PlayState.CONTINUE;
         }));
     }
@@ -156,5 +158,12 @@ public class AuraEntity extends Entity implements GeoEntity {
     @Override
     public boolean isAlive() {
         return super.isAlive() && lifespan < MAX_LIFESPAN;
+    }
+
+    // Trigger animations manually for debugging
+    public void triggerAnimations() {
+        if (level().isClientSide()) {
+            this.triggerAnim("aura_controller", "pulse");
+        }
     }
 }
