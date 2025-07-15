@@ -80,10 +80,9 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
         if (artDef != null) {
             this.maxLifetimeTicks = artDef.style() == SpawnStyle.GROUND ? 80 : 120; // 4s ground, 6s projectile
         }
-        // Special positioning for petrify breath
-        if ("petrify_breath".equals(artName) && shooter instanceof Player player) {
-            positionPetrifyBreath(player);
-        }
+
+        // Remove the special positioning for petrify breath from constructor
+        // This will now be handled in the CastScheduler
     }
 
     @Override
@@ -233,33 +232,42 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
             deathTimer = 0;
 
             if (getArtName().equals("earth_lance")) {
-                // For earth_lance, damage in a straight line
-                Vec3 direction = Vec3.directionFromRotation(0, getYRot()).normalize();
+                // For earth_lance, damage in a straight line based on the entity's rotation
+                // FIXED: Convert yaw to radians and use proper direction calculation
+                float yawRad = (float) Math.toRadians(getYRot());
+                Vec3 direction = new Vec3(-Math.sin(yawRad), 0, Math.cos(yawRad)).normalize();
+
                 double lineLength = 5.0;
-                double lineWidth = 1.5; // Half-width for the box
+                double lineWidth = 1.0; // Half-width for the damage box
 
                 Vec3 start = position();
                 Vec3 end = start.add(direction.scale(lineLength));
 
-                // Create a thin long AABB along the line
-                AABB lineBox = new AABB(
-                        Math.min(start.x, end.x) - lineWidth,
-                        Math.min(start.y, end.y) - lineWidth,
-                        Math.min(start.z, end.z) - lineWidth,
-                        Math.max(start.x, end.x) + lineWidth,
-                        Math.max(start.y, end.y) + lineWidth,
-                        Math.max(start.z, end.z) + lineWidth
-                );
+                // Create multiple damage points along the line for better hit detection
+                for (int i = 0; i <= 10; i++) {
+                    double t = i / 10.0;
+                    Vec3 checkPoint = start.add(direction.scale(lineLength * t));
 
-                level().getEntities(this, lineBox).stream()
-                        .filter(entity -> entity instanceof LivingEntity target &&
-                                !target.getUUID().equals(ownerUUID))
-                        .forEach(target -> {
-                            onHitEntity(new EntityHitResult(target));
-                        });
+                    AABB lineSegment = new AABB(
+                            checkPoint.x - lineWidth,
+                            checkPoint.y - 0.5,
+                            checkPoint.z - lineWidth,
+                            checkPoint.x + lineWidth,
+                            checkPoint.y + 2.0,
+                            checkPoint.z + lineWidth
+                    );
+
+                    level().getEntities(this, lineSegment).stream()
+                            .filter(entity -> entity instanceof LivingEntity target &&
+                                    !target.getUUID().equals(ownerUUID))
+                            .forEach(target -> {
+                                onHitEntity(new EntityHitResult(target));
+                            });
+                }
             } else {
                 // Default for other ground spells
-                AABB box = getBoundingBox().inflate(1.0);
+                double inflateAmount = "petrify_breath".equals(getArtName()) ? 1.5 : 1.0;
+                AABB box = getBoundingBox().inflate(inflateAmount);
                 level().getEntities(this, box).stream()
                         .filter(entity -> entity instanceof LivingEntity target &&
                                 !target.getUUID().equals(ownerUUID))
@@ -282,47 +290,10 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
             }
         }
     }
-    private void positionPetrifyBreath(Player owner) {
-        // Get the block position directly in front of the player based on their facing direction
-        Vec3 playerPos = owner.position();
-        Direction facing = owner.getDirection(); // Gets the cardinal direction the player is facing
-
-        // Get the block position 1 block in front of the player
-        Vec3 offsetPos = switch (facing) {
-            case NORTH -> playerPos.add(0, 0, -1);
-            case SOUTH -> playerPos.add(0, 0, 1);
-            case WEST -> playerPos.add(-1, 0, 0);
-            case EAST -> playerPos.add(1, 0, 0);
-            default -> playerPos.add(0, 0, -1);
-        };
-
-        // Snap to block grid center
-        int blockX = Mth.floor(offsetPos.x);
-        int blockZ = Mth.floor(offsetPos.z);
-        int groundY = level().getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, blockX, blockZ);
-
-        // Apply to entity - centered on the block
-        setPos(blockX + 0.5, groundY, blockZ + 0.5);
-        setDeltaMovement(Vec3.ZERO);
-        setNoGravity(true);
-        setPositioned(true);
-
-        // Set the entity's rotation to match the player's facing direction
-        setYRot(owner.getYRot());
-
-        // Trigger instant impact
-        impactOccurred = true;
-        setHit(true);
-    }
-
-
     private void handlePetrifyBreathSpell() {
-        // For petrify breath, we position immediately in constructor
-        // so we just need to handle the animation and damage timing
-
+        // Petrify breath now uses the same ground spell logic but with different timing
         if (!impactOccurred) {
-            // This should not happen for petrify breath as it's positioned immediately
-            // But keep as fallback
+            // Immediately trigger impact for petrify breath
             impactOccurred = true;
             setHit(true);
             setDeltaMovement(Vec3.ZERO);
@@ -345,8 +316,8 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
 
             // Apply damage after 1 second delay (20 ticks) to sync with animation
             if (deathTimer == 20) {
-                // Apply 2x2 AOE damage
-                AABB aoeBox = getBoundingBox().inflate(1.0); // 2x2 area
+                // Apply 3x3 AOE damage
+                AABB aoeBox = getBoundingBox().inflate(1.5); // 3x3 area
                 level().getEntities(this, aoeBox).stream()
                         .filter(entity -> entity instanceof LivingEntity target &&
                                 !target.getUUID().equals(ownerUUID))
@@ -381,7 +352,6 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
             }
         }
     }
-
 
     private void playPetrifyBreathEffects() {
         if (level().isClientSide) return;

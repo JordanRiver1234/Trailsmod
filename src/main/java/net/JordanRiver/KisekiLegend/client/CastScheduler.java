@@ -28,13 +28,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Mod.EventBusSubscriber(modid = KisekiLegend.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class CastScheduler {
-    private record PendingCast(UUID playerId, ArtDefinition art, int ticksLeft, long scheduleTime, AuraEntity aura, MagicCircleEntity circle) {}
+    private record PendingCast(UUID playerId, ArtDefinition art, int ticksLeft, long scheduleTime, AuraEntity aura, MagicCircleEntity circle, Vec3 targetPos) {}
 
     private static final Map<UUID, PendingCast> PENDING = new ConcurrentHashMap<>();
     private static final int MAX_SPELL_LIFETIME = 12000; // 10 minutes max
     private static int cleanupTimer = 0;
 
-    public static void scheduleCast(Player player, ArtDefinition art) {
+    public static void scheduleCast(Player player, ArtDefinition art, Vec3 targetPos) {
         if (player == null || art == null) {
             System.out.println("Failed to schedule cast: player or art is null");
             return;
@@ -43,7 +43,6 @@ public class CastScheduler {
             System.out.println("Cannot schedule cast: not on server side");
             return;
         }
-        // Rest of the method remains unchanged
 
         // Cancel any existing cast
         cancelCast(player.getUUID());
@@ -84,7 +83,8 @@ public class CastScheduler {
                 Math.max(1, art.getCastDelayTicks()),
                 System.currentTimeMillis(),
                 aura,
-                circle
+                circle,
+                targetPos // Store the target position for ground spells
         );
 
         PENDING.put(player.getUUID(), pendingCast);
@@ -181,13 +181,15 @@ public class CastScheduler {
                             remainingTicks,
                             pendingCast.scheduleTime,
                             pendingCast.aura,
-                            pendingCast.circle
+                            pendingCast.circle,
+                            pendingCast.targetPos
                     ));
                 }
             }
         }
     }
 
+    // In the executeCast method, replace the ground spell positioning logic:
     private static void executeCast(net.minecraft.server.MinecraftServer server, PendingCast pendingCast) {
         ServerPlayer player = server.getPlayerList().getPlayer(pendingCast.playerId);
         if (player == null) {
@@ -221,9 +223,18 @@ public class CastScheduler {
 
         Vec3 lookVector = player.getLookAngle();
 
+// In CastScheduler.executeCast() method, replace the GROUND spell handling section:
+
         if (pendingCast.art.style() == SpawnStyle.GROUND) {
-            // For ground spells, get the block position in front of the player
-            Vec3 spawnPos = player.position().add(lookVector.scale(2.5));
+            Vec3 spawnPos;
+
+            if (pendingCast.targetPos != null) {
+                // Use the exact target position from block click
+                spawnPos = pendingCast.targetPos;
+            } else {
+                // Fallback to player look direction
+                spawnPos = player.position().add(lookVector.scale(2.5));
+            }
 
             // Snap to block grid center for proper positioning
             int blockX = Mth.floor(spawnPos.x);
@@ -235,22 +246,24 @@ public class CastScheduler {
             spell.setDeltaMovement(Vec3.ZERO);
             spell.setNoGravity(true);
 
-            // Set rotation based on spell type and player facing
-            float playerYaw = Mth.wrapDegrees(player.getYRot());
+            // Calculate rotation based on player position to spell position for proper directional casting
+            Vec3 playerPos = player.position();
+            Vec3 spellPos = new Vec3(blockX + 0.5, groundY, blockZ + 0.5);
+            Vec3 direction = spellPos.subtract(playerPos).normalize();
+
+            // FIXED: Correct yaw calculation for models facing north in Blockbench
+            // Since models face north (negative Z), we need to adjust the calculation
+            float yaw = (float) (Math.atan2(direction.x, direction.z) * (180.0 / Math.PI));
 
             if (artKey.equals("earth_lance")) {
-                // Earth lance needs special rotation logic
-                if (Math.abs(playerYaw) >= 45 && Math.abs(playerYaw) <= 135) {
-                    spell.setYRot(player.getYRot() + 180f);
-                } else {
-                    spell.setYRot(player.getYRot());
-                }
+                // Earth lance should point away from player towards the target
+                spell.setYRot(yaw);
             } else if (artKey.equals("petrify_breath")) {
-                // Petrify breath should face the player's direction + 180 degrees for animation
-                spell.setYRot(player.getYRot() + 180f);
+                // Petrify breath should face towards the player (opposite direction)
+                spell.setYRot(yaw + 180f);
             } else {
-                // Default ground spells use player's rotation
-                spell.setYRot(player.getYRot());
+                // Default ground spells use calculated direction
+                spell.setYRot(yaw);
             }
 
             spell.setXRot(0f);
@@ -259,6 +272,7 @@ public class CastScheduler {
             if (artKey.equals("petrify_breath")) {
                 spell.setPositioned(true);
             }
+
         } else if (pendingCast.art.style() == SpawnStyle.AOE_CENTERED) {
             Vec3 spawnPos = player.position().add(0, 5.0, 0);
             spell.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
@@ -293,7 +307,6 @@ public class CastScheduler {
         System.out.println("Successfully spawned spell: " + artKey +
                 " at " + spell.position() +
                 " for player: " + player.getName().getString());
-
     }
 
     private static void cleanupOrphanedEntities(net.minecraft.server.MinecraftServer server) {

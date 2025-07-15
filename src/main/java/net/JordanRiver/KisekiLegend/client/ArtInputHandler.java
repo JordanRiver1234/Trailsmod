@@ -10,6 +10,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickItem;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -119,7 +120,7 @@ public class ArtInputHandler {
         }
         if (!comp.useEP(cost)) {
             player.displayClientMessage(
-                    Component.translatable("message.kisekilegend.not_enough_ep"),
+                    Component.translatable("Not enough EP!"),
                     true
             );
             ev.setCanceled(true);
@@ -134,12 +135,16 @@ public class ArtInputHandler {
             geoItem.triggerAnim(player, GeoItem.getId(orb), "cast_controller", "cast");
         }
 
-// Only schedule cast on the server
+        // Only schedule cast on the server
         if (!ev.getLevel().isClientSide()) {
             ServerLevel serverLevel = (ServerLevel) ev.getLevel();
-            CastScheduler.scheduleCast(player, art);
-        }
 
+            // Calculate target position for ground spells
+            Vec3 lookVector = player.getLookAngle();
+            Vec3 targetPos = player.position().add(lookVector.scale(2.5));
+
+            CastScheduler.scheduleCast(player, art, targetPos);
+        }
 
         OrbmentItem.saveComponent(orb, comp, player.level());
         ev.setCanceled(true);
