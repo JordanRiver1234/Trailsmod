@@ -17,13 +17,11 @@ public class MagicCircleRenderer extends GeoEntityRenderer<MagicCircleEntity> {
 
     public MagicCircleRenderer(EntityRendererProvider.Context renderManager) {
         super(renderManager, new MagicCircleModel());
-        LOGGER.info("MagicCircleRenderer initialized for kisekilegend:magic_circle_entity");
     }
 
     @Override
     public ResourceLocation getTextureLocation(MagicCircleEntity entity) {
         ResourceLocation texture = ResourceLocation.fromNamespaceAndPath(KisekiLegend.MOD_ID, "textures/entity/magic_circle.png");
-        LOGGER.debug("Fetching texture for MagicCircleEntity {}: {}", entity.getId(), texture);
         return texture;
     }
 

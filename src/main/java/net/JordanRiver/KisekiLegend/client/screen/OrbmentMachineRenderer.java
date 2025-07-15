@@ -26,26 +26,24 @@ public class OrbmentMachineRenderer implements BlockEntityRenderer<OrbmentMachin
 
         poseStack.pushPose();
 
-// ✅ Center & lower
-        poseStack.translate(0.5, 0.28, 0.5);
+// Center the orbment on the machine block
+        poseStack.translate(0.5, 0.3, 0.44);// was 0.53->0.57
 
-// ✅ Rotate based on blocks.json facing
+// Rotate to lay flat and face block direction
         Direction facing = entity.getBlockState().getValue(OrbmentMachineBlock.FACING);
         float rotationY = switch (facing) {
             case NORTH -> 0f;
             case SOUTH -> 180f;
-            case WEST -> 270f;
-            case EAST -> 90f;
+            case WEST -> 90f;   // Swapped with EAST
+            case EAST -> 270f;  // Swapped with WEST
             default -> 0f;
         };
 
-        poseStack.mulPose(com.mojang.math.Axis.XP.rotationDegrees(90)); // flat
-        poseStack.mulPose(com.mojang.math.Axis.YP.rotationDegrees(rotationY)); // face direction
+        poseStack.mulPose(com.mojang.math.Axis.XP.rotationDegrees(90));     // lay flat
+        poseStack.mulPose(com.mojang.math.Axis.YP.rotationDegrees(90)); // rotate with block
 
-// ✅ Scale (you can tweak this)
-        poseStack.scale(0.5f, 0.5f, 0.5f);
+        poseStack.scale(0.5f, 0.5f, 0.5f); // size
 
-// 🎯 Render the item
         Minecraft.getInstance().getItemRenderer().renderStatic(
                 stack,
                 ItemDisplayContext.FIXED,

@@ -39,6 +39,7 @@ public class OrbmentItemModel extends DefaultedItemGeoModel<OrbmentItem> {
         return ResourceLocation.fromNamespaceAndPath(KisekiLegend.MOD_ID, "animations/orbment.animation.json");
     }
 
+
     public RenderType getRenderType(OrbmentItem animatable, ResourceLocation texture,
                                     MultiBufferSource bufferSource, float partialTick) {
         // Always use the normal render type for base model
@@ -46,13 +47,14 @@ public class OrbmentItemModel extends DefaultedItemGeoModel<OrbmentItem> {
         return RenderType.entityCutoutNoCull(texture);
     }
 
-    // Remove @Override and just override the method if it exists in parent
+    // Check if this method exists in the parent class before overriding
     public void setCustomAnimations(OrbmentItem animatable, long instanceId, AnimationState<OrbmentItem> animationState) {
-        // Check if parent has this method before calling super
+        // Call parent method if it exists
         try {
+            // For GeckoLib 4.x, this method signature should be correct
             super.setCustomAnimations(animatable, instanceId, animationState);
-        } catch (Exception e) {
-            // If parent doesn't have this method, just continue
+        } catch (NoSuchMethodError e) {
+            // If the method doesn't exist in the parent, that's fine - just continue
         }
 
         // You can add casting-specific animations here if needed
@@ -79,5 +81,10 @@ public class OrbmentItemModel extends DefaultedItemGeoModel<OrbmentItem> {
 
         return CastScheduler.hasPendingCast(player.getUUID()) &&
                 (player.getMainHandItem().is(item) || player.getOffhandItem().is(item));
+    }
+
+    // Get the glow texture for the renderer
+    public ResourceLocation getGlowTexture() {
+        return GLOW_TEXTURE;
     }
 }

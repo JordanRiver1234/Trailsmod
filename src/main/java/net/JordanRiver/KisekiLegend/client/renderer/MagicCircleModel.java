@@ -13,21 +13,18 @@ public class MagicCircleModel extends GeoModel<MagicCircleEntity> {
     @Override
     public ResourceLocation getModelResource(MagicCircleEntity animatable) {
         ResourceLocation model = ResourceLocation.fromNamespaceAndPath(KisekiLegend.MOD_ID, "geo/magic_circle.geo.json");
-        LOGGER.debug("Loading model for MagicCircleEntity: {}", model);
         return model;
     }
 
     @Override
     public ResourceLocation getTextureResource(MagicCircleEntity animatable) {
         ResourceLocation texture = ResourceLocation.fromNamespaceAndPath(KisekiLegend.MOD_ID, "textures/entity/magic_circle.png");
-        LOGGER.debug("Loading texture for MagicCircleEntity: {}", texture);
         return texture;
     }
 
     @Override
     public ResourceLocation getAnimationResource(MagicCircleEntity animatable) {
         ResourceLocation animation = ResourceLocation.fromNamespaceAndPath(KisekiLegend.MOD_ID, "animations/magic_circle.animation.json");
-        LOGGER.debug("Loading animation for MagicCircleEntity: {}", animation);
         return animation;
     }
 }

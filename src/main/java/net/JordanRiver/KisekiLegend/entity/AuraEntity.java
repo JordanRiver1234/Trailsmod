@@ -40,7 +40,7 @@ public class AuraEntity extends Entity implements GeoEntity {
 
         // Position the aura around the player's torso
         Vec3 playerPos = owner.position();
-        this.setPos(playerPos.x, playerPos.y + 1.0, playerPos.z); // At chest level
+        this.setPos(playerPos.x, playerPos.y - 1, playerPos.z); // At chest level
         this.setYRot(owner.getYRot());
         this.setXRot(0);
 
@@ -63,7 +63,7 @@ public class AuraEntity extends Entity implements GeoEntity {
         // Keep the aura centered on the owner's torso
         if (ownerUUID != null && level().getPlayerByUUID(ownerUUID) instanceof Player owner) {
             Vec3 ownerPos = owner.position();
-            Vec3 targetPos = new Vec3(ownerPos.x, ownerPos.y + 1.0, ownerPos.z);
+            Vec3 targetPos = new Vec3(ownerPos.x, ownerPos.y - 1, ownerPos.z);
             Vec3 currentPos = this.position();
             Vec3 lerpedPos = currentPos.lerp(targetPos, 0.3); // Smooth following
 

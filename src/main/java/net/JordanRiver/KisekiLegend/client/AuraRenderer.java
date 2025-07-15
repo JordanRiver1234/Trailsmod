@@ -18,13 +18,11 @@ public class AuraRenderer extends GeoEntityRenderer<AuraEntity> {
     public AuraRenderer(EntityRendererProvider.Context renderManager) {
         super(renderManager, new AuraModel());
         this.shadowRadius = 0.0f; // No shadow for aura
-        LOGGER.info("AuraRenderer initialized for kisekilegend:aura_entity");
     }
 
     @Override
     public ResourceLocation getTextureLocation(AuraEntity entity) {
         ResourceLocation texture = ResourceLocation.fromNamespaceAndPath(KisekiLegend.MOD_ID, "textures/entity/aura.png");
-        LOGGER.debug("Fetching texture for AuraEntity {}: {}", entity.getId(), texture);
         return texture;
     }
 
@@ -32,13 +30,11 @@ public class AuraRenderer extends GeoEntityRenderer<AuraEntity> {
     public RenderType getRenderType(AuraEntity animatable, ResourceLocation texture, MultiBufferSource bufferSource, float partialTick) {
         // Use translucent render type for glowing aura effect
         RenderType renderType = RenderType.entityTranslucent(texture);
-        LOGGER.debug("Getting RenderType for AuraEntity {}: {}", animatable.getId(), renderType);
         return renderType;
     }
 
     @Override
     public void render(AuraEntity entity, float entityYaw, float partialTicks, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
-        LOGGER.info("Rendering AuraEntity {} at position {}, tick {}", entity.getId(), entity.position(), entity.tickCount);
 
         // Scale the aura slightly for better visibility
         poseStack.pushPose();
@@ -49,6 +45,5 @@ public class AuraRenderer extends GeoEntityRenderer<AuraEntity> {
 
         poseStack.popPose();
 
-        LOGGER.debug("Finished rendering AuraEntity {}", entity.getId());
     }
 }

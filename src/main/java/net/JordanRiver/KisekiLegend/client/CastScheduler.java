@@ -222,25 +222,43 @@ public class CastScheduler {
         Vec3 lookVector = player.getLookAngle();
 
         if (pendingCast.art.style() == SpawnStyle.GROUND) {
+            // For ground spells, get the block position in front of the player
             Vec3 spawnPos = player.position().add(lookVector.scale(2.5));
-            int groundX = Mth.floor(spawnPos.x);
-            int groundZ = Mth.floor(spawnPos.z);
-            int groundY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, groundX, groundZ);
 
-            spell.setPos(spawnPos.x, groundY, spawnPos.z);
+            // Snap to block grid center for proper positioning
+            int blockX = Mth.floor(spawnPos.x);
+            int blockZ = Mth.floor(spawnPos.z);
+            int groundY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, blockX, blockZ);
+
+            // Center the spell on the block (add 0.5 to x and z for block center)
+            spell.setPos(blockX + 0.5, groundY, blockZ + 0.5);
             spell.setDeltaMovement(Vec3.ZERO);
             spell.setNoGravity(true);
+
+            // Set rotation based on spell type and player facing
             float playerYaw = Mth.wrapDegrees(player.getYRot());
+
             if (artKey.equals("earth_lance")) {
+                // Earth lance needs special rotation logic
                 if (Math.abs(playerYaw) >= 45 && Math.abs(playerYaw) <= 135) {
                     spell.setYRot(player.getYRot() + 180f);
                 } else {
                     spell.setYRot(player.getYRot());
                 }
+            } else if (artKey.equals("petrify_breath")) {
+                // Petrify breath should face the player's direction + 180 degrees for animation
+                spell.setYRot(player.getYRot() + 180f);
             } else {
+                // Default ground spells use player's rotation
                 spell.setYRot(player.getYRot());
             }
+
             spell.setXRot(0f);
+
+            // Mark as positioned for spells that need it
+            if (artKey.equals("petrify_breath")) {
+                spell.setPositioned(true);
+            }
         } else if (pendingCast.art.style() == SpawnStyle.AOE_CENTERED) {
             Vec3 spawnPos = player.position().add(0, 5.0, 0);
             spell.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
@@ -257,7 +275,7 @@ public class CastScheduler {
             Vec3 eyePos = player.getEyePosition();
             spell.setPos(eyePos.x, eyePos.y - 0.2, eyePos.z);
             // Slower projectile speed for stone hammer and other projectiles
-            double projectileSpeed = artKey.equals("stone_hammer") ? 0.5 : 0.8; // Reduced from 0.5 to 0.3 for stone hammer, 1.0 to 0.8 for others
+            double projectileSpeed = artKey.equals("stone_hammer") ? 0.5 : 0.8;
             spell.setDeltaMovement(lookVector.normalize().scale(projectileSpeed));
             spell.setRotationFromLook(lookVector);
         }
@@ -275,6 +293,7 @@ public class CastScheduler {
         System.out.println("Successfully spawned spell: " + artKey +
                 " at " + spell.position() +
                 " for player: " + player.getName().getString());
+
     }
 
     private static void cleanupOrphanedEntities(net.minecraft.server.MinecraftServer server) {

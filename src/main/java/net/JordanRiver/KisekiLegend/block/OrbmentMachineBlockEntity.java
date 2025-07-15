@@ -11,7 +11,6 @@ import net.JordanRiver.KisekiLegend.item.ModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
@@ -30,14 +29,16 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.common.extensions.IForgeBlockEntity;
 
 import javax.annotation.Nullable;
 import java.util.*;
 
-public class OrbmentMachineBlockEntity extends BlockEntity implements MenuProvider {
+public class OrbmentMachineBlockEntity extends BlockEntity implements MenuProvider, IForgeBlockEntity {
 
     private ItemStack orbment = ItemStack.EMPTY;
     private int unlockAnimationTimer = 0;
+    private boolean orbmentRemoved = false; // Track if orbment was manually removed
 
     public static final Codec<OrbmentMachineBlockEntity> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             BlockPos.CODEC.fieldOf("pos").forGetter(BlockEntity::getBlockPos),
@@ -56,35 +57,44 @@ public class OrbmentMachineBlockEntity extends BlockEntity implements MenuProvid
     }
 
     public boolean hasOrbment() {
-        return !orbment.isEmpty();
+        return !orbment.isEmpty() && !orbmentRemoved;
     }
 
     public ItemStack getOrbment() {
-        return orbment;
+        return orbmentRemoved ? ItemStack.EMPTY : orbment;
     }
 
     public void setOrbment(ItemStack stack) {
         this.orbment = stack;
+        this.orbmentRemoved = stack.isEmpty();
         setChanged();
 
-        if (level != null) {
+        if (level != null && !level.isClientSide) {
+            // Send update packet to all nearby players
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
 
-            if (level.isClientSide) {
-                requestModelDataUpdate(); // ✅ Trigger render refresh on client
-            } else if (level instanceof ServerLevel serverLevel) {
+            if (level instanceof ServerLevel serverLevel) {
                 Packet<ClientGamePacketListener> packet = getUpdatePacket();
-                for (Player player : serverLevel.players()) {
-                    if (player.distanceToSqr(worldPosition.getCenter()) < 64 * 64) {
-                        ((ServerPlayer) player).connection.send(packet); // ✅ Send update packet to clients
+                if (packet != null) {
+                    for (Player player : serverLevel.players()) {
+                        if (player.distanceToSqr(worldPosition.getCenter()) < 64 * 64) {
+                            ((ServerPlayer) player).connection.send(packet);
+                        }
                     }
                 }
             }
         }
     }
 
+    public void removeOrbment() {
+        this.orbmentRemoved = true;
+        this.orbment = ItemStack.EMPTY;
+        setChanged();
 
-
+        if (level != null && !level.isClientSide) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
+    }
 
     @Override
     public Component getDisplayName() {
@@ -96,7 +106,6 @@ public class OrbmentMachineBlockEntity extends BlockEntity implements MenuProvid
     public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
         return new OrbmentMachineMenu(id, inv, this);
     }
-
 
     public void unlockNextSlot(Player player) {
         if (!(orbment.getItem() instanceof OrbmentItem)) return;
@@ -204,7 +213,9 @@ public class OrbmentMachineBlockEntity extends BlockEntity implements MenuProvid
             int toRemove = 1;
             for (ItemStack s : player.getInventory().items) {
                 if (s.isEmpty() || s.getItem() != target) continue;
-                CompoundTag tag = s.get(DataComponents.CUSTOM_DATA).copyTag();
+                CustomData data = s.get(DataComponents.CUSTOM_DATA);
+                if (data == null) continue;
+                CompoundTag tag = data.copyTag();
                 int available = tag.getInt(e);
                 int used = Math.min(available, toRemove);
                 tag.putInt(e, available - used);
@@ -256,35 +267,71 @@ public class OrbmentMachineBlockEntity extends BlockEntity implements MenuProvid
         if (!orbment.isEmpty()) {
             tag.put("Orbment", orbment.save(provider, new CompoundTag()));
         }
+        tag.putBoolean("OrbmentRemoved", orbmentRemoved);
     }
 
     @Override
-    public void loadAdditional(CompoundTag tag, HolderLookup.Provider provider) {
+    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider provider) {
         super.loadAdditional(tag, provider);
         if (tag.contains("Orbment")) {
             orbment = ItemStack.parse(provider, tag.getCompound("Orbment")).orElse(ItemStack.EMPTY);
         } else {
             orbment = ItemStack.EMPTY;
         }
+        orbmentRemoved = tag.getBoolean("OrbmentRemoved");
     }
 
     @Override
     public Packet<ClientGamePacketListener> getUpdatePacket() {
-        return ClientboundBlockEntityDataPacket.create(this, (be, access) -> {
+        return ClientboundBlockEntityDataPacket.create(this, (be, provider) -> {
             CompoundTag tag = new CompoundTag();
             if (!orbment.isEmpty()) {
-                tag.put("Orbment", orbment.save(access, new CompoundTag()));
+                tag.put("Orbment", orbment.save(provider, new CompoundTag()));
             }
+            tag.putBoolean("OrbmentRemoved", orbmentRemoved);
             return tag;
         });
     }
 
+    // Correct method signature for Forge 1.21.1
+    @Override
+    public CompoundTag getUpdateTag(HolderLookup.Provider provider) {
+        CompoundTag tag = super.getUpdateTag(provider);
+        if (!orbment.isEmpty()) {
+            tag.put("Orbment", orbment.save(provider, new CompoundTag()));
+        }
+        tag.putBoolean("OrbmentRemoved", orbmentRemoved);
+        return tag;
+    }
 
+    // Correct method signature for Forge 1.21.1
+    @Override
+    public void handleUpdateTag(CompoundTag tag, HolderLookup.Provider provider) {
+        super.handleUpdateTag(tag, provider);
+        if (tag.contains("Orbment")) {
+            this.orbment = ItemStack.parse(provider, tag.getCompound("Orbment")).orElse(ItemStack.EMPTY);
+        } else {
+            this.orbment = ItemStack.EMPTY;
+        }
+        this.orbmentRemoved = tag.getBoolean("OrbmentRemoved");
 
-    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt) {
+        if (level != null && level.isClientSide) {
+            requestModelDataUpdate();
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
+    }
+
+    @Override
+    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt, HolderLookup.Provider provider) {
         CompoundTag tag = pkt.getTag();
-        if (tag != null && tag.contains("Orbment")) {
-            this.orbment = ItemStack.parse(this.level != null ? this.level.registryAccess() : null, tag.getCompound("Orbment")).orElse(ItemStack.EMPTY);
+        if (tag != null) {
+            if (tag.contains("Orbment")) {
+                this.orbment = ItemStack.parse(provider, tag.getCompound("Orbment")).orElse(ItemStack.EMPTY);
+            } else {
+                this.orbment = ItemStack.EMPTY;
+            }
+            this.orbmentRemoved = tag.getBoolean("OrbmentRemoved");
+
             if (level != null && level.isClientSide) {
                 requestModelDataUpdate();
                 level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
@@ -292,6 +339,3 @@ public class OrbmentMachineBlockEntity extends BlockEntity implements MenuProvid
         }
     }
 }
-
-
-

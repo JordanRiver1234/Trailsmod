@@ -21,6 +21,8 @@ import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -32,11 +34,12 @@ import javax.annotation.Nullable;
 
 public class OrbmentMachineBlock extends Block implements EntityBlock {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+
     public OrbmentMachineBlock(Properties props) {
         super(props);
         registerDefaultState(this.defaultBlockState().setValue(FACING, Direction.NORTH));
-
     }
+
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext ctx) {
         return this.defaultBlockState().setValue(FACING, ctx.getHorizontalDirection().getOpposite());
@@ -57,9 +60,6 @@ public class OrbmentMachineBlock extends Block implements EntityBlock {
         builder.add(FACING);
     }
 
-
-
-
     public @NotNull InteractionResult use(@NotNull BlockState state,
                                           @NotNull Level level,
                                           @NotNull BlockPos pos,
@@ -79,10 +79,14 @@ public class OrbmentMachineBlock extends Block implements EntityBlock {
 
         // (1) Remove Orbment with Shift + Empty hand
         if (player.isShiftKeyDown() && machine.hasOrbment() && held.isEmpty()) {
-            ItemStack orb = machine.getOrbment();
-            machine.setOrbment(ItemStack.EMPTY);
+            ItemStack orb = machine.getOrbment().copy();
 
-            if (!player.getInventory().add(orb.copy())) {
+            // Use the new removal method to properly mark it as removed
+            machine.removeOrbment();
+
+            // Try to add to player inventory first
+            if (!player.getInventory().add(orb)) {
+                // If inventory is full, drop in world
                 level.addFreshEntity(new ItemEntity(
                         level,
                         pos.getX() + 0.5, pos.getY() + 1.2, pos.getZ() + 0.5,
@@ -109,10 +113,6 @@ public class OrbmentMachineBlock extends Block implements EntityBlock {
 
             machine.setOrbment(held.copy());
             held.shrink(1);
-
-            machine.requestModelDataUpdate();
-            level.sendBlockUpdated(pos, state, state, 3);
-
 
             if (player instanceof ServerPlayer srv) {
                 srv.sendSystemMessage(Component.literal("Inserted Orbment"));
@@ -172,8 +172,21 @@ public class OrbmentMachineBlock extends Block implements EntityBlock {
         return new OrbmentMachineBlockEntity(pos, state);
     }
 
+    @Nullable
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+        if (level.isClientSide) {
+            return null;
+        }
+        return (lvl, pos, st, be) -> {
+            if (be instanceof OrbmentMachineBlockEntity machine) {
+                machine.tickClientParticles();
+            }
+        };
+    }
+
     /**
-     * When the blocks.json is broken or replaced, drop any stored Orbment
+     * When the block is broken or replaced, drop any stored Orbment
      * so that it never disappears.
      */
     @Override
@@ -182,7 +195,7 @@ public class OrbmentMachineBlock extends Block implements EntityBlock {
                          @NotNull BlockPos pos,
                          @NotNull BlockState newState,
                          boolean isMoving) {
-        // Only drop when actually removed, not on blockstate tweak
+        // Only drop when actually removed, not on blockstate change
         if (!oldState.is(newState.getBlock())) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof OrbmentMachineBlockEntity machine) {
@@ -198,7 +211,7 @@ public class OrbmentMachineBlock extends Block implements EntityBlock {
                     ));
                 }
             }
-            super.onRemove(oldState, level, pos, newState, isMoving);
         }
+        super.onRemove(oldState, level, pos, newState, isMoving);
     }
 }

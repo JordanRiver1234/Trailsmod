@@ -1,5 +1,6 @@
 package net.JordanRiver.KisekiLegend.entity;
-
+import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
 import net.JordanRiver.KisekiLegend.KisekiLegend;
 import net.JordanRiver.KisekiLegend.orbal.ArtsRegistry;
 import net.JordanRiver.KisekiLegend.orbal.SpawnStyle;
@@ -15,6 +16,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ItemSupplier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -46,6 +48,8 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
             SynchedEntityData.defineId(GeckoSpellEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> DATA_SHOULD_REMOVE =
             SynchedEntityData.defineId(GeckoSpellEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> DATA_POSITIONED =
+            SynchedEntityData.defineId(GeckoSpellEntity.class, EntityDataSerializers.BOOLEAN);
 
     private final AnimatableInstanceCache cache = new SingletonAnimatableInstanceCache(this);
     private AnimationController<GeckoSpellEntity> controller;
@@ -76,6 +80,10 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
         if (artDef != null) {
             this.maxLifetimeTicks = artDef.style() == SpawnStyle.GROUND ? 80 : 120; // 4s ground, 6s projectile
         }
+        // Special positioning for petrify breath
+        if ("petrify_breath".equals(artName) && shooter instanceof Player player) {
+            positionPetrifyBreath(player);
+        }
     }
 
     @Override
@@ -84,6 +92,7 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
         builder.define(DATA_DAMAGE, 0);
         builder.define(DATA_HIT, false);
         builder.define(DATA_SHOULD_REMOVE, false);
+        builder.define(DATA_POSITIONED, false);
     }
 
     // Getters and setters
@@ -118,7 +127,13 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
     public boolean shouldRemove() {
         return this.entityData.get(DATA_SHOULD_REMOVE);
     }
+    public void setPositioned(boolean positioned) {
+        this.entityData.set(DATA_POSITIONED, positioned);
+    }
 
+    public boolean isPositioned() {
+        return this.entityData.get(DATA_POSITIONED);
+    }
     private ArtsRegistry.ArtDefinition getArtDefinition() {
         String artName = getArtName();
         if (artName.isEmpty()) return null;
@@ -180,15 +195,25 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
         if (!level().isClientSide && level() instanceof ServerLevel serverLevel && random.nextInt(3) == 0) {
             String art = getArtName();
             switch (art) {
-                case "stone_hammer" -> serverLevel.sendParticles(ParticleTypes.DUST_PLUME, getX(), getY(), getZ(), 1, 0.1, 0.1, 0.1, 0.01);
-                case "earth_lance" -> serverLevel.sendParticles(ParticleTypes.CRIT, getX(), getY(), getZ(), 1, 0.1, 0.1, 0.1, 0.01);
-                default -> serverLevel.sendParticles(ParticleTypes.SMOKE, getX(), getY(), getZ(), 1, 0.1, 0.1, 0.1, 0.01);
+                case "stone_hammer" ->
+                        serverLevel.sendParticles(ParticleTypes.DUST_PLUME, getX(), getY(), getZ(), 1, 0.1, 0.1, 0.1, 0.01);
+                case "earth_lance" ->
+                        serverLevel.sendParticles(ParticleTypes.CRIT, getX(), getY(), getZ(), 1, 0.1, 0.1, 0.1, 0.01);
+                case "stone_impact" ->
+                        serverLevel.sendParticles(ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, getX(), getY(), getZ(), 1, 0.1, 0.1, 0.1, 0.01);
+                default ->
+                        serverLevel.sendParticles(ParticleTypes.SMOKE, getX(), getY(), getZ(), 1, 0.1, 0.1, 0.1, 0.01);
             }
         }
 
         // Handle different spell behaviors
+        // Handle different spell behaviors
         if (artDef.style() == SpawnStyle.GROUND) {
-            handleGroundSpell();
+            if ("petrify_breath".equals(getArtName())) {
+                handlePetrifyBreathSpell();
+            } else {
+                handleGroundSpell();
+            }
         } else if (artDef.style() == SpawnStyle.AOE_CENTERED) {
             handleAOECenteredSpell();
         } else if (artDef.style() == SpawnStyle.BOUNCING_PROJECTILE) {
@@ -255,6 +280,125 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
                 setShouldRemove(true);
                 discard();
             }
+        }
+    }
+    private void positionPetrifyBreath(Player owner) {
+        // Get the block position directly in front of the player based on their facing direction
+        Vec3 playerPos = owner.position();
+        Direction facing = owner.getDirection(); // Gets the cardinal direction the player is facing
+
+        // Get the block position 1 block in front of the player
+        Vec3 offsetPos = switch (facing) {
+            case NORTH -> playerPos.add(0, 0, -1);
+            case SOUTH -> playerPos.add(0, 0, 1);
+            case WEST -> playerPos.add(-1, 0, 0);
+            case EAST -> playerPos.add(1, 0, 0);
+            default -> playerPos.add(0, 0, -1);
+        };
+
+        // Snap to block grid center
+        int blockX = Mth.floor(offsetPos.x);
+        int blockZ = Mth.floor(offsetPos.z);
+        int groundY = level().getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, blockX, blockZ);
+
+        // Apply to entity - centered on the block
+        setPos(blockX + 0.5, groundY, blockZ + 0.5);
+        setDeltaMovement(Vec3.ZERO);
+        setNoGravity(true);
+        setPositioned(true);
+
+        // Set the entity's rotation to match the player's facing direction
+        setYRot(owner.getYRot());
+
+        // Trigger instant impact
+        impactOccurred = true;
+        setHit(true);
+    }
+
+
+    private void handlePetrifyBreathSpell() {
+        // For petrify breath, we position immediately in constructor
+        // so we just need to handle the animation and damage timing
+
+        if (!impactOccurred) {
+            // This should not happen for petrify breath as it's positioned immediately
+            // But keep as fallback
+            impactOccurred = true;
+            setHit(true);
+            setDeltaMovement(Vec3.ZERO);
+            setNoGravity(true);
+            deathTimer = 0;
+
+            if (!level().isClientSide) {
+                playPetrifyBreathEffects();
+            }
+        }
+
+        // After impact, start countdown and apply damage after animation delay
+        if (impactOccurred) {
+            deathTimer++;
+
+            // Play effects at start of animation
+            if (deathTimer == 1 && !level().isClientSide) {
+                playPetrifyBreathEffects();
+            }
+
+            // Apply damage after 1 second delay (20 ticks) to sync with animation
+            if (deathTimer == 20) {
+                // Apply 2x2 AOE damage
+                AABB aoeBox = getBoundingBox().inflate(1.0); // 2x2 area
+                level().getEntities(this, aoeBox).stream()
+                        .filter(entity -> entity instanceof LivingEntity target &&
+                                !target.getUUID().equals(ownerUUID))
+                        .forEach(target -> {
+                            // Apply damage
+                            onHitEntity(new EntityHitResult(target));
+
+                            // Apply petrify effect (20% chance of slowness)
+                            if (random.nextFloat() < 0.2f) { // 20% chance
+                                if (target instanceof net.minecraft.world.entity.player.Player player) {
+                                    // For players, apply slowness effect
+                                    player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                                            net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN,
+                                            100, // 5 seconds at 20 TPS
+                                            1 // Level 2 slowness (20% slower)
+                                    ));
+                                } else if (target instanceof net.minecraft.world.entity.Mob mob) {
+                                    // For mobs, apply slowness effect
+                                    mob.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                                            net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN,
+                                            100, // 5 seconds
+                                            1 // Level 2 slowness
+                                    ));
+                                }
+                            }
+                        });
+            }
+
+            if (!level().isClientSide && deathTimer > 80) { // 4 seconds after impact
+                setShouldRemove(true);
+                discard();
+            }
+        }
+    }
+
+
+    private void playPetrifyBreathEffects() {
+        if (level().isClientSide) return;
+
+        // Play petrify breath sound effect
+        level().playSound(null, getX(), getY(), getZ(), SoundEvents.BREWING_STAND_BREW, SoundSource.PLAYERS, 1.0f, 0.7f);
+
+        // Add poison/gas-like particles for petrify breath
+        if (level() instanceof ServerLevel serverLevel) {
+            // Main petrify cloud effect
+            serverLevel.sendParticles(ParticleTypes.MYCELIUM, getX(), getY(), getZ(), 30, 1.0, 0.5, 1.0, 0.1);
+            // Spore particles for petrification effect
+            serverLevel.sendParticles(ParticleTypes.SPORE_BLOSSOM_AIR, getX(), getY(), getZ(), 20, 1.0, 0.5, 1.0, 0.05);
+            // Dust particles for stone effect
+            serverLevel.sendParticles(ParticleTypes.ASH, getX(), getY(), getZ(), 15, 1.0, 0.5, 1.0, 0.02);
+            // Ambient particles
+            serverLevel.sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, getX(), getY(), getZ(), 10, 0.8, 0.3, 0.8, 0.03);
         }
     }
 
@@ -379,52 +523,60 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
 
             // Check for block collision
             if (this.onGround() || this.horizontalCollision || this.verticalCollision) {
-                halfAOE = false;
-                bounceToGround();
-                impactOccurred = true;
+                if (!groundImpacted) {
+                    // First block impact - just bounce, no explosion
+                    halfAOE = false;
+                    bounceToGround();
+                    // Don't set impactOccurred = true here, let it continue moving
+                } else {
+                    // Second block impact - explode
+                    impactOccurred = true;
+                    setHit(true);
+                    setDeltaMovement(Vec3.ZERO);
+                    setNoGravity(true);
+
+                    // Apply AOE damage at full power (since it's block impact)
+                    AABB aoeBox = getBoundingBox().inflate(1.5); // 3x3 blocks
+                    level().getEntities(this, aoeBox).stream()
+                            .filter(entity -> entity instanceof LivingEntity target &&
+                                    !target.getUUID().equals(ownerUUID))
+                            .forEach(target -> {
+                                LivingEntity owner = getOwner();
+                                if (owner != null) {
+                                    target.hurt(level().damageSources().indirectMagic(this, owner), getDamage());
+                                } else {
+                                    target.hurt(level().damageSources().magic(), getDamage());
+                                }
+                            });
+
+                    // Play AOE effects for the final explosion
+                    if (!level().isClientSide) {
+                        playFinalImpactEffects();
+                    }
+
+                    deathTimer = 0;
+                }
             }
 
             // Check for entity collision
-            if (!impactOccurred) {
+            if (!impactOccurred && !groundImpacted) {
                 AABB box = getBoundingBox().inflate(0.2);
                 level().getEntities(this, box).stream()
                         .filter(entity -> entity instanceof LivingEntity target &&
                                 !target.getUUID().equals(ownerUUID))
                         .findFirst()
                         .ifPresent(target -> {
+                            // Hit entity - cause half damage, then bounce to ground
                             onHitEntity(new EntityHitResult(target));
                             halfAOE = true;
                             bounceToGround();
-                            impactOccurred = true;
+                            impactOccurred = true; // End the projectile phase after entity hit
                         });
             }
         }
 
-        if (groundImpacted) {
-            // Apply AOE damage
-            int aoeDamage = halfAOE ? getDamage() / 2 : getDamage();
-            AABB aoeBox = getBoundingBox().inflate(1.5); // 3x3 blocks
-            level().getEntities(this, aoeBox).stream()
-                    .filter(entity -> entity instanceof LivingEntity target &&
-                            !target.getUUID().equals(ownerUUID))
-                    .forEach(target -> {
-                        LivingEntity owner = getOwner();
-                        if (owner != null) {
-                            target.hurt(level().damageSources().indirectMagic(this, owner), aoeDamage);
-                        } else {
-                            target.hurt(level().damageSources().magic(), aoeDamage);
-                        }
-                    });
-
-            // Play AOE effects
-            if (!level().isClientSide) {
-                level().playSound(null, getX(), getY(), getZ(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.0f, 1.0f);
-                if (level() instanceof ServerLevel serverLevel) {
-                    serverLevel.sendParticles(ParticleTypes.EXPLOSION, getX(), getY(), getZ(), 10, 1.0, 0.5, 1.0, 0.1);
-                    serverLevel.sendParticles(ParticleTypes.SMOKE, getX(), getY(), getZ(), 20, 1.0, 0.5, 1.0, 0.05);
-                }
-            }
-
+        // Handle the lingering AOE effect after impact
+        if (impactOccurred && groundImpacted) {
             deathTimer++;
             if (!level().isClientSide && deathTimer > 60) { // 3 seconds linger
                 setShouldRemove(true);
@@ -457,6 +609,32 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
             level().playSound(null, getX(), getY(), getZ(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 1.0f, 1.0f);
             if (level() instanceof ServerLevel serverLevel) {
                 serverLevel.sendParticles(ParticleTypes.DUST_PLUME, getX(), getY(), getZ(), 10, 0.5, 0.5, 0.5, 0.1);
+            }
+        }
+
+        // If this bounce was after hitting an entity, apply half AOE damage
+        if (halfAOE) {
+            int aoeDamage = getDamage() / 2;
+            AABB aoeBox = getBoundingBox().inflate(1.5); // 3x3 blocks
+            level().getEntities(this, aoeBox).stream()
+                    .filter(entity -> entity instanceof LivingEntity target &&
+                            !target.getUUID().equals(ownerUUID))
+                    .forEach(target -> {
+                        LivingEntity owner = getOwner();
+                        if (owner != null) {
+                            target.hurt(level().damageSources().indirectMagic(this, owner), aoeDamage);
+                        } else {
+                            target.hurt(level().damageSources().magic(), aoeDamage);
+                        }
+                    });
+
+            // Play AOE effects for entity bounce
+            if (!level().isClientSide) {
+                level().playSound(null, getX(), getY(), getZ(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.0f, 1.0f);
+                if (level() instanceof ServerLevel serverLevel) {
+                    serverLevel.sendParticles(ParticleTypes.EXPLOSION, getX(), getY(), getZ(), 10, 1.0, 0.5, 1.0, 0.1);
+                    serverLevel.sendParticles(ParticleTypes.SMOKE, getX(), getY(), getZ(), 20, 1.0, 0.5, 1.0, 0.05);
+                }
             }
         }
 
@@ -516,6 +694,32 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
         }
     }
 
+    // New method specifically for stone_impact final explosion
+    private void playFinalImpactEffects() {
+        if (level().isClientSide) return;
+
+        String art = getArtName();
+        if ("stone_impact".equals(art)) {
+            // Play stone impact explosion sound
+            level().playSound(null, getX(), getY(), getZ(), SoundEvents.STONE_BREAK, SoundSource.PLAYERS, 1.5f, 0.8f);
+
+            // Add explosion particles for stone impact
+            if (level() instanceof ServerLevel serverLevel) {
+                // Main explosion effect
+                serverLevel.sendParticles(ParticleTypes.EXPLOSION, getX(), getY(), getZ(), 15, 1.0, 0.5, 1.0, 0.1);
+                // Stone debris
+                serverLevel.sendParticles(ParticleTypes.DUST_PLUME, getX(), getY(), getZ(), 25, 1.5, 1.0, 1.5, 0.2);
+                // Falling dust for stone chunks
+                serverLevel.sendParticles(ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, getX(), getY(), getZ(), 30, 1.0, 1.0, 1.0, 0.1);
+                // Smoke cloud
+                serverLevel.sendParticles(ParticleTypes.SMOKE, getX(), getY(), getZ(), 20, 1.0, 0.5, 1.0, 0.05);
+            }
+        } else {
+            // Fallback to regular impact effects for other spells
+            playImpactEffects();
+        }
+    }
+
     public void setRotationFromLook(Vec3 look) {
         double horizontalDistance = Math.sqrt(look.x * look.x + look.z * look.z);
         float yaw = (float) (Math.atan2(-look.x, look.z) * (180.0 / Math.PI));
@@ -542,7 +746,7 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
             // Force start animation if not started
             if (!animationStarted) {
                 String animKey = "animation." + KisekiLegend.MOD_ID + "." + art + "_cast";
-                Animation.LoopType loopType = ("earth_lance".equals(art) || "titanic_roar".equals(art) || "stone_impact".equals(art)) ? HOLD_ON_LAST_FRAME : PLAY_ONCE;
+                Animation.LoopType loopType = ("earth_lance".equals(art) || "titanic_roar".equals(art) || "stone_impact".equals(art) || "petrify_breath".equals(art)) ? HOLD_ON_LAST_FRAME : PLAY_ONCE;
                 state.getController().setAnimation(RawAnimation.begin().then(animKey, loopType));
                 animationStarted = true;
             }
@@ -575,6 +779,7 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
         tag.putInt("Damage", getDamage());
         tag.putBoolean("Hit", isHit());
         tag.putBoolean("ShouldRemove", shouldRemove());
+        tag.putBoolean("Positioned", isPositioned());
         tag.putInt("LifeTimer", lifeTimer);
         tag.putInt("DeathTimer", deathTimer);
         tag.putInt("MaxLifetime", maxLifetimeTicks);
@@ -595,6 +800,7 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
         setDamage(tag.getInt("Damage"));
         setHit(tag.getBoolean("Hit"));
         setShouldRemove(tag.getBoolean("ShouldRemove"));
+        setPositioned(tag.getBoolean("Positioned"));
         lifeTimer = tag.getInt("LifeTimer");
         deathTimer = tag.getInt("DeathTimer");
         maxLifetimeTicks = tag.getInt("MaxLifetime");
@@ -609,6 +815,7 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
         }
     }
 
+
     // Spawn data for client-server sync
     @Override
     public void writeSpawnData(FriendlyByteBuf buffer) {
@@ -616,6 +823,7 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
         buffer.writeInt(getDamage());
         buffer.writeBoolean(isHit());
         buffer.writeBoolean(shouldRemove());
+        buffer.writeBoolean(isPositioned());
         buffer.writeInt(lifeTimer);
         buffer.writeBoolean(impactOccurred);
         buffer.writeInt(damageDelayTimer);
@@ -637,6 +845,7 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
         setDamage(buffer.readInt());
         setHit(buffer.readBoolean());
         setShouldRemove(buffer.readBoolean());
+        setPositioned(buffer.readBoolean());
         lifeTimer = buffer.readInt();
         impactOccurred = buffer.readBoolean();
         damageDelayTimer = buffer.readInt();
