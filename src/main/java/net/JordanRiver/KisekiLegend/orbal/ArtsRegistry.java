@@ -7,13 +7,13 @@ import java.util.Map;
 public class ArtsRegistry {
 
     public record ArtDefinition(
-        String name,
-        Map<String, Integer> elementCost,
-        String epCost,
-        String castTime,
-        String power,
-        SpawnStyle style,               // ← NEW parameter
-        String effectDescription
+            String name,
+            Map<String, Integer> elementCost,
+            String epCost,
+            String castTime,
+            String power,
+            SpawnStyle style,               // ← NEW parameter
+            String effectDescription
 
 
     ) {
@@ -40,8 +40,8 @@ public class ArtsRegistry {
 
             // Water Attack Arts
             new ArtDefinition("Aqua Bleed", Map.of("water", 1), "10 EP", "1 AT", "10", SpawnStyle.PROJECTILE,"Water - Single - Attack"),
-            new ArtDefinition("Blue Impact", Map.of("water", 5), "20 EP", "1 AT", "50", SpawnStyle.PROJECTILE,"Water - Single - Attack"),
-            new ArtDefinition("Diamond Dust", Map.of("water", 4, "wind", 2, "space", 1), "140 EP", "5 AT", "20", SpawnStyle.PROJECTILE,"Water - Area (S) - Attack [Freeze 20%]"),
+            new ArtDefinition("Blue Impact", Map.of("water", 5), "20 EP", "1 AT", "50", SpawnStyle.PROJECTILE_SPREAD,"Water - Single - Attack"),
+            new ArtDefinition("Diamond Dust", Map.of("water", 4, "wind", 2, "space", 1), "140 EP", "5 AT", "20", SpawnStyle.PROJECTILE_TRAIL,"Water - Area (S) - Attack [Freeze 20%]"),
 
             // Fire Attack Arts
             new ArtDefinition("Fire Bolt", Map.of("fire", 1), "10 EP", "1 AT", "10", SpawnStyle.PROJECTILE,"Fire - Single - Attack"),
@@ -97,4 +97,3 @@ public class ArtsRegistry {
             new ArtDefinition("Chaos Brand", Map.of("mirage", 5), "10 EP", "1 AT", "-", SpawnStyle.PROJECTILE,"Mirage - Single - Debilitate")
     );
 }
-

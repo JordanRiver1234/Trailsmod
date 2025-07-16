@@ -289,7 +289,16 @@ public class CastScheduler {
             Vec3 eyePos = player.getEyePosition();
             spell.setPos(eyePos.x, eyePos.y - 0.2, eyePos.z);
             // Slower projectile speed for stone hammer and other projectiles
-            double projectileSpeed = artKey.equals("stone_hammer") ? 0.5 : 0.8;
+            double projectileSpeed;
+            switch (artKey) {
+                case "stone_hammer":
+                case "aqua_bleed":
+                    projectileSpeed = 0.5;
+                    break;
+                default:
+                    projectileSpeed = 0.8;
+                    break;
+            }
             spell.setDeltaMovement(lookVector.normalize().scale(projectileSpeed));
             spell.setRotationFromLook(lookVector);
         }

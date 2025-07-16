@@ -1,5 +1,9 @@
 package net.JordanRiver.KisekiLegend.entity;
+
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.util.Mth;
 import net.JordanRiver.KisekiLegend.KisekiLegend;
 import net.JordanRiver.KisekiLegend.orbal.ArtsRegistry;
@@ -33,7 +37,6 @@ import software.bernie.geckolib.animation.*;
 
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.Mth;
 
 import java.util.UUID;
 
@@ -64,6 +67,12 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
     private boolean groundImpacted = false;
     private boolean halfAOE = false;
 
+    // For Diamond Dust
+    private int spellPhase = 0; // 0: inactive, 1: travelling, 2: dropping, 3: swelling, 4: popping
+    private Vec3 playerStartPos; // Player's position when casting
+    private Vec3 direction;
+    private float initialYaw; // Player's yaw when casting
+
     public GeckoSpellEntity(EntityType<? extends GeckoSpellEntity> type, Level level) {
         super(type, level);
         this.noCulling = true; // Prevent culling issues
@@ -75,14 +84,19 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
         setDamage(damage);
         setArtName(artName);
 
-        // Set appropriate lifetime based on spell type
         var artDef = getArtDefinition();
         if (artDef != null) {
-            this.maxLifetimeTicks = artDef.style() == SpawnStyle.GROUND ? 80 : 120; // 4s ground, 6s projectile
+            if (artDef.style() == SpawnStyle.PROJECTILE_TRAIL) {
+                this.maxLifetimeTicks = 100; // 5 seconds for Diamond Dust
+                this.playerStartPos = shooter.position(); // Use player's base position
+                this.direction = shooter.getLookAngle().normalize();
+                this.initialYaw = shooter.getYRot();
+                this.setYRot(this.initialYaw); // Set rotation immediately
+                this.spellPhase = 1; // Start travelling
+            } else {
+                this.maxLifetimeTicks = artDef.style() == SpawnStyle.GROUND ? 80 : 120; // 4s ground, 6s projectile
+            }
         }
-
-        // Remove the special positioning for petrify breath from constructor
-        // This will now be handled in the CastScheduler
     }
 
     @Override
@@ -155,70 +169,50 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
     public void tick() {
         super.tick();
 
-        // Safety check - remove if no art name
-        if (getArtName().isEmpty()) {
-            if (!level().isClientSide) {
-                discard();
-            }
+        if (getArtName().isEmpty() || shouldRemove()) {
+            if (!level().isClientSide) discard();
             return;
         }
 
         var artDef = getArtDefinition();
         if (artDef == null) {
-            if (!level().isClientSide) {
-                discard();
-            }
+            if (!level().isClientSide) discard();
             return;
         }
 
         lifeTimer++;
-
-        // Hard timeout - prevent entities from living forever
         if (lifeTimer > maxLifetimeTicks) {
-            if (!level().isClientSide) {
-                setShouldRemove(true);
-                discard();
-            }
+            if (!level().isClientSide) discard();
             return;
         }
 
-        // Handle removal flag
-        if (shouldRemove()) {
-            if (!level().isClientSide) {
-                discard();
-            }
-            return;
-        }
-
-        // Add trailing particles every few ticks
         if (!level().isClientSide && level() instanceof ServerLevel serverLevel && random.nextInt(3) == 0) {
             String art = getArtName();
             switch (art) {
-                case "stone_hammer" ->
-                        serverLevel.sendParticles(ParticleTypes.DUST_PLUME, getX(), getY(), getZ(), 1, 0.1, 0.1, 0.1, 0.01);
-                case "earth_lance" ->
-                        serverLevel.sendParticles(ParticleTypes.CRIT, getX(), getY(), getZ(), 1, 0.1, 0.1, 0.1, 0.01);
-                case "stone_impact" ->
-                        serverLevel.sendParticles(ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, getX(), getY(), getZ(), 1, 0.1, 0.1, 0.1, 0.01);
-                default ->
-                        serverLevel.sendParticles(ParticleTypes.SMOKE, getX(), getY(), getZ(), 1, 0.1, 0.1, 0.1, 0.01);
+                case "stone_hammer" -> serverLevel.sendParticles(ParticleTypes.DUST_PLUME, getX(), getY(), getZ(), 1, 0.1, 0.1, 0.1, 0.01);
+                case "earth_lance" -> serverLevel.sendParticles(ParticleTypes.CRIT, getX(), getY(), getZ(), 1, 0.1, 0.1, 0.1, 0.01);
+                case "stone_impact" -> serverLevel.sendParticles(ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, getX(), getY(), getZ(), 1, 0.1, 0.1, 0.1, 0.01);
+                case "aqua_bleed" -> serverLevel.sendParticles(ParticleTypes.RAIN, getX(), getY(), getZ(), 2, 0.1, 0.1, 0.1, 0.01);
+                case "blue_impact" -> serverLevel.sendParticles(ParticleTypes.BUBBLE, getX(), getY(), getZ(), 1, 0.1, 0.1, 0.1, 0.01);
+                case "diamond_dust" -> {} // Handled in its own logic
+                default -> serverLevel.sendParticles(ParticleTypes.SMOKE, getX(), getY(), getZ(), 1, 0.1, 0.1, 0.1, 0.01);
             }
         }
 
-        // Handle different spell behaviors
-        // Handle different spell behaviors
-        if (artDef.style() == SpawnStyle.GROUND) {
-            if ("petrify_breath".equals(getArtName())) {
-                handlePetrifyBreathSpell();
-            } else {
-                handleGroundSpell();
+        // Handle different spell behaviors based on SpawnStyle
+        switch (artDef.style()) {
+            case GROUND -> {
+                if ("petrify_breath".equals(getArtName())) {
+                    handlePetrifyBreathSpell();
+                } else {
+                    handleGroundSpell();
+                }
             }
-        } else if (artDef.style() == SpawnStyle.AOE_CENTERED) {
-            handleAOECenteredSpell();
-        } else if (artDef.style() == SpawnStyle.BOUNCING_PROJECTILE) {
-            handleBouncingProjectileSpell();
-        } else {
-            handleProjectileSpell();
+            case AOE_CENTERED -> handleAOECenteredSpell();
+            case BOUNCING_PROJECTILE -> handleBouncingProjectileSpell();
+            case PROJECTILE_SPREAD -> handleProjectileSpreadSpell();
+            case PROJECTILE_TRAIL -> handleProjectileTrailSpell();
+            default -> handleProjectileSpell(); // PROJECTILE
         }
     }
 
@@ -428,58 +422,57 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
             }
         }
     }
-
     private void handleProjectileSpell() {
         if (!impactOccurred) {
-            // Apply movement
             this.move(MoverType.SELF, this.getDeltaMovement());
+            this.setDeltaMovement(this.getDeltaMovement().multiply(0.99, 0.95, 0.99));
 
-            // Apply air friction
-            this.setDeltaMovement(this.getDeltaMovement().multiply(0.99, 0.95, 0.99)); // Slightly more friction on Y for arc
-
-            // Check for block collision
             if (this.onGround() || this.horizontalCollision || this.verticalCollision) {
                 impactOccurred = true;
                 setHit(true);
                 setDeltaMovement(Vec3.ZERO);
+                setNoGravity(true); // Ensure it stops moving after impact
                 if (!level().isClientSide) {
-                    playImpactEffects();
+                    if ("aqua_bleed".equals(getArtName())) playWaterImpactEffects(); else playImpactEffects();
                 }
                 deathTimer = 0;
             }
 
-            // Check for entity collision - single target for projectiles like stone_hammer
             AABB box = getBoundingBox().inflate(0.2);
             level().getEntities(this, box).stream()
-                    .filter(entity -> entity instanceof LivingEntity target &&
-                            !target.getUUID().equals(ownerUUID))
+                    .filter(entity -> entity instanceof LivingEntity target && !target.getUUID().equals(ownerUUID))
                     .findFirst()
                     .ifPresent(target -> {
-                        onHitEntity(new EntityHitResult(target));
                         impactOccurred = true;
+                        setHit(true);
+                        setDeltaMovement(Vec3.ZERO);
+                        setNoGravity(true); // Ensure it stops moving after impact
                         if (!level().isClientSide) {
-                            playImpactEffects();
+                            if ("aqua_bleed".equals(getArtName())) playWaterImpactEffects(); else playImpactEffects();
                         }
                         deathTimer = 0;
                     });
         }
 
-        // After impact, start countdown
         if (impactOccurred) {
             deathTimer++;
-            if (!level().isClientSide && deathTimer > 60) { // 3 seconds after impact
+            // For Aqua Bleed, damage is delayed to sync with animation (0.25 to 0.5 seconds, 5 to 10 ticks)
+            if ("aqua_bleed".equals(getArtName()) && deathTimer >= 5 && deathTimer <= 10) {
+                AABB damageBox = getBoundingBox().inflate(0.5D);
+                level().getEntities(this, damageBox).stream()
+                        .filter(entity -> entity instanceof LivingEntity target && !target.getUUID().equals(ownerUUID))
+                        .forEach(target -> onHitEntity(new EntityHitResult(target)));
+            }
+
+            if (!level().isClientSide && deathTimer > 60) {
                 setShouldRemove(true);
                 discard();
             }
         }
 
-        // Projectile timeout - shorter for stone_hammer
-        int maxFlightTicks = "stone_hammer".equals(getArtName()) ? 20 : 40;
-        if (lifeTimer > maxFlightTicks && !impactOccurred) { // Shorter range for stone_hammer
-            if (!level().isClientSide) {
-                setShouldRemove(true);
-                discard();
-            }
+        int maxFlightTicks = "stone_hammer".equals(getArtName()) || "aqua_bleed".equals(getArtName()) ? 20 : 40;
+        if (lifeTimer > maxFlightTicks && !impactOccurred) {
+            if (!level().isClientSide) discard();
         }
     }
 
@@ -493,60 +486,73 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
 
             // Check for block collision
             if (this.onGround() || this.horizontalCollision || this.verticalCollision) {
-                if (!groundImpacted) {
-                    // First block impact - just bounce, no explosion
-                    halfAOE = false;
-                    bounceToGround();
-                    // Don't set impactOccurred = true here, let it continue moving
-                } else {
-                    // Second block impact - explode
-                    impactOccurred = true;
-                    setHit(true);
-                    setDeltaMovement(Vec3.ZERO);
-                    setNoGravity(true);
+                impactOccurred = true;
+                setHit(true);
+                setDeltaMovement(Vec3.ZERO);
+                setNoGravity(true);
 
-                    // Apply AOE damage at full power (since it's block impact)
-                    AABB aoeBox = getBoundingBox().inflate(1.5); // 3x3 blocks
-                    level().getEntities(this, aoeBox).stream()
-                            .filter(entity -> entity instanceof LivingEntity target &&
-                                    !target.getUUID().equals(ownerUUID))
-                            .forEach(target -> {
-                                LivingEntity owner = getOwner();
-                                if (owner != null) {
-                                    target.hurt(level().damageSources().indirectMagic(this, owner), getDamage());
-                                } else {
-                                    target.hurt(level().damageSources().magic(), getDamage());
-                                }
-                            });
+                // Apply AOE damage at full power (since it's block impact)
+                AABB aoeBox = getBoundingBox().inflate(1.5); // 3x3 blocks
+                level().getEntities(this, aoeBox).stream()
+                        .filter(entity -> entity instanceof LivingEntity target &&
+                                !target.getUUID().equals(ownerUUID))
+                        .forEach(target -> {
+                            LivingEntity owner = getOwner();
+                            if (owner != null) {
+                                target.hurt(level().damageSources().indirectMagic(this, owner), getDamage());
+                            } else {
+                                target.hurt(level().damageSources().magic(), getDamage());
+                            }
+                        });
 
-                    // Play AOE effects for the final explosion
-                    if (!level().isClientSide) {
-                        playFinalImpactEffects();
-                    }
-
-                    deathTimer = 0;
+                // Play AOE effects for the final explosion
+                if (!level().isClientSide) {
+                    playFinalImpactEffects();
                 }
+
+                deathTimer = 0;
             }
 
             // Check for entity collision
-            if (!impactOccurred && !groundImpacted) {
+            if (!impactOccurred) {
                 AABB box = getBoundingBox().inflate(0.2);
                 level().getEntities(this, box).stream()
                         .filter(entity -> entity instanceof LivingEntity target &&
                                 !target.getUUID().equals(ownerUUID))
                         .findFirst()
                         .ifPresent(target -> {
-                            // Hit entity - cause half damage, then bounce to ground
+                            // Hit entity - cause full damage and stop
                             onHitEntity(new EntityHitResult(target));
-                            halfAOE = true;
-                            bounceToGround();
-                            impactOccurred = true; // End the projectile phase after entity hit
+                            impactOccurred = true;
+                            setHit(true);
+                            setDeltaMovement(Vec3.ZERO);
+                            setNoGravity(true);
+
+                            // Apply AOE damage
+                            AABB aoeBox = getBoundingBox().inflate(1.5); // 3x3 blocks
+                            level().getEntities(this, aoeBox).stream()
+                                    .filter(e -> e instanceof LivingEntity t &&
+                                            !t.getUUID().equals(ownerUUID))
+                                    .forEach(t -> {
+                                        LivingEntity owner = getOwner();
+                                        if (owner != null) {
+                                            t.hurt(level().damageSources().indirectMagic(this, owner), getDamage());
+                                        } else {
+                                            t.hurt(level().damageSources().magic(), getDamage());
+                                        }
+                                    });
+
+                            // Play AOE effects
+                            if (!level().isClientSide) {
+                                playFinalImpactEffects();
+                            }
+                            deathTimer = 0;
                         });
             }
         }
 
         // Handle the lingering AOE effect after impact
-        if (impactOccurred && groundImpacted) {
+        if (impactOccurred) {
             deathTimer++;
             if (!level().isClientSide && deathTimer > 60) { // 3 seconds linger
                 setShouldRemove(true);
@@ -564,54 +570,171 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
         }
     }
 
-    private void bounceToGround() {
-        Vec3 hitPos = position();
-        int gx = Mth.floor(hitPos.x);
-        int gz = Mth.floor(hitPos.z);
-        int gy = level().getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, gx, gz);
+    private void handleProjectileSpreadSpell() { // For Blue Impact
+        if (!impactOccurred) {
+            // Standard projectile movement
+            move(MoverType.SELF, getDeltaMovement());
+            setDeltaMovement(getDeltaMovement().multiply(0.99, 0.95, 0.99));
 
-        setPos(hitPos.x, gy, hitPos.z);
-        setDeltaMovement(Vec3.ZERO);
-        setNoGravity(true);
-
-        // Play bounce effects
-        if (!level().isClientSide) {
-            level().playSound(null, getX(), getY(), getZ(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 1.0f, 1.0f);
-            if (level() instanceof ServerLevel serverLevel) {
-                serverLevel.sendParticles(ParticleTypes.DUST_PLUME, getX(), getY(), getZ(), 10, 0.5, 0.5, 0.5, 0.1);
+            // Check for collision
+            if (onGround() || horizontalCollision || verticalCollision) {
+                impactOccurred = true;
+                setHit(true);
+                setDeltaMovement(Vec3.ZERO);
+                if (!level().isClientSide) playWaterImpactEffects();
+                deathTimer = 0;
             }
-        }
 
-        // If this bounce was after hitting an entity, apply half AOE damage
-        if (halfAOE) {
-            int aoeDamage = getDamage() / 2;
-            AABB aoeBox = getBoundingBox().inflate(1.5); // 3x3 blocks
-            level().getEntities(this, aoeBox).stream()
-                    .filter(entity -> entity instanceof LivingEntity target &&
-                            !target.getUUID().equals(ownerUUID))
-                    .forEach(target -> {
-                        LivingEntity owner = getOwner();
-                        if (owner != null) {
-                            target.hurt(level().damageSources().indirectMagic(this, owner), aoeDamage);
-                        } else {
-                            target.hurt(level().damageSources().magic(), aoeDamage);
-                        }
+            AABB box = getBoundingBox().inflate(0.2);
+            level().getEntities(this, box).stream()
+                    .filter(entity -> entity instanceof LivingEntity target && !target.getUUID().equals(ownerUUID))
+                    .findFirst()
+                    .ifPresent(target -> {
+                        impactOccurred = true;
+                        setHit(true);
+                        setDeltaMovement(Vec3.ZERO);
+                        if (!level().isClientSide) playWaterImpactEffects();
+                        deathTimer = 0;
                     });
+        } else {
+            // After impact, start the bubble animation timer
+            deathTimer++;
+            if (deathTimer == 25) { // 1.25 seconds
+                if (!level().isClientSide && level() instanceof ServerLevel serverLevel) {
+                    // Cause suffocation damage
+                    AABB damageBox = getBoundingBox().inflate(1.0);
+                    level().getEntities(this, damageBox).stream()
+                            .filter(e -> e instanceof LivingEntity target && !target.getUUID().equals(ownerUUID))
+                            .forEach(e -> e.hurt(level().damageSources().drown(), getDamage()));
 
-            // Play AOE effects for entity bounce
-            if (!level().isClientSide) {
-                level().playSound(null, getX(), getY(), getZ(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.0f, 1.0f);
-                if (level() instanceof ServerLevel serverLevel) {
-                    serverLevel.sendParticles(ParticleTypes.EXPLOSION, getX(), getY(), getZ(), 10, 1.0, 0.5, 1.0, 0.1);
-                    serverLevel.sendParticles(ParticleTypes.SMOKE, getX(), getY(), getZ(), 20, 1.0, 0.5, 1.0, 0.05);
+                    // Spawn secondary projectiles
+                    spawnSecondaryProjectiles(serverLevel);
+
+                    // Burst effects
+                    serverLevel.playSound(null, getX(), getY(), getZ(), SoundEvents.BUBBLE_COLUMN_UPWARDS_INSIDE, SoundSource.PLAYERS, 1.0f, 1.0f);
+                    serverLevel.sendParticles(ParticleTypes.BUBBLE_POP, getX(), getY(), getZ(), 30, 0.5, 0.5, 0.5, 0.1);
                 }
             }
-        }
 
-        groundImpacted = true;
-        deathTimer = 0;
+            if (!level().isClientSide && deathTimer > 100) { // 5 seconds total lifetime
+                discard();
+            }
+        }
     }
 
+    private void spawnSecondaryProjectiles(ServerLevel level) {
+        Vec3[] directions = {
+                new Vec3(1, 0, 1).normalize(),   // NE
+                new Vec3(1, 0, -1).normalize(),  // SE
+                new Vec3(-1, 0, -1).normalize(), // SW
+                new Vec3(-1, 0, 1).normalize()   // NW
+        };
+
+        for (Vec3 dir : directions) {
+            GeckoSpellEntity secondary = new GeckoSpellEntity(level, getOwner(), getDamage() / 4, "aqua_bleed"); // Use a simple projectile
+            secondary.setPos(getX(), getY(), getZ());
+            secondary.setDeltaMovement(dir.scale(0.6)); // Slower speed
+            level.addFreshEntity(secondary);
+            level.sendParticles(ParticleTypes.SPLASH, getX(), getY(), getZ(), 10, 0.2, 0.2, 0.2, 0.1);
+        }
+    }
+
+    private void handleProjectileTrailSpell() { // For Diamond Dust
+        if (level().isClientSide || playerStartPos == null || direction == null) return;
+        ServerLevel serverLevel = (ServerLevel) level();
+
+        setYRot(initialYaw + 180.0F);
+
+        switch (spellPhase) {
+            case 1: // Travelling phase (0 to 3.75s, or 75 ticks)
+                if (lifeTimer <= 75) {
+                    double progress = lifeTimer / 75.0;
+                    double travelDistance = progress * 6.0;
+
+                    // --- NEW ARC LOGIC ---
+                    // 1. Define the parameters of the arc.
+                    double startHeight = 3.0; // Starts 3 blocks above the ground.
+                    double arcPeakHeight = 2.5; // It will go an additional 2.5 blocks up at its peak.
+
+                    // 2. Calculate the vertical offset using a parabolic equation.
+                    // This formula creates an arc that is 0 at the start and end of the travel time.
+                    double time = lifeTimer;
+                    double travelDuration = 75.0;
+                    double yOffset = -4 * arcPeakHeight / (travelDuration * travelDuration) * time * (time - travelDuration);
+                    // --- END NEW ARC LOGIC ---
+
+                    // 3. Calculate the ground position for the particle trail (this remains the same)
+                    Vec3 groundTrailPos = playerStartPos.add(direction.scale(travelDistance));
+                    int trailGroundY = level().getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, Mth.floor(groundTrailPos.x), Mth.floor(groundTrailPos.z));
+
+                    // 4. The visual model's position now includes the starting height and the arc offset.
+                    Vec3 modelCurrentPos = new Vec3(groundTrailPos.x, trailGroundY + startHeight + yOffset, groundTrailPos.z);
+
+                    // Collision check for the model, now using the arcing path
+                    Vec3 nextModelPos = modelCurrentPos.add(direction.scale(0.2));
+                    BlockPos collisionCheckPos = new BlockPos(Mth.floor(nextModelPos.x), Mth.floor(nextModelPos.y), Mth.floor(nextModelPos.z));
+                    if (!level().getBlockState(collisionCheckPos).isAir()) {
+                        setPos(getX(), trailGroundY, getZ()); // Drop to ground on collision
+                        setHit(true);
+                        spellPhase = 2;
+                        lifeTimer = 76;
+                        break;
+                    }
+
+                    setPos(modelCurrentPos);
+
+                    // 5. Spawn particles on the ground below the arcing spell
+                    serverLevel.sendParticles(ParticleTypes.SNOWFLAKE, groundTrailPos.x, trailGroundY + 0.1, groundTrailPos.z, 5, 0.2, 0.1, 0.2, 0.0);
+                    AABB trailBox = new AABB(groundTrailPos.x - 0.5, trailGroundY, groundTrailPos.z - 0.5, groundTrailPos.x + 0.5, trailGroundY + 1.0, groundTrailPos.z + 0.5);
+                    level().getEntitiesOfClass(LivingEntity.class, trailBox, e -> !e.getUUID().equals(ownerUUID))
+                            .forEach(e -> e.setTicksFrozen(140));
+
+                } else {
+                    // End of travel: Position entity on the ground at the 6-block mark
+                    Vec3 finalPos = playerStartPos.add(direction.scale(6.0));
+                    int groundY = level().getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, Mth.floor(finalPos.x), Mth.floor(finalPos.z));
+                    setPos(finalPos.x, groundY, finalPos.z);
+                    setDeltaMovement(Vec3.ZERO);
+                    setNoGravity(true);
+                    setHit(true);
+                    spellPhase = 2;
+                }
+                break;
+
+            case 2: // Waiting for the first impact at 4s (tick 80)
+                if (lifeTimer >= 80) {
+                    playIceImpactEffects(1.0f);
+                    AABB damageBox = getBoundingBox().inflate(0.5);
+                    level().getEntities(this, damageBox, e -> e instanceof LivingEntity && !e.getUUID().equals(ownerUUID))
+                            .forEach(e -> {
+                                e.hurt(level().damageSources().magic(), getDamage());
+                                if (e instanceof LivingEntity target) {
+                                    target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 2));
+                                }
+                            });
+                    spellPhase = 3;
+                }
+                break;
+
+            case 3: // Waiting for the final pop at 5s (tick 100)
+                if (lifeTimer >= 100) {
+                    playIceImpactEffects(1.5f);
+                    AABB aoeBox = getBoundingBox().inflate(1.5);
+                    level().getEntities(this, aoeBox, e -> e instanceof LivingEntity && !e.getUUID().equals(ownerUUID))
+                            .forEach(e -> e.hurt(level().damageSources().magic(), getDamage() / 2.0f));
+
+                    spellPhase = 4;
+                    setShouldRemove(true);
+                }
+                break;
+
+            case 4: // Spell finished, waiting for removal
+                if (lifeTimer > 101) {
+                    discard();
+                }
+                break;
+        }
+    }
     protected void onHitEntity(EntityHitResult result) {
         if (!level().isClientSide && result.getEntity() instanceof LivingEntity target) {
             LivingEntity owner = getOwner();
@@ -664,7 +787,24 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
         }
     }
 
-    // New method specifically for stone_impact final explosion
+    private void playWaterImpactEffects() {
+        if (level().isClientSide) return;
+        level().playSound(null, getX(), getY(), getZ(), SoundEvents.AMBIENT_UNDERWATER_ENTER, SoundSource.PLAYERS, 1.0f, 1.2f);
+        if (level() instanceof ServerLevel serverLevel) {
+            serverLevel.sendParticles(ParticleTypes.SPLASH, getX(), getY(), getZ(), 30, 0.5, 0.5, 0.5, 0.2);
+            serverLevel.sendParticles(ParticleTypes.BUBBLE, getX(), getY(), getZ(), 20, 0.3, 0.3, 0.3, 0.1);
+        }
+    }
+
+    private void playIceImpactEffects(float volume) {
+        if (level().isClientSide) return;
+        level().playSound(null, getX(), getY(), getZ(), SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, volume, 1.5f);
+        if (level() instanceof ServerLevel serverLevel) {
+            serverLevel.sendParticles(ParticleTypes.SNOWFLAKE, getX(), getY(), getZ(), 50, 1.0, 1.0, 1.0, 0.1);
+            serverLevel.sendParticles(ParticleTypes.POOF, getX(), getY(), getZ(), 20, 0.5, 0.5, 0.5, 0.05);
+        }
+    }
+
     private void playFinalImpactEffects() {
         if (level().isClientSide) return;
 
@@ -704,19 +844,18 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
     public void registerControllers(AnimatableManager.ControllerRegistrar regs) {
         controller = new AnimationController<>(this, "spellController", 2, state -> {
             String art = getArtName();
-            if (art.isEmpty()) {
-                return PlayState.STOP;
-            }
-
+            if (art.isEmpty()) return PlayState.STOP;
             var def = getArtDefinition();
-            if (def == null) {
-                return PlayState.STOP;
-            }
+            if (def == null) return PlayState.STOP;
 
-            // Force start animation if not started
             if (!animationStarted) {
                 String animKey = "animation." + KisekiLegend.MOD_ID + "." + art + "_cast";
-                Animation.LoopType loopType = ("earth_lance".equals(art) || "titanic_roar".equals(art) || "stone_impact".equals(art) || "petrify_breath".equals(art)) ? HOLD_ON_LAST_FRAME : PLAY_ONCE;
+                boolean hold = switch (art) {
+                    case "earth_lance", "titanic_roar", "stone_impact", "petrify_breath",
+                         "aqua_bleed", "blue_impact", "diamond_dust" -> true;
+                    default -> false;
+                };
+                Animation.LoopType loopType = hold ? HOLD_ON_LAST_FRAME : PLAY_ONCE;
                 state.getController().setAnimation(RawAnimation.begin().then(animKey, loopType));
                 animationStarted = true;
             }
@@ -758,9 +897,22 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
         tag.putInt("DamageDelayTimer", damageDelayTimer);
         tag.putBoolean("GroundImpacted", groundImpacted);
         tag.putBoolean("HalfAOE", halfAOE);
-
+        tag.putInt("SpellPhase", spellPhase);
+        if (playerStartPos != null) {
+            tag.putDouble("PlayerStartX", playerStartPos.x);
+            tag.putDouble("PlayerStartY", playerStartPos.y);
+            tag.putDouble("PlayerStartZ", playerStartPos.z);
+        }
+        if (direction != null) {
+            tag.putDouble("DirX", direction.x);
+            tag.putDouble("DirY", direction.y);
+            tag.putDouble("DirZ", direction.z);
+        }
         if (ownerUUID != null) {
             tag.putUUID("OwnerUUID", ownerUUID);
+        }
+        if ("diamond_dust".equals(getArtName())) {
+            tag.putFloat("InitialYaw", initialYaw);
         }
     }
 
@@ -779,33 +931,50 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
         damageDelayTimer = tag.getInt("DamageDelayTimer");
         groundImpacted = tag.getBoolean("GroundImpacted");
         halfAOE = tag.getBoolean("HalfAOE");
-
+        spellPhase = tag.getInt("SpellPhase");
+        if (tag.contains("PlayerStartX")) {
+            playerStartPos = new Vec3(tag.getDouble("PlayerStartX"), tag.getDouble("PlayerStartY"), tag.getDouble("PlayerStartZ"));
+        }
+        if (tag.contains("DirX")) {
+            direction = new Vec3(tag.getDouble("DirX"), tag.getDouble("DirY"), tag.getDouble("DirZ"));
+        }
         if (tag.hasUUID("OwnerUUID")) {
             ownerUUID = tag.getUUID("OwnerUUID");
         }
+        if ("diamond_dust".equals(getArtName())) {
+            initialYaw = tag.getFloat("InitialYaw");
+        }
     }
-
 
     // Spawn data for client-server sync
     @Override
     public void writeSpawnData(FriendlyByteBuf buffer) {
         buffer.writeUtf(getArtName(), 32);
         buffer.writeInt(getDamage());
-        buffer.writeBoolean(isHit());
-        buffer.writeBoolean(shouldRemove());
-        buffer.writeBoolean(isPositioned());
-        buffer.writeInt(lifeTimer);
-        buffer.writeBoolean(impactOccurred);
-        buffer.writeInt(damageDelayTimer);
-        buffer.writeBoolean(groundImpacted);
-        buffer.writeBoolean(halfAOE);
-
-        // Write owner UUID
         if (ownerUUID != null) {
             buffer.writeBoolean(true);
             buffer.writeUUID(ownerUUID);
         } else {
             buffer.writeBoolean(false);
+        }
+        if (getArtName().equals("diamond_dust")) {
+            if (playerStartPos != null) {
+                buffer.writeBoolean(true);
+                buffer.writeDouble(playerStartPos.x);
+                buffer.writeDouble(playerStartPos.y);
+                buffer.writeDouble(playerStartPos.z);
+            } else {
+                buffer.writeBoolean(false);
+            }
+            if (direction != null) {
+                buffer.writeBoolean(true);
+                buffer.writeDouble(direction.x);
+                buffer.writeDouble(direction.y);
+                buffer.writeDouble(direction.z);
+            } else {
+                buffer.writeBoolean(false);
+            }
+            buffer.writeFloat(initialYaw);
         }
     }
 
@@ -813,18 +982,17 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
     public void readSpawnData(FriendlyByteBuf buffer) {
         setArtName(buffer.readUtf(32));
         setDamage(buffer.readInt());
-        setHit(buffer.readBoolean());
-        setShouldRemove(buffer.readBoolean());
-        setPositioned(buffer.readBoolean());
-        lifeTimer = buffer.readInt();
-        impactOccurred = buffer.readBoolean();
-        damageDelayTimer = buffer.readInt();
-        groundImpacted = buffer.readBoolean();
-        halfAOE = buffer.readBoolean();
-
-        // Read owner UUID
         if (buffer.readBoolean()) {
             ownerUUID = buffer.readUUID();
+        }
+        if (getArtName().equals("diamond_dust")) {
+            if (buffer.readBoolean()) {
+                playerStartPos = new Vec3(buffer.readDouble(), buffer.readDouble(), buffer.readDouble());
+            }
+            if (buffer.readBoolean()) {
+                direction = new Vec3(buffer.readDouble(), buffer.readDouble(), buffer.readDouble());
+            }
+            initialYaw = buffer.readFloat();
         }
     }
 }
