@@ -39,11 +39,8 @@ public class OrbmentProcHandler {
                 def.applyOnHit(target, p);
                 // remove the quartz
                 comp.getInventory().setStackInSlot(i, ItemStack.EMPTY);
-                OrbmentItem.saveInventory(orb,
-                        comp.getInventory(),
-                        comp.getUnlockedSlots(),
-                        p.level()
-                );
+                // Use the new, correct save method
+                OrbmentItem.saveComponent(orb, comp, p.level());
             } else {
                 // normal on‐hit effect
                 def.applyOnHit(target, p);
