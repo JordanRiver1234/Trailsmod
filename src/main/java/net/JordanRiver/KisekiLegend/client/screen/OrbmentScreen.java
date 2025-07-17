@@ -167,12 +167,12 @@ public class OrbmentScreen extends AbstractContainerScreen<OrbmentMenu> {
         int sx = (int) ((ax + 8) / scale);
         int sy = (int) ((ay + 18) / scale);
 
-        // Arts Table columns adjusted - moved effect left and widened it
-        int col_elem = sx + (int) (100 / scale);
-        int col_cost = sx + (int) (160 / scale);
-        int col_time = sx + (int) (210 / scale);
-        int col_power = sx + (int) (260 / scale);
-        int col_effect = sx + (int) (300 / scale); // MOVED LEFT
+        // Arts Table columns - moved everything left, widened elem and effect
+        int col_elem = sx + (int) (80 / scale);
+        int col_cost = sx + (int) (130 / scale);
+        int col_time = sx + (int) (170 / scale);
+        int col_power = sx + (int) (210 / scale);
+        int col_effect = sx + (int) (250 / scale);
 
         gui.drawString(this.font, "Name", sx, sy, 0xFFFFAA);
         gui.drawString(this.font, "Elem", col_elem, sy, 0xFFFFAA);
@@ -191,12 +191,11 @@ public class OrbmentScreen extends AbstractContainerScreen<OrbmentMenu> {
                 int y = sy + (int) ((i * 12) / scale);
 
                 gui.drawString(this.font, truncate(art.name(), 15), sx, y, 0xFFFFFF);
-                gui.drawString(this.font, truncate(formatElem(art.elementCost()), 7), col_elem, y, 0x99FF99);
-                gui.drawString(this.font, truncate(art.epCost(), 6), col_cost, y, 0xFFDDDD);
+                gui.drawString(this.font, truncate(formatElem(art.elementCost()), 9), col_elem, y, 0x99FF99); // Increased from 7 to 9                gui.drawString(this.font, truncate(art.epCost(), 6), col_cost, y, 0xFFDDDD);
                 gui.drawString(this.font, truncate(art.castTime(), 5), col_time, y, 0xFFFFBB);
                 gui.drawString(this.font, truncate(art.power(), 5), col_power, y, 0xFFAAAA);
                 // Effect column widened by increasing truncate limit
-                gui.drawString(this.font, truncate(art.effectDescription(), 35), col_effect, y, 0xAAAAFF); // WIDENED
+                gui.drawString(this.font, truncate(art.effectDescription(), 45), col_effect, y, 0xAAAAFF); // Increased from 35 to 45
             }
         }
         gui.pose().popPose();
