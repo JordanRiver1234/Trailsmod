@@ -111,7 +111,14 @@ public class OrbmentMachineBlock extends Block implements EntityBlock {
                 && held.getItem() instanceof OrbmentItem
                 && !machine.hasOrbment()) {
 
-            machine.setOrbment(held.copy());
+            // Create a single copy for the machine
+            ItemStack orbmentCopy = held.copy();
+            orbmentCopy.setCount(1);
+
+            // Set the orbment in the machine
+            machine.setOrbment(orbmentCopy);
+
+            // Shrink the original stack
             held.shrink(1);
 
             if (player instanceof ServerPlayer srv) {
@@ -126,7 +133,7 @@ public class OrbmentMachineBlock extends Block implements EntityBlock {
 
             if (player instanceof ServerPlayer sp) {
                 sp.connection.send(new ClientboundLevelParticlesPacket(
-                        ParticleTypes.HAPPY_VILLAGER, true,
+                        ParticleTypes.END_ROD , true,
                         pos.getX() + 0.5, pos.getY() + 1.1, pos.getZ() + 0.5,
                         0f, 0.1f, 0f, 0.05f, 10
                 ));

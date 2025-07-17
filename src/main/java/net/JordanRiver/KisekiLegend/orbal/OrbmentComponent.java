@@ -274,11 +274,11 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
             return true; // Neutral slots accept any quartz
         }
 
-        // FIX: Check QuartzItem's sepith data directly instead of relying on CustomData
-        Map<String, Integer> sepithData = quartzItem.getSepith();
+        // Check if the quartz's primary element matches the line's element
+        String quartzElement = quartzItem.getElement().toLowerCase();
         String lineElementName = lineElement.getName().toLowerCase();
 
-        return sepithData.containsKey(lineElementName) && sepithData.get(lineElementName) > 0;
+        return quartzElement.equals(lineElementName);
     }
 
 

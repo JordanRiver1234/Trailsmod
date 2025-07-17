@@ -83,16 +83,24 @@ public class OrbmentScreen extends AbstractContainerScreen<OrbmentMenu> {
         int panelCenterX = this.leftPos + 266; // MOVED FURTHER RIGHT
 // Draw custom panels
         drawPanel(gui, leftPos + 8, topPos + 8, 172, 122, 0xFF4A3828);
+        drawGearShadows(gui, leftPos + 8, topPos + 8, 172, 122);
+
         drawGoldFrame(gui, leftPos + 8, topPos + 8, 172, 122, 1);
 
         drawPanel(gui, panelCenterX - 64, centerY - 64, 128, 128, 0xFF3E2E20);
+        drawGearShadows(gui, panelCenterX - 64, centerY - 64, 128, 128);
+
         drawGoldFrame(gui, panelCenterX - 64, centerY - 64, 128, 128, 2);
 
         drawPanel(gui, leftPos + 340, topPos + 8, 130, 136, 0xFF493420);
+        drawGearShadows(gui, leftPos + 340, topPos + 8, 130, 136);
+
         drawGoldFrame(gui, leftPos + 340, topPos + 8, 130, 136, 3);
 
         int ax = leftPos + 8, ay = topPos + 156;
         drawPanel(gui, ax, ay, ARTS_W, ARTS_H, 0xFF392418);
+        drawGearShadows(gui, ax, ay, ARTS_W, ARTS_H);
+
         drawGoldFrame(gui, ax, ay, ARTS_W - 10, ARTS_H, 4); // Shortened to avoid scrollbar
         // Draw headings
         gui.drawString(this.font, "Player Inventory", leftPos + 16, topPos + 12, 0xFFDDAA, false);
@@ -345,5 +353,125 @@ public class OrbmentScreen extends AbstractContainerScreen<OrbmentMenu> {
         gui.fill(x + w - 4, y, x + w, y + 1, light);
         gui.fill(x, y + h - 1, x + 4, y + h, light);
         gui.fill(x + w - 4, y + h - 1, x + w, y + h, light);
+    }
+    private void drawGearShadows(GuiGraphics gui, int x, int y, int w, int h) {
+        int shadowColor = 0xFF3D2817; // Dark brownish color
+        int gearSize = 32; // Bigger size
+        int offset = 0; // Position at exact corner
+
+        // Draw quarter gear shadows at each corner (facing towards corners)
+        drawQuarterGear(gui, x + offset, y + offset, gearSize, shadowColor, 0); // Top-left (top-left quarter)
+        drawQuarterGear(gui, x + w - gearSize + offset, y + offset, gearSize, shadowColor, 1); // Top-right (top-right quarter)
+        drawQuarterGear(gui, x + offset, y + h - gearSize + offset, gearSize, shadowColor, 2); // Bottom-left (bottom-left quarter)
+        drawQuarterGear(gui, x + w - gearSize + offset, y + h - gearSize + offset, gearSize, shadowColor, 3); // Bottom-right (bottom-right quarter)
+    }
+
+    private void drawQuarterGear(GuiGraphics gui, int x, int y, int size, int color, int corner) {
+        // Corner determines which quarter to draw:
+        // 0 = top-left corner (show top-left quarter of gear)
+        // 1 = top-right corner (show top-right quarter of gear)
+        // 2 = bottom-left corner (show bottom-left quarter of gear)
+        // 3 = bottom-right corner (show bottom-right quarter of gear)
+
+        int centerX, centerY;
+
+        // Position the gear center so the correct quarter faces the corner
+        switch (corner) {
+            case 0: // Top-left corner
+                centerX = x;
+                centerY = y;
+                break;
+            case 1: // Top-right corner
+                centerX = x + size;
+                centerY = y;
+                break;
+            case 2: // Bottom-left corner
+                centerX = x;
+                centerY = y + size;
+                break;
+            case 3: // Bottom-right corner
+            default:
+                centerX = x + size;
+                centerY = y + size;
+                break;
+        }
+
+        int outerRadius = size;
+        int innerRadius = (int)(outerRadius * 0.7);
+        int teethCount = 20; // More teeth for larger gear
+        int toothHeight = (int)(outerRadius * 0.2);
+        int toothWidth = (int)(outerRadius * 0.15);
+        int holeRadius = (int)(outerRadius * 0.25);
+
+        // Draw gear teeth first
+        for (int i = 0; i < teethCount; i++) {
+            double angle = 2 * Math.PI * i / teethCount;
+
+            // Calculate tooth position
+            int toothCenterX = centerX + (int)((innerRadius + toothHeight/2) * Math.cos(angle));
+            int toothCenterY = centerY + (int)((innerRadius + toothHeight/2) * Math.sin(angle));
+
+            // Draw rectangular tooth
+            for (int dx = -toothWidth/2; dx <= toothWidth/2; dx++) {
+                for (int dy = -toothHeight/2; dy <= toothHeight/2; dy++) {
+                    // Rotate the tooth rectangle
+                    int rotatedX = (int)(dx * Math.cos(angle) - dy * Math.sin(angle));
+                    int rotatedY = (int)(dx * Math.sin(angle) + dy * Math.cos(angle));
+
+                    int pixelX = toothCenterX + rotatedX;
+                    int pixelY = toothCenterY + rotatedY;
+
+                    // Only draw if within the panel bounds
+                    if (pixelX >= x && pixelX < x + size && pixelY >= y && pixelY < y + size) {
+                        gui.fill(pixelX, pixelY, pixelX + 1, pixelY + 1, color);
+                    }
+                }
+            }
+        }
+
+        // Draw main gear body (circle)
+        for (int px = x; px < x + size; px++) {
+            for (int py = y; py < y + size; py++) {
+                int dx = px - centerX;
+                int dy = py - centerY;
+                int distance = (int)Math.sqrt(dx * dx + dy * dy);
+
+                // Main gear body
+                if (distance <= innerRadius) {
+                    gui.fill(px, py, px + 1, py + 1, color);
+                }
+            }
+        }
+
+        // Draw center hole (lighter brownish color to show depth)
+        int holeColor = 0xFF4A3426; // Slightly lighter brown
+        for (int px = x; px < x + size; px++) {
+            for (int py = y; py < y + size; py++) {
+                int dx = px - centerX;
+                int dy = py - centerY;
+                int distance = (int)Math.sqrt(dx * dx + dy * dy);
+
+                if (distance <= holeRadius) {
+                    gui.fill(px, py, px + 1, py + 1, holeColor);
+                }
+            }
+        }
+
+        // Add inner detail rings (darker brown for contrast)
+        int ringRadius1 = (int)(innerRadius * 0.8);
+        int ringRadius2 = (int)(innerRadius * 0.9);
+        int ringColor = 0xFF2A1F11; // Darker brown for ring details
+
+        for (int px = x; px < x + size; px++) {
+            for (int py = y; py < y + size; py++) {
+                int dx = px - centerX;
+                int dy = py - centerY;
+                int distance = (int)Math.sqrt(dx * dx + dy * dy);
+
+                if (distance == ringRadius1 || distance == ringRadius2) {
+                    gui.fill(px, py, px + 1, py + 1, ringColor);
+                }
+            }
+        }
     }
 }
