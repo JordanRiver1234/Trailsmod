@@ -81,14 +81,19 @@ public class OrbmentScreen extends AbstractContainerScreen<OrbmentMenu> {
 
         // A new variable for the visual center of the panel, leaving the slot logic untouched.
         int panelCenterX = this.leftPos + 266; // MOVED FURTHER RIGHT
-
-        // Draw custom panels - UPDATED PLAYER INVENTORY PANEL TO MATCH ORBMENT MACHINE
+// Draw custom panels
         drawPanel(gui, leftPos + 8, topPos + 8, 172, 122, 0xFF4A3828);
-        drawPanel(gui, panelCenterX - 64, centerY - 64, 128, 128, 0xFF3E2E20); // Centered using new variable
+        drawGoldFrame(gui, leftPos + 8, topPos + 8, 172, 122, 1);
+
+        drawPanel(gui, panelCenterX - 64, centerY - 64, 128, 128, 0xFF3E2E20);
+        drawGoldFrame(gui, panelCenterX - 64, centerY - 64, 128, 128, 2);
+
         drawPanel(gui, leftPos + 340, topPos + 8, 130, 136, 0xFF493420);
+        drawGoldFrame(gui, leftPos + 340, topPos + 8, 130, 136, 3);
+
         int ax = leftPos + 8, ay = topPos + 156;
         drawPanel(gui, ax, ay, ARTS_W, ARTS_H, 0xFF392418);
-
+        drawGoldFrame(gui, ax, ay, ARTS_W - 10, ARTS_H, 4); // Shortened to avoid scrollbar
         // Draw headings
         gui.drawString(this.font, "Player Inventory", leftPos + 16, topPos + 12, 0xFFDDAA, false);
         gui.drawString(this.font, "Orbment Core", panelCenterX - 36, centerY - 60, 0xFFD700); // Centered using new variable
@@ -268,5 +273,78 @@ public class OrbmentScreen extends AbstractContainerScreen<OrbmentMenu> {
         gui.fill(x, y + h - 1, x + w, y + h, border);
         gui.fill(x, y, x + 1, y + h, border);
         gui.fill(x + w - 1, y, x + w, y + h, border);
+    }
+    private void drawGoldFrame(GuiGraphics gui, int x, int y, int w, int h, int style) {
+        int gold = 0xFFD4AF37;
+        int darkGold = 0xFFB8860B;
+        int lightGold = 0xFFFFD700;
+
+        // Base frame
+        gui.fill(x - 2, y - 2, x + w + 2, y - 1, gold);
+        gui.fill(x - 2, y + h + 1, x + w + 2, y + h + 2, gold);
+        gui.fill(x - 2, y - 2, x - 1, y + h + 2, gold);
+        gui.fill(x + w + 1, y - 2, x + w + 2, y + h + 2, gold);
+
+        // Decorative elements based on style
+        switch (style) {
+            case 1: // Inventory frame - simple scrollwork
+                drawScrollwork(gui, x - 4, y - 4, 8, 8, gold, lightGold);
+                drawScrollwork(gui, x + w - 4, y - 4, 8, 8, gold, lightGold);
+                drawScrollwork(gui, x - 4, y + h - 4, 8, 8, gold, lightGold);
+                drawScrollwork(gui, x + w - 4, y + h - 4, 8, 8, gold, lightGold);
+                break;
+            case 2: // Orbment core frame - ornate circular
+                drawOrnateCorners(gui, x - 3, y - 3, w + 6, h + 6, gold, darkGold, lightGold);
+                break;
+            case 3: // Right panel frame - elegant curves
+                drawElegantFrame(gui, x - 2, y - 2, w + 4, h + 4, gold, darkGold);
+                break;
+            case 4: // Arts panel frame - minimal to avoid scrollbar
+                drawMinimalFrame(gui, x - 1, y - 1, w + 2, h + 2, gold, lightGold);
+                break;
+        }
+    }
+
+    private void drawScrollwork(GuiGraphics gui, int x, int y, int w, int h, int gold, int light) {
+        gui.fill(x + 1, y, x + w - 1, y + 1, light);
+        gui.fill(x, y + 1, x + 1, y + h - 1, light);
+        gui.fill(x + 2, y + 2, x + w - 2, y + 3, gold);
+        gui.fill(x + w - 1, y + 1, x + w, y + h - 1, gold);
+    }
+
+    private void drawOrnateCorners(GuiGraphics gui, int x, int y, int w, int h, int gold, int dark, int light) {
+        // Top corners
+        gui.fill(x, y, x + 6, y + 1, light);
+        gui.fill(x + w - 6, y, x + w, y + 1, light);
+        gui.fill(x, y + 1, x + 3, y + 3, gold);
+        gui.fill(x + w - 3, y + 1, x + w, y + 3, gold);
+
+        // Bottom corners
+        gui.fill(x, y + h - 1, x + 6, y + h, light);
+        gui.fill(x + w - 6, y + h - 1, x + w, y + h, light);
+        gui.fill(x, y + h - 3, x + 3, y + h - 1, gold);
+        gui.fill(x + w - 3, y + h - 3, x + w, y + h - 1, gold);
+    }
+
+    private void drawElegantFrame(GuiGraphics gui, int x, int y, int w, int h, int gold, int dark) {
+        // Curved top
+        gui.fill(x + 2, y, x + w - 2, y + 1, gold);
+        gui.fill(x + 1, y + 1, x + w - 1, y + 2, gold);
+
+        // Curved bottom
+        gui.fill(x + 1, y + h - 2, x + w - 1, y + h - 1, gold);
+        gui.fill(x + 2, y + h - 1, x + w - 2, y + h, gold);
+
+        // Sides with curves
+        gui.fill(x, y + 2, x + 1, y + h - 2, gold);
+        gui.fill(x + w - 1, y + 2, x + w, y + h - 2, gold);
+    }
+
+    private void drawMinimalFrame(GuiGraphics gui, int x, int y, int w, int h, int gold, int light) {
+        // Simple corner accents only
+        gui.fill(x, y, x + 4, y + 1, light);
+        gui.fill(x + w - 4, y, x + w, y + 1, light);
+        gui.fill(x, y + h - 1, x + 4, y + h, light);
+        gui.fill(x + w - 4, y + h - 1, x + w, y + h, light);
     }
 }
