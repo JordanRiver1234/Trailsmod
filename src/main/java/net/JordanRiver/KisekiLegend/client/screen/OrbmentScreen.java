@@ -82,7 +82,7 @@ public class OrbmentScreen extends AbstractContainerScreen<OrbmentMenu> {
         // A new variable for the visual center of the panel, leaving the slot logic untouched.
         int panelCenterX = this.leftPos + 266; // MOVED FURTHER RIGHT
 
-        // Draw custom panels
+        // Draw custom panels - UPDATED PLAYER INVENTORY PANEL TO MATCH ORBMENT MACHINE
         drawPanel(gui, leftPos + 8, topPos + 8, 172, 122, 0xFF4A3828);
         drawPanel(gui, panelCenterX - 64, centerY - 64, 128, 128, 0xFF3E2E20); // Centered using new variable
         drawPanel(gui, leftPos + 340, topPos + 8, 130, 136, 0xFF493420);

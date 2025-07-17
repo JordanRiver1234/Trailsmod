@@ -182,13 +182,39 @@ public class OrbmentMachineBlockEntity extends BlockEntity implements MenuProvid
 
 
     private boolean findAndRemoveItems(Inventory inventory, Item item, int count) {
-        if (inventory.countItem(item) >= count) {
-            inventory.removeItem(new ItemStack(item, count));
-            return true;
-        }
-        return false;
-    }
+        int foundCount = 0;
 
+        // First pass: count how many we have
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            ItemStack stack = inventory.getItem(i);
+            if (stack.getItem() == item) {
+                foundCount += stack.getCount();
+            }
+        }
+
+        // Check if we have enough
+        if (foundCount < count) {
+            return false;
+        }
+
+        // Second pass: actually remove the items
+        int remaining = count;
+        for (int i = 0; i < inventory.getContainerSize() && remaining > 0; i++) {
+            ItemStack stack = inventory.getItem(i);
+            if (stack.getItem() == item) {
+                int toRemove = Math.min(remaining, stack.getCount());
+                stack.shrink(toRemove);
+                remaining -= toRemove;
+
+                // Clean up empty stacks
+                if (stack.isEmpty()) {
+                    inventory.setItem(i, ItemStack.EMPTY);
+                }
+            }
+        }
+
+        return true;
+    }
     private Item getMassItemForElement(Element element) {
         return switch (element) {
             case EARTH -> ModItems.EARTH_MASS.get();

@@ -265,23 +265,20 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
     }
 
     public boolean isQuartzValidForSlot(int slot, ItemStack stack) {
-        if (!(stack.getItem() instanceof QuartzItem)) {
+        if (!(stack.getItem() instanceof QuartzItem quartzItem)) {
             return false;
         }
+
         Element lineElement = this.sepithLines[slot];
         if (lineElement == Element.NONE) {
             return true; // Neutral slots accept any quartz
         }
 
-        CustomData data = stack.get(DataComponents.CUSTOM_DATA);
-        if (data == null) {
-            return false;
-        }
-
-        CompoundTag tag = data.copyTag();
+        // FIX: Check QuartzItem's sepith data directly instead of relying on CustomData
+        Map<String, Integer> sepithData = quartzItem.getSepith();
         String lineElementName = lineElement.getName().toLowerCase();
 
-        return tag.contains(lineElementName, Tag.TAG_INT) && tag.getInt(lineElementName) > 0;
+        return sepithData.containsKey(lineElementName) && sepithData.get(lineElementName) > 0;
     }
 
 

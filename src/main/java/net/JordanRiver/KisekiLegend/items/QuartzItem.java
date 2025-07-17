@@ -6,11 +6,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.level.Level;
-import net.minecraft.core.Registry;
+import net.minecraft.world.item.Item.TooltipContext;
 import javax.annotation.Nullable;
-import net.minecraft.core.Registry;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.List;
@@ -21,8 +18,6 @@ public class QuartzItem extends Item {
     private final Map<String, Integer> sepith;
     private final String bonus;
     private final String effect;
-
-
 
     public QuartzItem(String element, Map<String, Integer> sepith, String bonus, String effect, Properties properties) {
         super(properties.stacksTo(10));
@@ -48,16 +43,20 @@ public class QuartzItem extends Item {
         return effect;
     }
 
+    @Override
+    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
+        super.appendHoverText(stack, context, tooltip, flag); // Call super first
 
-    @SuppressWarnings("deprecation")
-    public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(Component.literal("Element: " + element).withStyle(ChatFormatting.GOLD));
+
         if (!bonus.isEmpty()) {
             tooltip.add(Component.literal("Bonus: " + bonus).withStyle(ChatFormatting.AQUA));
         }
+
         if (!effect.isEmpty()) {
             tooltip.add(Component.literal("Effect: " + effect).withStyle(ChatFormatting.BLUE));
         }
+
         if (!sepith.isEmpty()) {
             tooltip.add(Component.literal("Sepith Cost:").withStyle(ChatFormatting.GRAY));
             for (Map.Entry<String, Integer> entry : sepith.entrySet()) {
@@ -65,7 +64,6 @@ public class QuartzItem extends Item {
             }
         }
     }
-
 
     public String getQuartzId() {
         var key = ForgeRegistries.ITEMS.getKey(this);
