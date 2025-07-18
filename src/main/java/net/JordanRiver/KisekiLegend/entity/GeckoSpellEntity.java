@@ -195,6 +195,15 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
                 case "aqua_bleed" -> serverLevel.sendParticles(ParticleTypes.RAIN, getX(), getY(), getZ(), 2, 0.1, 0.1, 0.1, 0.01);
                 case "blue_impact" -> serverLevel.sendParticles(ParticleTypes.BUBBLE, getX(), getY(), getZ(), 1, 0.1, 0.1, 0.1, 0.01);
                 case "diamond_dust" -> {} // Handled in its own logic
+                case "fire_bolt" -> serverLevel.sendParticles(ParticleTypes.FLAME, getX(), getY(), getZ(), 2, 0.1, 0.1, 0.1, 0.0);
+                case "flare_arrow" -> {
+                    serverLevel.sendParticles(ParticleTypes.FLAME, getX(), getY(), getZ(), 1, 0.05, 0.05, 0.05, 0.0);
+                    serverLevel.sendParticles(ParticleTypes.SMOKE, getX(), getY(), getZ(), 1, 0.05, 0.05, 0.05, 0.0);
+                }
+                case "napalm_breath" -> {
+                    serverLevel.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, getX(), getY(), getZ(), 3, 0.2, 0.2, 0.2, 0.01);
+                    serverLevel.sendParticles(ParticleTypes.FALLING_LAVA, getX(), getY(), getZ(), 1, 0.05, 0.05, 0.05, 0.0);
+                }
                 default -> serverLevel.sendParticles(ParticleTypes.SMOKE, getX(), getY(), getZ(), 1, 0.1, 0.1, 0.1, 0.01);
             }
         }
@@ -443,10 +452,11 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
                     .filter(entity -> entity instanceof LivingEntity target && !target.getUUID().equals(ownerUUID))
                     .findFirst()
                     .ifPresent(target -> {
+                        onHitEntity(new EntityHitResult(target));
                         impactOccurred = true;
                         setHit(true);
                         setDeltaMovement(Vec3.ZERO);
-                        setNoGravity(true); // Ensure it stops moving after impact
+                        setNoGravity(true);
                         if (!level().isClientSide) {
                             if ("aqua_bleed".equals(getArtName())) playWaterImpactEffects(); else playImpactEffects();
                         }
@@ -456,7 +466,6 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
 
         if (impactOccurred) {
             deathTimer++;
-            // For Aqua Bleed, damage is delayed to sync with animation (0.25 to 0.5 seconds, 5 to 10 ticks)
             if ("aqua_bleed".equals(getArtName()) && deathTimer >= 5 && deathTimer <= 10) {
                 AABB damageBox = getBoundingBox().inflate(0.5D);
                 level().getEntities(this, damageBox).stream()
@@ -470,12 +479,11 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
             }
         }
 
-        int maxFlightTicks = "stone_hammer".equals(getArtName()) || "aqua_bleed".equals(getArtName()) ? 20 : 40;
+        int maxFlightTicks = "stone_hammer".equals(getArtName()) || "fire_bolt".equals(getArtName()) ||"aqua_bleed".equals(getArtName()) ? 20 : 40;
         if (lifeTimer > maxFlightTicks && !impactOccurred) {
             if (!level().isClientSide) discard();
         }
     }
-
     private void handleBouncingProjectileSpell() {
         if (!impactOccurred) {
             // Apply movement
@@ -746,11 +754,46 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
         }
     }
 
+    private void playFireImpactEffects() {
+        if (level().isClientSide) return;
+        ServerLevel serverLevel = (ServerLevel) level();
+        String art = getArtName();
+
+        switch (art) {
+            case "fire_bolt" -> {
+                level().playSound(null, getX(), getY(), getZ(), SoundEvents.BLAZE_SHOOT, SoundSource.PLAYERS, 1.0f, 1.2f);
+                serverLevel.sendParticles(ParticleTypes.LAVA, getX(), getY(), getZ(), 10, 0.2, 0.2, 0.2, 0.1);
+                serverLevel.sendParticles(ParticleTypes.FLAME, getX(), getY(), getZ(), 20, 0.5, 0.5, 0.5, 0.1);
+            }
+            case "flare_arrow" -> {
+                // "Showers an enemy with searing flames" effect
+                level().playSound(null, getX(), getY(), getZ(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.7f, 1.5f);
+                serverLevel.sendParticles(ParticleTypes.FLAME, getX(), getY(), getZ(), 50, 1.0, 1.0, 1.0, 0.15);
+                serverLevel.sendParticles(ParticleTypes.SMOKE, getX(), getY(), getZ(), 25, 1.0, 1.0, 1.0, 0.1);
+            }
+        }
+    }
+
+    // Now, MODIFY the existing playImpactEffects method to call our new one.
     private void playImpactEffects() {
         if (level().isClientSide) return;
 
         String art = getArtName();
-        SoundEvent sound = switch (art) {
+        // --- ADD THIS BLOCK to the top of the method ---
+        if (art.equals("fire_bolt") || art.equals("flare_arrow")) {
+            playFireImpactEffects();
+            return;
+        }
+        // --- END OF ADDITION ---
+
+        // Check for water spells
+        if (art.equals("aqua_bleed") || art.equals("blue_impact")) { //
+            playWaterImpactEffects();
+            return;
+        }
+
+        SoundEvent sound = switch (art) { //
+
             case "stone_hammer" -> SoundEvents.ANVIL_BREAK;
             case "earth_lance" -> SoundEvents.GLASS_BREAK;
             case "titanic_roar" -> SoundEvents.ROOTED_DIRT_BREAK; // Custom sound for roar
@@ -809,26 +852,29 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
         if (level().isClientSide) return;
 
         String art = getArtName();
-        if ("stone_impact".equals(art)) {
-            // Play stone impact explosion sound
-            level().playSound(null, getX(), getY(), getZ(), SoundEvents.STONE_BREAK, SoundSource.PLAYERS, 1.5f, 0.8f);
+        // MODIFY the 'if' condition
+        if ("stone_impact".equals(art) || "napalm_breath".equals(art)) {
+            // --- ADD THIS 'if' BLOCK for Napalm Breath ---
+            if ("napalm_breath".equals(art)) {
+                // "Crimson flames that erupt from below" effect
+                level().playSound(null, getX(), getY(), getZ(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 2.0f, 0.7f);
+                if (level() instanceof ServerLevel serverLevel) {
+                    serverLevel.sendParticles(ParticleTypes.EXPLOSION_EMITTER, getX(), getY() + 0.5, getZ(), 2, 0, 0, 0, 0);
+                    // Spawn particles at ground level that move upwards
+                    for (int i = 0; i < 50; i++) {
+                        double radius = 2.5;
+                        double x = getX() + random.nextGaussian() * radius;
+                        double z = getZ() + random.nextGaussian() * radius;
+                        serverLevel.sendParticles(ParticleTypes.FLAME, x, getY() + 0.1, z, 1, 0, 0.5, 0, 0.05);
+                    }
+                    serverLevel.sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, getX(), getY(), getZ(), 40, 2.5, 1.0, 2.5, 0.05);
+                }
+            } else  // stone_impact
 
-            // Add explosion particles for stone impact
-            if (level() instanceof ServerLevel serverLevel) {
-                // Main explosion effect
-                serverLevel.sendParticles(ParticleTypes.EXPLOSION, getX(), getY(), getZ(), 15, 1.0, 0.5, 1.0, 0.1);
-                // Stone debris
-                serverLevel.sendParticles(ParticleTypes.DUST_PLUME, getX(), getY(), getZ(), 25, 1.5, 1.0, 1.5, 0.2);
-                // Falling dust for stone chunks
-                serverLevel.sendParticles(ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, getX(), getY(), getZ(), 30, 1.0, 1.0, 1.0, 0.1);
-                // Smoke cloud
-                serverLevel.sendParticles(ParticleTypes.SMOKE, getX(), getY(), getZ(), 20, 1.0, 0.5, 1.0, 0.05);
+                // Fallback to regular impact effects for other spells
+                playImpactEffects();
             }
-        } else {
-            // Fallback to regular impact effects for other spells
-            playImpactEffects();
         }
-    }
 
     public void setRotationFromLook(Vec3 look) {
         double horizontalDistance = Math.sqrt(look.x * look.x + look.z * look.z);
@@ -850,9 +896,12 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
 
             if (!animationStarted) {
                 String animKey = "animation." + KisekiLegend.MOD_ID + "." + art + "_cast";
+                // MODIFY this switch statement
                 boolean hold = switch (art) {
                     case "earth_lance", "titanic_roar", "stone_impact", "petrify_breath",
-                         "aqua_bleed", "blue_impact", "diamond_dust" -> true;
+                         "aqua_bleed", "blue_impact", "diamond_dust" -> true; //
+                    // ADD THESE CASES
+                    case "fire_bolt", "flare_arrow", "napalm_breath" -> true;
                     default -> false;
                 };
                 Animation.LoopType loopType = hold ? HOLD_ON_LAST_FRAME : PLAY_ONCE;

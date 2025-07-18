@@ -33,6 +33,7 @@ import java.util.function.Consumer;
 public class OrbmentItem extends Item implements GeoItem {
     private static final RawAnimation CAST_ANIM = RawAnimation.begin().then("cast", Animation.LoopType.PLAY_ONCE);
     private static final RawAnimation IDLE_ANIM = RawAnimation.begin().then("idle", Animation.LoopType.LOOP);
+    private static final RawAnimation FLARE_ARROW_ANIM = RawAnimation.begin().then("flare_arrow_draw", Animation.LoopType.PLAY_ONCE);
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
@@ -42,35 +43,45 @@ public class OrbmentItem extends Item implements GeoItem {
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-        HitResult target = player.pick(5.0D, 0.0F, false);
         ItemStack stack = player.getItemInHand(hand);
 
-        if (target.getType() == HitResult.Type.MISS) {  // Air click
-            if (player.isShiftKeyDown()) {  // Shift-right-click: Trigger spell casting animation
-                if (level instanceof ServerLevel serverLevel) {
-                    long id = GeoItem.getOrAssignId(stack, serverLevel);
-                    serverLevel.getServer().execute(() -> triggerAnim(player, id, "cast_controller", "cast"));
-                }
-                return InteractionResultHolder.success(stack);
-            } else {  // Non-shift air click: Open menu
-                if (!level.isClientSide()) {
-                    player.openMenu(new SimpleMenuProvider(
-                            (windowId, inv, plyr) -> new OrbmentMenu(windowId, inv),
-                            Component.literal("Orbment")
-                    ));
-                }
-                return InteractionResultHolder.success(stack);
+        // This method will now ONLY handle the non-shift right-click to open the menu.
+        // The shift-right-click for casting is handled entirely by ArtInputHandler.
+        if (!player.isShiftKeyDown()) {
+            if (!level.isClientSide()) {
+                player.openMenu(new SimpleMenuProvider(
+                        (windowId, inv, plyr) -> new OrbmentMenu(windowId, inv),
+                        Component.literal("Orbment")
+                ));
             }
+            return InteractionResultHolder.success(stack);
         }
+
+        // Pass for shift-clicks, allowing ArtInputHandler to take over without conflict.
         return InteractionResultHolder.pass(stack);
     }
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
         controllers.add(new AnimationController<>(this, "cast_controller", 0, state -> {
-            state.getController().setAnimation(IDLE_ANIM);
-            return PlayState.CONTINUE;
-        }).triggerableAnim("cast", CAST_ANIM).triggerableAnim("idle", IDLE_ANIM));
+            var controller = state.getController();
+
+            // Debug logging
+            System.out.println("Animation Controller State: " + (controller.getCurrentAnimation() != null ? controller.getCurrentAnimation().animation().name() : "null"));
+
+            // If we have a running animation that isn't finished, continue it
+            if (controller.getCurrentAnimation() != null && !controller.hasAnimationFinished()) {
+                System.out.println("Animation running: " + controller.getCurrentAnimation().animation().name());
+                return PlayState.CONTINUE;
+            }
+
+            // Only set idle if no animation is running or the current animation has finished
+            // This prevents idle from overriding triggered animations
+            System.out.println("Setting idle animation");
+            return state.setAndContinue(IDLE_ANIM);
+        }).triggerableAnim("cast", CAST_ANIM)
+                .triggerableAnim("idle", IDLE_ANIM)
+                .triggerableAnim("flare_arrow_draw", FLARE_ARROW_ANIM));
     }
 
     @Override

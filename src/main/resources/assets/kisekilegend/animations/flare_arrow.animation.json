@@ -1,0 +1,48 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.kisekilegend.flare_arrow_cast": {
+			"loop": "hold_on_last_frame",
+			"animation_length": 1,
+			"bones": {
+				"root": {
+					"rotation": {
+						"vector": ["math.sin(query.anim_time * 120) * 6", 0, "math.cos(query.anim_time * 100) * 4"]
+					},
+					"position": {
+						"vector": [0, "math.sin(query.anim_time * 90) * 1", 0]
+					}
+				},
+				"bone": {
+					"rotation": {
+						"vector": [0, 0, "math.sin(query.anim_time * 3000) * 3"]
+					},
+					"position": {
+						"vector": [0, 0, 0]
+					},
+					"scale": {
+						"0.25": {
+							"vector": [0, 0, 0]
+						},
+						"0.2917": {
+							"vector": [0.06, 0.06, 0.06]
+						},
+						"0.3333": {
+							"vector": [0.2, 0.2, 0.2]
+						},
+						"0.4167": {
+							"vector": [0.8, 0.8, 0.8]
+						},
+						"0.4583": {
+							"vector": [0.94, 0.94, 0.94]
+						},
+						"0.5": {
+							"vector": [1, 1, 1]
+						}
+					}
+				}
+			}
+		}
+	},
+	"geckolib_format_version": 2
+}

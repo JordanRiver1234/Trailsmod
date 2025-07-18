@@ -1,38 +1,97 @@
 {
 	"format_version": "1.8.0",
 	"animations": {
-		"cast": {
-			"animation_length": 0.5,
+		"flare_arrow_draw": {
+			"animation_length": 2.0,
 			"bones": {
-				"group2": {
-					"rotation": {
-						"0.0": {
-							"vector": [-1080, 0, 0]
-						},
-						"0.25": {
-							"vector": [-1260, 0, 0]
-						},
-						"0.5": {
-							"vector": [-1440, 0, 0]
-						}
-					},
-					"position": {
-						"vector": [0, 1, 0]
-					},
+				"orbment": {
 					"scale": {
-						"vector": [1, 0.7, 1]
+						"0.0": { "vector": [0, 0, 0] }
 					}
 				},
-				"group": {
+				"voxel_file": {
+					"scale": {
+						"0.0": { "vector": [1, 1, 1] },
+						"2.0": { "vector": [1, 1, 1] }
+					},
 					"rotation": {
-						"vector": [19.3806, -4.2851, -1.01503]
+						"0.0": { "vector": [0, 0, 0] },
+						"0.5": { "vector": [-16.25, 0, 0] },
+						"1.0": { "vector": [-10, 0, 0] },
+						"2.0": { "vector": [0, 0, 0] }
 					},
 					"position": {
-						"vector": [0, 1, 1]
+						"0.0": { "vector": [0, 0, 0] },
+						"0.5": { "vector": [0, 4, -0.33] },
+						"1.0": { "vector": [0, 3, 1] },
+						"2.0": { "vector": [0, 0, 0] }
+					}
+				},
+				"bone2": {
+					"scale": {
+						"0.0": { "vector": [1, 1, 1] },
+						"2.0": { "vector": [1, 1.4, 1] }
+					},
+					"rotation": {
+						"0.0": { "vector": [0, 0, 0] },
+						"1.0": { "vector": [2.5, 0, 0] },
+						"2.0": { "vector": [10, 0, 0] }
+					},
+					"position": {
+						"0.0": { "vector": [0, 0, 0] },
+						"0.5": { "vector": [0, 0, 1] },
+						"1.0": { "vector": [0, -1, 2] },
+						"2.0": { "vector": [0, -3, 1] }
+					}
+				},
+				"bow": {
+					"scale": {
+						"0.0": { "vector": [1, 1, 1] },
+						"2.0": { "vector": [1, 1, 1] }
+					},
+					"rotation": {
+						"0.0": { "vector": [0, 0, 0] },
+						"1.0": { "vector": [-7.5, 0, 0] },
+						"1.5": { "vector": [2.5, 0, 0] },
+						"2.0": { "vector": [0, 0, 0] }
 					}
 				}
 			}
+		},
+		"cast": {
+			"animation_length": 1.0,
+			"bones": {
+				"orbment": {
+					"scale": [1, 1, 1]
+				},
+				"bow": {
+					"scale": [0, 0, 0]
+				},
+				"voxel_file": {
+					"scale": [0, 0, 0]
+				},
+				"bone2": {
+					"scale": [0, 0, 0]
+				}
+			}
+		},
+		"idle": {
+			"loop": true,
+			"animation_length": 0.05,
+			"bones": {
+				"orbment": {
+					"scale": [1, 1, 1]
+				},
+				"bow": {
+					"scale": [0, 0, 0]
+				},
+				"voxel_file": {
+					"scale": [0, 0, 0]
+				},
+				"bone2": {
+					"scale": [0, 0, 0]
+				}
+			}
 		}
-	},
-	"geckolib_format_version": 2
+	}
 }

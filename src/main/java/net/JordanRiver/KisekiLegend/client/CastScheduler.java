@@ -276,6 +276,7 @@ public class CastScheduler {
             switch (artKey) {
                 case "stone_hammer":
                 case "aqua_bleed":
+                case "fire_bolt":
                     projectileSpeed = 0.5;
                     break;
                 default:

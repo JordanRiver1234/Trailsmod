@@ -199,11 +199,14 @@ public class OrbmentScreen extends AbstractContainerScreen<OrbmentMenu> {
                 int y = sy + (int) ((i * 12) / scale);
 
                 gui.drawString(this.font, truncate(art.name(), 15), sx, y, 0xFFFFFF);
-                gui.drawString(this.font, truncate(formatElem(art.elementCost()), 9), col_elem, y, 0x99FF99); // Increased from 7 to 9                gui.drawString(this.font, truncate(art.epCost(), 6), col_cost, y, 0xFFDDDD);
+                gui.drawString(this.font, truncate(formatElem(art.elementCost()), 9), col_elem, y, 0x99FF99);
+
+                // ADD THIS LINE BACK IN:
+                gui.drawString(this.font, truncate(art.epCost(), 6), col_cost, y, 0xFFDDDD);
+
                 gui.drawString(this.font, truncate(art.castTime(), 5), col_time, y, 0xFFFFBB);
                 gui.drawString(this.font, truncate(art.power(), 5), col_power, y, 0xFFAAAA);
-                // Effect column widened by increasing truncate limit
-                gui.drawString(this.font, truncate(art.effectDescription(), 45), col_effect, y, 0xAAAAFF); // Increased from 35 to 45
+                gui.drawString(this.font, truncate(art.effectDescription(), 45), col_effect, y, 0xAAAAFF);
             }
         }
         gui.pose().popPose();

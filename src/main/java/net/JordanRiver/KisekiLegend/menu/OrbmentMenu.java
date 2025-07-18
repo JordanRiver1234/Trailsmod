@@ -53,8 +53,8 @@ public class OrbmentMenu extends AbstractContainerMenu {
         }
 
         // --- Player inventory (UNCHANGED from your file) ---
-        int invX = 8;
-        int invY = 20;
+        int invX = 16;
+        int invY = 32;
         for (int row = 0; row < 3; row++)
             for (int col = 0; col < 9; col++)
                 addSlot(new Slot(inv, col + row * 9 + 9, invX + col * 18, invY + row * 18));
