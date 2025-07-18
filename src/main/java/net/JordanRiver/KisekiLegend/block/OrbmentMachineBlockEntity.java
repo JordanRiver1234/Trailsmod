@@ -124,6 +124,11 @@ public class OrbmentMachineBlockEntity extends BlockEntity implements MenuProvid
             player.sendSystemMessage(Component.literal("Cannot modify a slot with a quartz in it."));
             return;
         }
+        // BUG FIX: Add check to ensure the line is neutral before setting a new one.
+        if (component.getSepithLines()[slot] != Element.NONE) {
+            player.sendSystemMessage(Component.literal("You must remove the existing line before setting a new one."));
+            return;
+        }
 
         Item requiredMass = getMassItemForElement(element);
         if (requiredMass == null) {

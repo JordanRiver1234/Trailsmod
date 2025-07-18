@@ -781,12 +781,23 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
                 level().playSound(null, getX(), getY(), getZ(), SoundEvents.ENDER_DRAGON_GROWL, SoundSource.PLAYERS, 0.5f, 1.5f);
             }
 
-            // The model faces North (-Z) in Blockbench. The entity's rotation is set to the player's rotation.
-            // To get the laser to fire from the model's front, we need the entity's forward vector.
-            Vec3 direction = Vec3.directionFromRotation(0, this.getYRot());
+            Vec3 entityPos = position();
+            Vec3 direction;
 
-            // The model is 2 blocks long. The entity's position is the model's origin (at its back).
-            // The mouth is at the front of the model, so we move forward by the model's length.
+// If we have owner UUID, calculate direction away from owner
+            if (ownerUUID != null) {
+                Player owner = level().getPlayerByUUID(ownerUUID);
+                if (owner != null) {
+                    direction = entityPos.subtract(owner.position()).normalize();
+                } else {
+                    // Fallback to using entity's rotation
+                    direction = Vec3.directionFromRotation(0, this.getYRot());
+                }
+            } else {
+                direction = Vec3.directionFromRotation(0, this.getYRot());
+            }
+
+// The mouth is at the front of the model
             Vec3 mouthPos = position().add(0, 0.5, 0).add(direction.scale(2.0));
 
             double laserLength = 5.0;

@@ -280,11 +280,14 @@ public class CastScheduler {
             spell.setPos(blockX + 0.5, groundY, blockZ + 0.5);
             spell.setDeltaMovement(Vec3.ZERO);
             spell.setNoGravity(true);
-            // Set the entity's rotation directly to the player's rotation.
-            // The visual rotation of the model is handled by its default orientation in Blockbench.
-            // If it faces North (-Z) in Blockbench, setting the entity's yaw to the player's yaw (0 for South)
-            // will correctly orient the model to face South.
-            spell.setYRot(player.getYRot());
+            // FIXED: Calculate direction from player to spell position for proper orientation
+            Vec3 playerPos = player.position();
+            Vec3 spellPos = new Vec3(blockX + 0.5, groundY, blockZ + 0.5);
+            Vec3 direction = spellPos.subtract(playerPos).normalize();
+
+            // Convert direction to yaw (same calculation used for GROUND style)
+            float yaw = (float) (Math.atan2(direction.x, direction.z) * (180.0 / Math.PI));
+            spell.setYRot(yaw);
             spell.setXRot(0f);
         } else {
             Vec3 eyePos = player.getEyePosition();
