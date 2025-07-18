@@ -5,38 +5,112 @@
 			"loop": "hold_on_last_frame",
 			"animation_length": 1,
 			"bones": {
-				"root": {
+				"voxel_file": {
 					"rotation": {
-						"vector": ["math.sin(query.anim_time * 120) * 6", 0, "math.cos(query.anim_time * 100) * 4"]
+						"0.0": {
+							"vector": [0, 0, 0]
+						},
+						"0.0833": {
+							"vector": [-5, 0, 0]
+						},
+						"0.375": {
+							"vector": [-15, 0, 0]
+						},
+						"0.75": {
+							"vector": [-2.5, 0, 0]
+						}
 					},
 					"position": {
-						"vector": [0, "math.sin(query.anim_time * 90) * 1", 0]
+						"0.0": {
+							"vector": [0, 0, 0]
+						},
+						"0.0833": {
+							"vector": [0, 1, 0]
+						},
+						"0.75": {
+							"vector": [0, 4, -14]
+						}
+					},
+					"scale": {
+						"0.0": {
+							"vector": [1, 1, 1]
+						},
+						"0.375": {
+							"vector": [1, 1.1, 1]
+						}
 					}
 				},
-				"bone": {
+				"bone2": {
 					"rotation": {
-						"vector": [0, 0, "math.sin(query.anim_time * 3000) * 3"]
+						"0.0": {
+							"vector": [0, 0, 0]
+						},
+						"0.1667": {
+							"vector": [2.5, 0, 0]
+						}
+					},
+					"position": {
+						"0.0": {
+							"vector": [0, 3, 3]
+						},
+						"0.0833": {
+							"vector": [0, 2, 3]
+						},
+						"0.1667": {
+							"vector": [0, 2, 2]
+						}
+					},
+					"scale": {
+						"0.0": {
+							"vector": [1, 1, 1]
+						},
+						"0.25": {
+							"vector": [1, 1, 1]
+						},
+						"0.375": {
+							"vector": [1, 1, 1]
+						},
+						"0.5": {
+							"vector": [0, 0, 0]
+						}
+					}
+				},
+				"bow": {
+					"rotation": {
+						"vector": [0, 0, 0]
 					},
 					"position": {
 						"vector": [0, 0, 0]
 					},
 					"scale": {
+						"0.0": {
+							"vector": [1, 1, 1]
+						},
 						"0.25": {
-							"vector": [0, 0, 0]
-						},
-						"0.2917": {
-							"vector": [0.06, 0.06, 0.06]
-						},
-						"0.3333": {
-							"vector": [0.2, 0.2, 0.2]
-						},
-						"0.4167": {
-							"vector": [0.8, 0.8, 0.8]
-						},
-						"0.4583": {
-							"vector": [0.94, 0.94, 0.94]
+							"vector": [1, 1, 1]
 						},
 						"0.5": {
+							"vector": [0, 0, 0]
+						}
+					}
+				},
+				"bone": {
+					"rotation": {
+						"vector": [0, 0, 0]
+					},
+					"position": {
+						"0.0": {
+							"vector": [0, 0, 0]
+						},
+						"0.875": {
+							"vector": [0, 4, -10]
+						}
+					},
+					"scale": {
+						"0.0": {
+							"vector": [0, 0, 0]
+						},
+						"0.875": {
 							"vector": [1, 1, 1]
 						}
 					}

@@ -223,7 +223,9 @@ public class CastScheduler {
         if (pendingCast.art.style() == SpawnStyle.GROUND) {
             Vec3 spawnPos;
 
-            if (pendingCast.targetPos != null) {
+            if (artKey.equals("volcanic_rave")) {
+                spawnPos = player.position().add(lookVector.scale(4.0));
+            } else if (pendingCast.targetPos != null) {
                 spawnPos = pendingCast.targetPos;
             } else {
                 spawnPos = player.position().add(lookVector.scale(2.5));
@@ -248,7 +250,7 @@ public class CastScheduler {
             } else if (artKey.equals("petrify_breath")) {
                 spell.setYRot(yaw + 180f);
             } else {
-                spell.setYRot(yaw);
+                spell.setYRot(player.getYRot());
             }
 
             spell.setXRot(0f);
@@ -269,6 +271,21 @@ public class CastScheduler {
             spell.setPos(eyePos.x, eyePos.y - 0.2, eyePos.z);
             spell.setDeltaMovement(lookVector.normalize().scale(2.0));
             spell.setRotationFromLook(lookVector);
+        } else if (pendingCast.art.style() == SpawnStyle.STATIONARY) {
+            Vec3 spawnPos = player.position().add(lookVector.scale(2.0)); // Move to 2 blocks in front
+            int blockX = Mth.floor(spawnPos.x);
+            int blockZ = Mth.floor(spawnPos.z);
+            int groundY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, blockX, blockZ);
+
+            spell.setPos(blockX + 0.5, groundY, blockZ + 0.5);
+            spell.setDeltaMovement(Vec3.ZERO);
+            spell.setNoGravity(true);
+            // Set the entity's rotation directly to the player's rotation.
+            // The visual rotation of the model is handled by its default orientation in Blockbench.
+            // If it faces North (-Z) in Blockbench, setting the entity's yaw to the player's yaw (0 for South)
+            // will correctly orient the model to face South.
+            spell.setYRot(player.getYRot());
+            spell.setXRot(0f);
         } else {
             Vec3 eyePos = player.getEyePosition();
             spell.setPos(eyePos.x, eyePos.y - 0.2, eyePos.z);
@@ -279,6 +296,7 @@ public class CastScheduler {
                 case "fire_bolt":
                     projectileSpeed = 0.5;
                     break;
+                case "fire_bolt_ex":
                 default:
                     projectileSpeed = 0.8;
                     break;

@@ -204,6 +204,8 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
                     serverLevel.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, getX(), getY(), getZ(), 3, 0.2, 0.2, 0.2, 0.01);
                     serverLevel.sendParticles(ParticleTypes.FALLING_LAVA, getX(), getY(), getZ(), 1, 0.05, 0.05, 0.05, 0.0);
                 }
+                case "fire_bolt_ex" -> serverLevel.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, getX(), getY(), getZ(), 2, 0.2, 0.2, 0.2, 0.01);
+                case "spiral_flare", "volcanic_rave" -> {} // Custom particle handling
                 default -> serverLevel.sendParticles(ParticleTypes.SMOKE, getX(), getY(), getZ(), 1, 0.1, 0.1, 0.1, 0.01);
             }
         }
@@ -213,7 +215,10 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
             case GROUND -> {
                 if ("petrify_breath".equals(getArtName())) {
                     handlePetrifyBreathSpell();
-                } else {
+                } else if ("volcanic_rave".equals(getArtName())) {
+                    handleVolcanicRaveSpell();
+                }
+                else {
                     handleGroundSpell();
                 }
             }
@@ -221,6 +226,7 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
             case BOUNCING_PROJECTILE -> handleBouncingProjectileSpell();
             case PROJECTILE_SPREAD -> handleProjectileSpreadSpell();
             case PROJECTILE_TRAIL -> handleProjectileTrailSpell();
+            case STATIONARY -> handleStationarySpell();
             default -> handleProjectileSpell(); // PROJECTILE
         }
     }
@@ -436,32 +442,44 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
             this.move(MoverType.SELF, this.getDeltaMovement());
             this.setDeltaMovement(this.getDeltaMovement().multiply(0.99, 0.95, 0.99));
 
+            // For Fire Bolt EX, apply damage in its path without stopping on entity hit
+            if ("fire_bolt_ex".equals(getArtName())) {
+                // The 3x1 line is represented by an inflated bounding box
+                AABB damageBox = getBoundingBox().inflate(1.0, 0.5, 1.0);
+                level().getEntities(this, damageBox).stream()
+                        .filter(entity -> entity instanceof LivingEntity target && !target.getUUID().equals(ownerUUID))
+                        .forEach(target -> onHitEntity(new EntityHitResult(target))); // Deal damage but don't stop
+            }
+
             if (this.onGround() || this.horizontalCollision || this.verticalCollision) {
                 impactOccurred = true;
                 setHit(true);
                 setDeltaMovement(Vec3.ZERO);
                 setNoGravity(true); // Ensure it stops moving after impact
                 if (!level().isClientSide) {
-                    if ("aqua_bleed".equals(getArtName())) playWaterImpactEffects(); else playImpactEffects();
+                    playImpactEffects();
                 }
                 deathTimer = 0;
             }
 
-            AABB box = getBoundingBox().inflate(0.2);
-            level().getEntities(this, box).stream()
-                    .filter(entity -> entity instanceof LivingEntity target && !target.getUUID().equals(ownerUUID))
-                    .findFirst()
-                    .ifPresent(target -> {
-                        onHitEntity(new EntityHitResult(target));
-                        impactOccurred = true;
-                        setHit(true);
-                        setDeltaMovement(Vec3.ZERO);
-                        setNoGravity(true);
-                        if (!level().isClientSide) {
-                            if ("aqua_bleed".equals(getArtName())) playWaterImpactEffects(); else playImpactEffects();
-                        }
-                        deathTimer = 0;
-                    });
+            // Standard single-target hit check for other projectiles
+            if (!"fire_bolt_ex".equals(getArtName())) {
+                AABB box = getBoundingBox().inflate(0.2);
+                level().getEntities(this, box).stream()
+                        .filter(entity -> entity instanceof LivingEntity target && !target.getUUID().equals(ownerUUID))
+                        .findFirst()
+                        .ifPresent(target -> {
+                            onHitEntity(new EntityHitResult(target));
+                            impactOccurred = true;
+                            setHit(true);
+                            setDeltaMovement(Vec3.ZERO);
+                            setNoGravity(true);
+                            if (!level().isClientSide) {
+                                if ("aqua_bleed".equals(getArtName())) playWaterImpactEffects(); else playImpactEffects();
+                            }
+                            deathTimer = 0;
+                        });
+            }
         }
 
         if (impactOccurred) {
@@ -743,6 +761,159 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
                 break;
         }
     }
+
+    private void handleStationarySpell() { // For Spiral Flare
+        if (impactOccurred) { // Use flag to mean "finished"
+            deathTimer++;
+            if (deathTimer > 40) { // 2 second linger
+                if (!level().isClientSide) {
+                    setShouldRemove(true);
+                    discard();
+                }
+            }
+            return;
+        }
+
+        lifeTimer++;
+
+        if (!level().isClientSide && level() instanceof ServerLevel serverLevel) {
+            if (lifeTimer % 20 == 1) {
+                level().playSound(null, getX(), getY(), getZ(), SoundEvents.ENDER_DRAGON_GROWL, SoundSource.PLAYERS, 0.5f, 1.5f);
+            }
+
+            // The model faces North (-Z) in Blockbench. The entity's rotation is set to the player's rotation.
+            // To get the laser to fire from the model's front, we need the entity's forward vector.
+            Vec3 direction = Vec3.directionFromRotation(0, this.getYRot());
+
+            // The model is 2 blocks long. The entity's position is the model's origin (at its back).
+            // The mouth is at the front of the model, so we move forward by the model's length.
+            Vec3 mouthPos = position().add(0, 0.5, 0).add(direction.scale(2.0));
+
+            double laserLength = 5.0;
+            double spiralRadius = 0.5;
+            double spiralFrequency = 4.0; // How many turns over the length
+
+            // Start the laser just in front of the mouth (d=0.2)
+            for (double d = 0.2; d < laserLength; d += 0.2) {
+                Vec3 forward = direction.scale(d);
+                Vec3 up = new Vec3(0, 1, 0);
+                Vec3 side = direction.cross(up).normalize();
+
+                // Calculate spiral offset, animating over time
+                double angle = (d * spiralFrequency) + (lifeTimer * 0.5);
+                Vec3 offset = side.scale(Math.cos(angle) * spiralRadius).add(up.scale(Math.sin(angle) * spiralRadius));
+                Vec3 particlePos = mouthPos.add(forward).add(offset);
+
+                serverLevel.sendParticles(ParticleTypes.FLAME, particlePos.x, particlePos.y, particlePos.z, 1, 0, 0, 0, 0);
+
+                AABB damageBox = new AABB(particlePos.subtract(0.2, 0.2, 0.2), particlePos.add(0.2, 0.2, 0.2));
+                level().getEntities(this, damageBox).stream()
+                        .filter(entity -> entity instanceof LivingEntity target && !target.getUUID().equals(ownerUUID))
+                        .forEach(target -> onHitEntity(new EntityHitResult(target)));
+            }
+        }
+
+        if (lifeTimer > 100) { // Spell ends after 5 AT (100 ticks)
+            impactOccurred = true;
+            deathTimer = 0;
+        }
+    }
+
+    private void handleVolcanicRaveSpell() {
+        if (!impactOccurred) {
+            impactOccurred = true;
+            setHit(true);
+            setDeltaMovement(Vec3.ZERO);
+            setNoGravity(true);
+            deathTimer = 0;
+            level().playSound(null, getX(), getY(), getZ(), SoundEvents.LAVA_POP, SoundSource.PLAYERS, 2.0f, 0.5f);
+        }
+
+        deathTimer++;
+        if (!level().isClientSide) {
+            ServerLevel serverLevel = (ServerLevel) level();
+            Vec3 origin = position();
+            float yawRad = (float) Math.toRadians(getYRot());
+            boolean lavaHitOccurred = false;
+
+            // Time windows for lava eruptions (in ticks)
+            if (deathTimer >= 5 && deathTimer < 10) { // 0.25 - 0.5s
+                applyVolcanicDamage(serverLevel, origin, 0, 0, getDamage() / 4f, yawRad);
+                lavaHitOccurred = true;
+            }
+            if (deathTimer >= 10 && deathTimer < 15) { // 0.5 - 0.75s
+                applyVolcanicDamage(serverLevel, origin, -1, 1, getDamage() / 4f, yawRad);
+                lavaHitOccurred = true;
+            }
+            if (deathTimer >= 15 && deathTimer < 20) { // 0.75 - 1.0s
+                applyVolcanicDamage(serverLevel, origin, -2, 3, getDamage() / 4f, yawRad);
+                applyVolcanicDamage(serverLevel, origin, -1, 3, getDamage() / 4f, yawRad);
+                lavaHitOccurred = true;
+            }
+            if (deathTimer >= 20 && deathTimer < 25) { // 1.0 - 1.25s
+                applyVolcanicDamage(serverLevel, origin, 0, 4, getDamage() / 4f, yawRad);
+                lavaHitOccurred = true;
+            }
+            if (deathTimer >= 25 && deathTimer < 30) { // 1.25 - 1.5s
+                applyVolcanicDamage(serverLevel, origin, 1, 3, getDamage() / 4f, yawRad);
+                lavaHitOccurred = true;
+            }
+            if (deathTimer >= 30 && deathTimer < 35) { // 1.5 - 1.75s
+                applyVolcanicDamage(serverLevel, origin, 2, 3, getDamage() / 4f, yawRad);
+                applyVolcanicDamage(serverLevel, origin, 1, 1, getDamage() / 4f, yawRad);
+                lavaHitOccurred = true;
+            }
+            if (deathTimer >= 35 && deathTimer < 40) { // 1.75 - 2.0s
+                applyVolcanicDamage(serverLevel, origin, 2, 2, getDamage(), yawRad); // Final hit
+                lavaHitOccurred = true;
+            }
+
+            // Apply movement slowdown inside the rhombus area if no lava is active
+            if (!lavaHitOccurred) {
+                AABB effectArea = getBoundingBox().inflate(3.0, 1.0, 5.0);
+                level().getEntities(this, effectArea).stream()
+                        .filter(entity -> entity instanceof LivingEntity target && !target.getUUID().equals(ownerUUID))
+                        .forEach(target -> ((LivingEntity) target).addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 10, 1)));
+            }
+        }
+
+        if (deathTimer > 100) { // Total duration and linger
+            if (!level().isClientSide) {
+                setShouldRemove(true);
+                discard();
+            }
+        }
+    }
+
+    private Vec3 rotatePoint(Vec3 point, float yawRad) {
+        double cos = Math.cos(yawRad);
+        double sin = Math.sin(yawRad);
+        double newX = point.x * cos - point.z * sin;
+        double newZ = point.x * sin + point.z * cos;
+        return new Vec3(newX, point.y, newZ);
+    }
+
+    private void applyVolcanicDamage(ServerLevel level, Vec3 origin, double relX, double relZ, float damage, float yawRad) {
+        // Rotate the relative X/Z coordinates based on the entity's yaw
+        Vec3 rotatedOffset = rotatePoint(new Vec3(relX, 0, relZ), -yawRad);
+        Vec3 lavaPos = origin.add(rotatedOffset);
+
+        level.sendParticles(ParticleTypes.LAVA, lavaPos.x, lavaPos.y, lavaPos.z, 20, 0.5, 0.2, 0.5, 1);
+        level.sendParticles(ParticleTypes.SMOKE, lavaPos.x, lavaPos.y, lavaPos.z, 10, 0.5, 0.5, 0.5, 0.1);
+
+        AABB damageBox = new AABB(lavaPos.subtract(0.5, 0, 0.5), lavaPos.add(0.5, 1, 0.5));
+        level.getEntities(this, damageBox).stream()
+                .filter(entity -> entity instanceof LivingEntity target && !target.getUUID().equals(ownerUUID))
+                .forEach(target -> {
+                    LivingEntity owner = getOwner();
+                    if(owner != null) {
+                        target.hurt(level.damageSources().indirectMagic(this, owner), damage);
+                    } else {
+                        target.hurt(level.damageSources().lava(), damage);
+                    }
+                });
+    }
+
     protected void onHitEntity(EntityHitResult result) {
         if (!level().isClientSide && result.getEntity() instanceof LivingEntity target) {
             LivingEntity owner = getOwner();
@@ -771,6 +942,11 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
                 serverLevel.sendParticles(ParticleTypes.FLAME, getX(), getY(), getZ(), 50, 1.0, 1.0, 1.0, 0.15);
                 serverLevel.sendParticles(ParticleTypes.SMOKE, getX(), getY(), getZ(), 25, 1.0, 1.0, 1.0, 0.1);
             }
+            case "fire_bolt_ex" -> {
+                level().playSound(null, getX(), getY(), getZ(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.0f, 1.2f);
+                serverLevel.sendParticles(ParticleTypes.EXPLOSION, getX(), getY(), getZ(), 2, 0.5, 0.5, 0.5, 0.1);
+                serverLevel.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, getX(), getY(), getZ(), 30, 1.0, 1.0, 1.0, 0.15);
+            }
         }
     }
 
@@ -780,7 +956,7 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
 
         String art = getArtName();
         // --- ADD THIS BLOCK to the top of the method ---
-        if (art.equals("fire_bolt") || art.equals("flare_arrow")) {
+        if (art.startsWith("fire_")) {
             playFireImpactEffects();
             return;
         }
@@ -869,12 +1045,11 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
                     }
                     serverLevel.sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, getX(), getY(), getZ(), 40, 2.5, 1.0, 2.5, 0.05);
                 }
-            } else  // stone_impact
-
-                // Fallback to regular impact effects for other spells
+            } else { // stone_impact
                 playImpactEffects();
             }
         }
+    }
 
     public void setRotationFromLook(Vec3 look) {
         double horizontalDistance = Math.sqrt(look.x * look.x + look.z * look.z);
@@ -901,7 +1076,7 @@ public class GeckoSpellEntity extends Entity implements GeoEntity, ItemSupplier,
                     case "earth_lance", "titanic_roar", "stone_impact", "petrify_breath",
                          "aqua_bleed", "blue_impact", "diamond_dust" -> true; //
                     // ADD THESE CASES
-                    case "fire_bolt", "flare_arrow", "napalm_breath" -> true;
+                    case "fire_bolt", "flare_arrow", "napalm_breath", "fire_bolt_ex", "spiral_flare" -> true;
                     default -> false;
                 };
                 Animation.LoopType loopType = hold ? HOLD_ON_LAST_FRAME : PLAY_ONCE;

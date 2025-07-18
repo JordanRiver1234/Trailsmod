@@ -33,7 +33,6 @@ import java.util.function.Consumer;
 public class OrbmentItem extends Item implements GeoItem {
     private static final RawAnimation CAST_ANIM = RawAnimation.begin().then("cast", Animation.LoopType.PLAY_ONCE);
     private static final RawAnimation IDLE_ANIM = RawAnimation.begin().then("idle", Animation.LoopType.LOOP);
-    private static final RawAnimation FLARE_ARROW_ANIM = RawAnimation.begin().then("flare_arrow_draw", Animation.LoopType.PLAY_ONCE);
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
@@ -80,8 +79,8 @@ public class OrbmentItem extends Item implements GeoItem {
             System.out.println("Setting idle animation");
             return state.setAndContinue(IDLE_ANIM);
         }).triggerableAnim("cast", CAST_ANIM)
-                .triggerableAnim("idle", IDLE_ANIM)
-                .triggerableAnim("flare_arrow_draw", FLARE_ARROW_ANIM));
+                .triggerableAnim("idle", IDLE_ANIM));
+
     }
 
     @Override

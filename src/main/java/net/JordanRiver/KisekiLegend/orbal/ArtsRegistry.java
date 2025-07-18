@@ -47,8 +47,8 @@ public class ArtsRegistry {
             new ArtDefinition("Flare Arrow", Element.FIRE, Map.of("fire", 3), "20 EP", "1 AT", "40", SpawnStyle.PROJECTILE,"Fire - Single - Attack"),
             new ArtDefinition("Napalm Breath", Element.FIRE, Map.of("fire", 6), "40 EP", "5 AT", "80", SpawnStyle.BOUNCING_PROJECTILE,"Fire - Single - Attack"),
             new ArtDefinition("Fire Bolt EX", Element.FIRE, Map.of("fire", 3, "wind", 1, "space", 1), "120 EP", "1 AT", "20", SpawnStyle.PROJECTILE,"Fire - Area (M) - Attack"),
-            new ArtDefinition("Spiral Flare", Element.FIRE, Map.of("fire", 5, "wind", 2, "space", 2), "230 EP", "5 AT", "50", SpawnStyle.PROJECTILE,"Fire - Area (M) - Attack"),
-            new ArtDefinition("Volcanic Rave", Element.FIRE, Map.of("fire", 8, "earth", 4, "space", 2), "250 EP", "10 AT", "90", SpawnStyle.PROJECTILE,"Fire - Area (M) - Attack"),
+            new ArtDefinition("Spiral Flare", Element.FIRE, Map.of("fire", 5, "wind", 2, "space", 2), "230 EP", "5 AT", "50", SpawnStyle.STATIONARY,"Fire - Area (M) - Attack"),
+            new ArtDefinition("Volcanic Rave", Element.FIRE, Map.of("fire", 8, "earth", 4, "space", 2), "250 EP", "10 AT", "90", SpawnStyle.GROUND,"Fire - Area (M) - Attack"),
 
             // Wind Attack Arts
             new ArtDefinition("Air Strike", Element.WIND, Map.of("wind", 1), "10 EP", "1 AT", "10", SpawnStyle.PROJECTILE,"Wind - Single - Attack"),

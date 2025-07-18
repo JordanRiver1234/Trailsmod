@@ -129,17 +129,10 @@ public class ArtInputHandler {
 
         player.swing(InteractionHand.MAIN_HAND);
 
-        // Only schedule cast on server side
-        // Always trigger animation client-side
         if (orb.getItem() instanceof GeoItem geoItem) {
-            if (art.name().equals("Flare Arrow")) {
-                // If the art is Flare Arrow, trigger the bow draw animation
-                geoItem.triggerAnim(player, GeoItem.getId(orb), "cast_controller", "flare_arrow_draw");
-            } else {
-                // Otherwise, trigger the default cast animation
-                geoItem.triggerAnim(player, GeoItem.getId(orb), "cast_controller", "cast");
-            }
+            geoItem.triggerAnim(player, GeoItem.getId(orb), "cast_controller", "cast");
         }
+
 
 
         // Only schedule cast on the server

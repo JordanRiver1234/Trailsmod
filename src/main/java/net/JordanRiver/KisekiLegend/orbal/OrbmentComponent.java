@@ -52,9 +52,11 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
     public void regenerateEP() {
         this.currentEP = Math.min(getMaxEP(), this.currentEP + 1);
     }
+
     public void fillToMaxEP() {
         this.currentEP = getMaxEP();
     }
+
     public void setCurrentEP(int ep) {
         this.currentEP = Math.min(ep, getMaxEP());
     }

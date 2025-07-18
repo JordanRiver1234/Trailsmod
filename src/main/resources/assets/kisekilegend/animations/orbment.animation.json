@@ -6,7 +6,8 @@
 			"bones": {
 				"orbment": {
 					"scale": {
-						"0.0": { "vector": [0, 0, 0] }
+						"0.0": { "vector": [1, 1, 1] },
+						"2.0": { "vector": [1, 1, 1] }
 					}
 				},
 				"voxel_file": {
