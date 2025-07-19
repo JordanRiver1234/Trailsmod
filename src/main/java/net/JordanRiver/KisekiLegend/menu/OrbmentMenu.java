@@ -1,5 +1,6 @@
 package net.JordanRiver.KisekiLegend.menu;
 
+import net.JordanRiver.KisekiLegend.init.ModSoundEvents;
 import net.JordanRiver.KisekiLegend.items.OrbmentItem;
 import net.JordanRiver.KisekiLegend.items.QuartzItem;
 import net.JordanRiver.KisekiLegend.orbal.OrbmentComponent;
@@ -103,6 +104,10 @@ public class OrbmentMenu extends AbstractContainerMenu {
     @Override
     public void removed(Player player) {
         super.removed(player);
+        // --- ADDED: Play close sound ---
+        if (player.level().isClientSide) {
+            player.playSound(ModSoundEvents.ORBMENT_MENU_CLOSE.get(), 0.7F, 1.0F);
+        }
         orbmentComponent.recalculate();
         OrbmentItem.saveComponent(orbmentStack, orbmentComponent, player.level());
     }

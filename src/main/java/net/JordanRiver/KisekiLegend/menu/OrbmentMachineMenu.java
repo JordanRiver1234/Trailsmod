@@ -1,6 +1,7 @@
 package net.JordanRiver.KisekiLegend.menu;
 
 import net.JordanRiver.KisekiLegend.block.OrbmentMachineBlockEntity;
+import net.JordanRiver.KisekiLegend.init.ModSoundEvents;
 import net.JordanRiver.KisekiLegend.orbal.Element;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.FriendlyByteBuf;
@@ -47,7 +48,14 @@ public class OrbmentMachineMenu extends AbstractContainerMenu {
             this.addSlot(new Slot(playerInv, col, invX + col * 18, invY + 58));
         }
     }
-
+    // --- ADDED: Play close sound when menu is closed ---
+    @Override
+    public void removed(Player player) {
+        super.removed(player);
+        if (player.level().isClientSide) {
+            player.playSound(ModSoundEvents.ORBMENT_MENU_CLOSE.get(), 0.7F, 1.0F);
+        }
+    }
     @Override
     public boolean stillValid(Player player) {
         return access.evaluate((level, pos) ->

@@ -48,14 +48,7 @@ public class CastScheduler {
         // Cancel any existing cast
         cancelCast(player.getUUID());
 
-        // Play casting sound
-        player.level().playSound(
-                null,
-                player.getX(), player.getY(), player.getZ(),
-                SoundEvents.ENCHANTMENT_TABLE_USE,
-                SoundSource.PLAYERS,
-                0.8f, 1.2f
-        );
+
 
         // Spawn aura and magic circle entities
         AuraEntity aura = null;
@@ -293,13 +286,6 @@ public class CastScheduler {
             spell.setRotationFromLook(lookVector);
         }
 
-        level.playSound(
-                null,
-                player.getX(), player.getY(), player.getZ(),
-                SoundEvents.EVOKER_CAST_SPELL,
-                SoundSource.PLAYERS,
-                1.0f, 1.0f
-        );
 
         level.addFreshEntity(spell);
     }

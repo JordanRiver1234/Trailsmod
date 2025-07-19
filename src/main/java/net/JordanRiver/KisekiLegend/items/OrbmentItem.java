@@ -1,6 +1,7 @@
 package net.JordanRiver.KisekiLegend.items;
 
 import net.JordanRiver.KisekiLegend.client.renderer.item.OrbmentItemRenderer;
+import net.JordanRiver.KisekiLegend.init.ModSoundEvents;
 import net.JordanRiver.KisekiLegend.menu.OrbmentMenu;
 import net.JordanRiver.KisekiLegend.orbal.OrbmentComponent;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
@@ -9,6 +10,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.SimpleMenuProvider;
@@ -44,19 +46,18 @@ public class OrbmentItem extends Item implements GeoItem {
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
 
-        // This method will now ONLY handle the non-shift right-click to open the menu.
-        // The shift-right-click for casting is handled entirely by ArtInputHandler.
         if (!player.isShiftKeyDown()) {
             if (!level.isClientSide()) {
                 player.openMenu(new SimpleMenuProvider(
                         (windowId, inv, plyr) -> new OrbmentMenu(windowId, inv),
                         Component.literal("Orbment")
                 ));
+                // --- ADDED: Play open sound ---
+                level.playSound(null, player.getX(), player.getY(), player.getZ(), ModSoundEvents.ORBMENT_MENU_OPEN.get(), SoundSource.PLAYERS, 0.8f, 1.2f);
             }
             return InteractionResultHolder.success(stack);
         }
 
-        // Pass for shift-clicks, allowing ArtInputHandler to take over without conflict.
         return InteractionResultHolder.pass(stack);
     }
 

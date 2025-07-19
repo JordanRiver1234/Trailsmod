@@ -1,5 +1,6 @@
 package net.JordanRiver.KisekiLegend.block;
 
+import net.JordanRiver.KisekiLegend.init.ModSoundEvents;
 import net.JordanRiver.KisekiLegend.items.OrbmentItem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -147,7 +148,7 @@ public class OrbmentMachineBlock extends Block implements EntityBlock {
                 srv.openMenu(machine, pos);
                 level.playSound(
                         null, pos,
-                        SoundEvents.ENDER_CHEST_OPEN,
+                        ModSoundEvents.ORBMENT_MENU_OPEN.get(), // <-- MODIFIED
                         SoundSource.BLOCKS,
                         0.8f, 1.2f
                 );
@@ -162,6 +163,7 @@ public class OrbmentMachineBlock extends Block implements EntityBlock {
 
         return InteractionResult.PASS;
     }
+
 
     @Override
     public @NotNull InteractionResult useWithoutItem(@NotNull BlockState state,

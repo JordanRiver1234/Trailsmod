@@ -8,6 +8,7 @@ import net.JordanRiver.KisekiLegend.client.ArtInputHandler;
 import net.JordanRiver.KisekiLegend.client.ClientSetup;
 import net.JordanRiver.KisekiLegend.client.screen.OrbmentMachineRenderer;
 import net.JordanRiver.KisekiLegend.client.AuraRenderer;
+import net.JordanRiver.KisekiLegend.init.ModSoundEvents;
 import net.JordanRiver.KisekiLegend.particle.ModParticles;
 import net.JordanRiver.KisekiLegend.client.screen.OrbmentScreen;
 import net.JordanRiver.KisekiLegend.datagen.ModDatapackEntries;
@@ -49,6 +50,7 @@ public class KisekiLegend {
         bus.addListener(this::gatherData);
         bus.addListener(this::commonSetup);
         bus.addListener(this::addCreative);
+        ModSoundEvents.register(bus);
 
         ModBlockEntities.register(bus);
         ModEntities.register(bus);

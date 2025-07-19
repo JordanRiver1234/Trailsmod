@@ -1,5 +1,6 @@
 package net.JordanRiver.KisekiLegend.block;
 
+import net.JordanRiver.KisekiLegend.init.ModSoundEvents;
 import net.JordanRiver.KisekiLegend.item.ModItems;
 import net.JordanRiver.KisekiLegend.items.OrbmentItem;
 import net.JordanRiver.KisekiLegend.menu.OrbmentMachineMenu;
@@ -77,12 +78,13 @@ public class OrbmentMachineBlockEntity extends BlockEntity implements MenuProvid
         if (findAndRemoveItems(player.getInventory(), ModItems.SEPITH_MASS.get(), UNLOCK_COST)) {
             component.unlockSlot(slot);
             saveOrbmentData(component);
-            level.playSound(null, getBlockPos(), SoundEvents.PLAYER_LEVELUP, SoundSource.BLOCKS, 1.0f, 1.2f);
+            level.playSound(null, getBlockPos(), ModSoundEvents.ORBMENT_SLOT_UNLOCK.get(), SoundSource.BLOCKS, 1.0f, 1.2f); // <-- MODIFIED
             player.sendSystemMessage(Component.literal("Unlocked slot " + (slot + 1) + "!"));
         } else {
             player.sendSystemMessage(Component.literal("You need " + UNLOCK_COST + " Sepith Mass to unlock a slot."));
         }
     }
+
 
     public void tryRemoveSepithLine(Player player, int slot) {
         if (level == null || level.isClientSide || orbment.isEmpty() || slot < 0 || slot >= OrbmentComponent.MAX_SLOTS) return;

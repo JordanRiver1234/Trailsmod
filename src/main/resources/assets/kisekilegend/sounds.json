@@ -1,0 +1,59 @@
+{
+  "cast_start": {
+    "subtitle": "subtitle.kisekilegend.cast_start",
+    "sounds": [
+      "kisekilegend:cast/start"
+    ]
+  },
+  "cast_loop": {
+    "subtitle": "subtitle.kisekilegend.cast_loop",
+    "sounds": [
+      {
+        "name": "kisekilegend:cast/loop",
+        "stream": true
+      }
+    ]
+  },
+  "cast_complete": {
+    "subtitle": "subtitle.kisekilegend.cast_complete",
+    "sounds": [
+      "kisekilegend:cast/complete"
+    ]
+  },
+  "cast_fail": {
+    "subtitle": "subtitle.kisekilegend.cast_fail",
+    "sounds": [
+      "kisekilegend:cast/fail"
+    ]
+  },
+  "art_select": {
+    "subtitle": "subtitle.kisekilegend.art_select",
+    "sounds": [
+      "kisekilegend:ui/art_select"
+    ]
+  },
+  "ui.orbment.open": {
+    "subtitle": "subtitle.kisekilegend.ui.orbment.open",
+    "sounds": [
+      "kisekilegend:ui/orbment/open"
+    ]
+  },
+  "ui.orbment.close": {
+    "subtitle": "subtitle.kisekilegend.ui.orbment.close",
+    "sounds": [
+      "kisekilegend:ui/orbment/close"
+    ]
+  },
+  "ui.orbment.unlock": {
+    "subtitle": "subtitle.kisekilegend.ui.orbment.unlock",
+    "sounds": [
+      "kisekilegend:ui/orbment/unlock"
+    ]
+  },
+  "ui.orbment.locked": {
+    "subtitle": "subtitle.kisekilegend.ui.orbment.locked",
+    "sounds": [
+      "kisekilegend:ui/orbment/locked"
+    ]
+  }
+}

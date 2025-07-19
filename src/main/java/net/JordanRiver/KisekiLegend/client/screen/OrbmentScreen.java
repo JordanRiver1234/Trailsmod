@@ -1,10 +1,12 @@
 package net.JordanRiver.KisekiLegend.client.screen;
 
+import net.JordanRiver.KisekiLegend.init.ModSoundEvents;
 import net.JordanRiver.KisekiLegend.menu.OrbmentMenu;
 import net.JordanRiver.KisekiLegend.orbal.ArtsRegistry;
 import net.JordanRiver.KisekiLegend.orbal.Element;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
@@ -215,6 +217,17 @@ public class OrbmentScreen extends AbstractContainerScreen<OrbmentMenu> {
     @Override
     public boolean mouseClicked(double mx, double my, int b) {
         if (b == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            // --- ADDED: Play sound on locked slot click ---
+            Slot hovered = this.getSlotUnderMouse();
+            if (hovered != null && hovered.index < OrbmentMenu.ORBMENT_SLOT_COUNT) {
+                if (!this.menu.getOrbmentComponent().isSlotUnlocked(hovered.index)) {
+                    if (this.minecraft != null) {
+                        this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(ModSoundEvents.ORBMENT_SLOT_LOCKED.get(), 1.0F));
+                    }
+                }
+            }
+
+
             int trackX = leftPos + 8 + ARTS_W - SCROLL_MARGIN - SCROLL_W;
             int trackY = topPos + 156 + SCROLL_MARGIN;
             int trackH = ARTS_H - SCROLL_MARGIN * 2;

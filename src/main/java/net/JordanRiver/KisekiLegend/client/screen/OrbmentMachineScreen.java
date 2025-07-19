@@ -1,5 +1,6 @@
 package net.JordanRiver.KisekiLegend.client.screen;
 
+import net.JordanRiver.KisekiLegend.init.ModSoundEvents;
 import net.JordanRiver.KisekiLegend.item.ModItems;
 import net.JordanRiver.KisekiLegend.menu.OrbmentMachineMenu;
 import net.JordanRiver.KisekiLegend.orbal.Element;
@@ -8,6 +9,7 @@ import net.JordanRiver.KisekiLegend.items.OrbmentItem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
@@ -107,6 +109,16 @@ public class OrbmentMachineScreen extends AbstractContainerScreen<OrbmentMachine
                 int sx = (int) (centerX + 40 * Math.cos(angle)) - 9;
                 int sy = (int) (centerY + 40 * Math.sin(angle)) - 9;
                 if (mouseX >= sx && mouseX <= sx + 18 && mouseY >= sy && mouseY <= sy + 18) {
+                    // --- MODIFIED SECTION START ---
+                    ItemStack orb = this.menu.getOrbmentStack();
+                    if (!orb.isEmpty() && minecraft != null && minecraft.level != null) {
+                        OrbmentComponent comp = OrbmentItem.loadComponent(orb, minecraft.level);
+                        if (!comp.isSlotUnlocked(i)) {
+                            minecraft.getSoundManager().play(SimpleSoundInstance.forUI(ModSoundEvents.ORBMENT_SLOT_LOCKED.get(), 1.0F));
+                        }
+                    }
+                    // --- MODIFIED SECTION END ---
+
                     selectedSlot = i;
                     onButtonClick(i);
                     updateButtonStates();
