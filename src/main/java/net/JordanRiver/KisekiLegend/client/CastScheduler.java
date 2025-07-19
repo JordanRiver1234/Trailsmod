@@ -3,7 +3,6 @@ package net.JordanRiver.KisekiLegend.client;
 import net.JordanRiver.KisekiLegend.KisekiLegend;
 import net.JordanRiver.KisekiLegend.entity.AuraEntity;
 import net.JordanRiver.KisekiLegend.entity.GeckoSpellEntity;
-import net.JordanRiver.KisekiLegend.entity.MagicCircleEntity;
 import net.JordanRiver.KisekiLegend.items.OrbmentItem;
 import net.JordanRiver.KisekiLegend.orbal.ArtsRegistry.ArtDefinition;
 import net.JordanRiver.KisekiLegend.orbal.OrbmentComponent;
@@ -30,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Mod.EventBusSubscriber(modid = KisekiLegend.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class CastScheduler {
-    private record PendingCast(UUID playerId, ArtDefinition art, int ticksLeft, long scheduleTime, AuraEntity aura, MagicCircleEntity circle, Vec3 targetPos) {}
+    private record PendingCast(UUID playerId, ArtDefinition art, int ticksLeft, long scheduleTime, AuraEntity aura, Vec3 targetPos) {}
 
     private static final Map<UUID, PendingCast> PENDING = new ConcurrentHashMap<>();
     private static final int MAX_SPELL_LIFETIME = 12000; // 10 minutes max
@@ -60,19 +59,13 @@ public class CastScheduler {
 
         // Spawn aura and magic circle entities
         AuraEntity aura = null;
-        MagicCircleEntity circle = null;
         if (player.level() instanceof ServerLevel serverLevel) {
             aura = new AuraEntity(serverLevel, player);
-            circle = new MagicCircleEntity(serverLevel, player);
             if (serverLevel.addFreshEntity(aura)) {
                 System.out.println("Successfully added AuraEntity " + aura.getId() + " at " + aura.position());
             } else {
                 System.out.println("Failed to add AuraEntity for player: " + player.getName().getString());
-            }
-            if (serverLevel.addFreshEntity(circle)) {
-                System.out.println("Successfully added MagicCircleEntity " + circle.getId() + " at " + circle.position());
-            } else {
-                System.out.println("Failed to add MagicCircleEntity for player: " + player.getName().getString());
+
             }
         } else {
             System.out.println("Failed to spawn entities: level is not ServerLevel");
@@ -85,7 +78,7 @@ public class CastScheduler {
                 Math.max(1, art.getCastDelayTicks()),
                 System.currentTimeMillis(),
                 aura,
-                circle,
+
                 targetPos // Store the target position for ground spells
         );
 
@@ -103,10 +96,7 @@ public class CastScheduler {
                     removed.aura.discard();
                     System.out.println("Discarded AuraEntity for player: " + playerId);
                 }
-                if (removed.circle != null) {
-                    removed.circle.discard();
-                    System.out.println("Discarded MagicCircleEntity for player: " + playerId);
-                }
+
                 System.out.println("Cancelled pending cast for player: " + playerId);
             }
         }
@@ -156,9 +146,7 @@ public class CastScheduler {
                     if (pendingCast.aura != null && !pendingCast.aura.isAlive()) {
                         System.out.println("AuraEntity is not alive for player: " + pendingCast.playerId);
                     }
-                    if (pendingCast.circle != null && !pendingCast.circle.isAlive()) {
-                        System.out.println("MagicCircleEntity is not alive for player: " + pendingCast.playerId);
-                    }
+
                 }
 
                 if (remainingTicks <= 0) {
@@ -166,9 +154,7 @@ public class CastScheduler {
                     if (pendingCast.aura != null) {
                         pendingCast.aura.discard();
                     }
-                    if (pendingCast.circle != null) {
-                        pendingCast.circle.discard();
-                    }
+
                     executeCast(event.getServer(), pendingCast);
                 } else {
                     entry.setValue(new PendingCast(
@@ -177,7 +163,6 @@ public class CastScheduler {
                             remainingTicks,
                             pendingCast.scheduleTime,
                             pendingCast.aura,
-                            pendingCast.circle,
                             pendingCast.targetPos
                     ));
                 }
@@ -350,14 +335,9 @@ public class CastScheduler {
                         removedCount++;
                     }
 
-                } else if (entity instanceof MagicCircleEntity circle) {
-                    boolean isActive = PENDING.values().stream()
-                            .anyMatch(pending -> pending.circle != null && pending.circle.equals(circle));
-                    if (!isActive) {
-                        circle.discard();
-                        removedCount++;
+
                     }
-                }
+
             }
         }
     }
@@ -370,7 +350,6 @@ public class CastScheduler {
                 PendingCast cast = entry.getValue();
                 if (currentTime - cast.scheduleTime > 30000) {
                     if (cast.aura != null) cast.aura.discard();
-                    if (cast.circle != null) cast.circle.discard();
                     return true;
                 }
                 return false;

@@ -199,7 +199,7 @@ public class OrbmentScreen extends AbstractContainerScreen<OrbmentMenu> {
                 int y = sy + (int) ((i * 12) / scale);
 
                 gui.drawString(this.font, truncate(art.name(), 15), sx, y, 0xFFFFFF);
-                gui.drawString(this.font, truncate(formatElem(art.elementCost()), 9), col_elem, y, 0x99FF99);
+                gui.drawString(this.font, truncate(formatElem(art.elementCost()), 11), col_elem, y, 0x99FF99);
 
                 // ADD THIS LINE BACK IN:
                 gui.drawString(this.font, truncate(art.epCost(), 6), col_cost, y, 0xFFDDDD);
@@ -224,6 +224,29 @@ public class OrbmentScreen extends AbstractContainerScreen<OrbmentMenu> {
             }
         }
         return super.mouseClicked(mx, my, b);
+    }
+
+    // --- NEW METHOD TO HANDLE MOUSE WHEEL ---
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        // Define the rectangular area of the arts panel
+        int panelX = this.leftPos + 8;
+        int panelY = this.topPos + 156;
+
+        // Check if the mouse cursor is within the bounds of the arts panel
+        if (mouseX >= panelX && mouseX < panelX + ARTS_W && mouseY >= panelY && mouseY < panelY + ARTS_H) {
+            // scrollY is typically -1.0 for scrolling down and 1.0 for scrolling up.
+            // We subtract it to move the list content in the natural direction.
+            this.scrollOffset -= (int) scrollY;
+
+            // Ensure the scroll offset stays within the valid range (0 to max)
+            this.clampScroll();
+
+            // Return true to indicate that we have handled this scroll event
+            return true;
+        }
+
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     @Override

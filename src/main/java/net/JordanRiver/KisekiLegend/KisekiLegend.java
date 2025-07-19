@@ -8,7 +8,6 @@ import net.JordanRiver.KisekiLegend.client.ArtInputHandler;
 import net.JordanRiver.KisekiLegend.client.ClientSetup;
 import net.JordanRiver.KisekiLegend.client.screen.OrbmentMachineRenderer;
 import net.JordanRiver.KisekiLegend.client.AuraRenderer;
-import net.JordanRiver.KisekiLegend.client.MagicCircleRenderer;
 import net.JordanRiver.KisekiLegend.particle.ModParticles;
 import net.JordanRiver.KisekiLegend.client.screen.OrbmentScreen;
 import net.JordanRiver.KisekiLegend.datagen.ModDatapackEntries;
@@ -18,7 +17,6 @@ import net.JordanRiver.KisekiLegend.item.ModItems;
 import net.JordanRiver.KisekiLegend.menu.ModMenuTypes;
 import net.minecraft.client.gui.screens.MenuScreens;
 
-import net.JordanRiver.KisekiLegend.client.MagicCircleRenderer;
 import net.JordanRiver.KisekiLegend.client.screen.OrbmentMachineScreen;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.entity.EntityRenderers;
@@ -132,10 +130,8 @@ public class KisekiLegend {
 
                 // Register Entity Renderers - CRITICAL: This must be in enqueueWork!
                 EntityRenderers.register(ModEntities.AURA_ENTITY.get(), AuraRenderer::new);
-                EntityRenderers.register(ModEntities.MAGIC_CIRCLE_ENTITY.get(), MagicCircleRenderer::new);
 
                 LOGGER.info("Registered AuraRenderer for: " + ModEntities.AURA_ENTITY.get().getDescriptionId());
-                LOGGER.info("Registered MagicCircleRenderer for: " + ModEntities.MAGIC_CIRCLE_ENTITY.get().getDescriptionId());
             });
 
             // Register input handler (this can be outside enqueueWork)

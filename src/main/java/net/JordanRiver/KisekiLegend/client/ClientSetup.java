@@ -1,3 +1,5 @@
+// src/main/java/net/JordanRiver/KisekiLegend/client/ClientSetup.java
+
 package net.JordanRiver.KisekiLegend.client;
 
 import net.JordanRiver.KisekiLegend.KisekiLegend;
@@ -68,6 +70,8 @@ public class ClientSetup {
             KisekiLegend.LOGGER.info("Client setup starting...");
             // Initialize GeckoLib item renderers
             initializeItemRenderers();
+            // --- ADD THIS LINE ---
+            ClientEventHandler.initializeCustomCursor();
         });
     }
 
