@@ -47,6 +47,7 @@ public class OrbmentItem extends Item implements GeoItem {
         ItemStack stack = player.getItemInHand(hand);
 
         if (!player.isShiftKeyDown()) {
+
             if (!level.isClientSide()) {
                 player.openMenu(new SimpleMenuProvider(
                         (windowId, inv, plyr) -> new OrbmentMenu(windowId, inv),
@@ -111,11 +112,19 @@ public class OrbmentItem extends Item implements GeoItem {
      * @param level The level, used to access registries.
      */
     public static void saveComponent(ItemStack stack, OrbmentComponent component, Level level) {
-        HolderLookup.Provider provider = level.registryAccess();
-        CompoundTag componentTag = component.serializeNBT(provider);
-        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(componentTag));
+        synchronized (OrbmentItem.class) {
+            HolderLookup.Provider provider = level.registryAccess();
+            CompoundTag componentTag = component.serializeNBT(provider);
+            stack.set(DataComponents.CUSTOM_DATA, CustomData.of(componentTag));
+        }
     }
+    public static void updateSelectedArt(ItemStack orbmentStack, String artName, Level level) {
+        if (orbmentStack.isEmpty() || !(orbmentStack.getItem() instanceof OrbmentItem)) return;
 
+        OrbmentComponent component = loadComponent(orbmentStack, level);
+        component.setLastSelectedArtName(artName);
+        saveComponent(orbmentStack, component, level);
+    }
     /**
      * Loads an OrbmentComponent from an ItemStack.
      * If the item is new (no line data), it initializes random sepith lines.
@@ -124,21 +133,24 @@ public class OrbmentItem extends Item implements GeoItem {
      * @return A fully loaded and initialized OrbmentComponent.
      */
     public static OrbmentComponent loadComponent(ItemStack stack, Level level) {
-        OrbmentComponent component = new OrbmentComponent();
+        synchronized (OrbmentItem.class) {        OrbmentComponent component = new OrbmentComponent();
         HolderLookup.Provider provider = level.registryAccess();
 
         if (stack.has(DataComponents.CUSTOM_DATA)) {
             CustomData data = stack.get(DataComponents.CUSTOM_DATA);
             CompoundTag tag = data.copyTag();
             component.deserializeNBT(provider, tag);
-        }
 
-        // If lines have never been initialized, do it now and save back to the item.
-        if (!component.areLinesInitialized()) {
-            component.initializeLines();
-            saveComponent(stack, component, level);
+            // Force recalculation after loading
+            component.recalculate();
+        } else {
+            // Only initialize lines if there's no saved data at all
+            if (!component.areLinesInitialized()) {
+                component.initializeLines();
+                saveComponent(stack, component, level);
+            }
         }
 
         return component;
     }
-}
+}}

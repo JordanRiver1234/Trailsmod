@@ -126,6 +126,7 @@ public class KisekiLegend {
                 // Register GUIs
                 MenuScreens.register(ModMenuTypes.ORBMENT_MACHINE.get(), OrbmentMachineScreen::new);
                 MenuScreens.register(ModMenuTypes.ORBMENT_MENU.get(), OrbmentScreen::new);
+                MinecraftForge.EVENT_BUS.register(new ArtInputHandler());
 
                 // Register Block Entity Renderers
                 BlockEntityRenderers.register(ModBlockEntities.ORBMENT_MACHINE.get(), OrbmentMachineRenderer::new);

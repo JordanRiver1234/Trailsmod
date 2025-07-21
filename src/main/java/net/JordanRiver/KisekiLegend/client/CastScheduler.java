@@ -3,6 +3,7 @@ package net.JordanRiver.KisekiLegend.client;
 import net.JordanRiver.KisekiLegend.KisekiLegend;
 import net.JordanRiver.KisekiLegend.entity.AuraEntity;
 import net.JordanRiver.KisekiLegend.entity.GeckoSpellEntity;
+import net.JordanRiver.KisekiLegend.init.ModSoundEvents;
 import net.JordanRiver.KisekiLegend.items.OrbmentItem;
 import net.JordanRiver.KisekiLegend.orbal.ArtsRegistry.ArtDefinition;
 import net.JordanRiver.KisekiLegend.orbal.OrbmentComponent;
@@ -130,6 +131,9 @@ public class CastScheduler {
 
                 ServerPlayer player = event.getServer().getPlayerList().getPlayer(pendingCast.playerId);
                 if (player != null && player.serverLevel() instanceof ServerLevel serverLevel) {
+
+                    // Play the loop sound on each tick of the countdown
+                    serverLevel.playSound(null, player.blockPosition(), ModSoundEvents.CAST_LOOP.get(), SoundSource.PLAYERS, 0.4f, 1.2f);
                     for (int i = 0; i < 5; i++) {
                         double offsetX = serverLevel.random.nextGaussian() * 0.2;
                         double offsetY = 0.5 + serverLevel.random.nextGaussian() * 0.1;
@@ -174,6 +178,7 @@ public class CastScheduler {
         if (!(heldItem.getItem() instanceof OrbmentItem)) {
             return;
         }
+        level.playSound(null, player.blockPosition(), ModSoundEvents.CAST_COMPLETE.get(), SoundSource.PLAYERS, 0.9f, 1.0f);
 
         // --- DAMAGE BONUS LOGIC ---
         OrbmentComponent orbmentComponent = OrbmentItem.loadComponent(heldItem, level);
@@ -322,7 +327,7 @@ public class CastScheduler {
                     }
 
 
-                    }
+                }
 
             }
         }

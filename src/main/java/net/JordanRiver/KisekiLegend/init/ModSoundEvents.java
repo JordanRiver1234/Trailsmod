@@ -18,6 +18,15 @@ public class ModSoundEvents {
     public static final RegistryObject<SoundEvent> CAST_COMPLETE = registerSoundEvent("cast_complete");
     public static final RegistryObject<SoundEvent> CAST_FAIL = registerSoundEvent("cast_fail");
 
+    // Radial Menu UI sounds
+    public static final RegistryObject<SoundEvent> UI_CLOCK_OPEN = registerSoundEvent("ui.clock_open");
+    public static final RegistryObject<SoundEvent> UI_CLOCK_CLOSE = registerSoundEvent("ui.clock_close");
+    public static final RegistryObject<SoundEvent> UI_ELEMENT_HOVER_TICK = registerSoundEvent("ui.element_tick");
+    public static final RegistryObject<SoundEvent> UI_RINGS_ENGAGE = registerSoundEvent("ui.rings_engage");
+    public static final RegistryObject<SoundEvent> UI_SPIRAL_TICK = registerSoundEvent("ui.spiral_tick");
+    public static final RegistryObject<SoundEvent> UI_ART_SELECT_CHIME = registerSoundEvent("ui.art_select");
+    public static final RegistryObject<SoundEvent> UI_FAVORITE_SET = registerSoundEvent("ui.favorite_set");
+
     // UI sounds
     public static final RegistryObject<SoundEvent> ART_SELECT = registerSoundEvent("art_select");
 

@@ -17,7 +17,7 @@ import java.util.UUID;
 @Mod.EventBusSubscriber(modid = KisekiLegend.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class PlayerRenderHandler {
 
-    // Track casting state per player
+    // Track casting state per player// This section is in progress
     private static final Map<UUID, CastingData> CASTING_PLAYERS = new HashMap<>();
 
     private static class CastingData {
