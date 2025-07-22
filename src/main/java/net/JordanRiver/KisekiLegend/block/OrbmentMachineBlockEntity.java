@@ -69,6 +69,10 @@ public class OrbmentMachineBlockEntity extends BlockEntity implements MenuProvid
         if (level == null || level.isClientSide || orbment.isEmpty() || slot < 0 || slot >= OrbmentComponent.MAX_SLOTS) return;
 
         OrbmentComponent component = OrbmentItem.loadComponent(orbment, level);
+// Ensure lines are initialized but don't re-randomize if already set
+        if (!component.areLinesInitialized()) {
+            component.initializeLines();
+        }
         if (component.isSlotUnlocked(slot)) {
             player.sendSystemMessage(Component.literal("Slot is already unlocked."));
             return;

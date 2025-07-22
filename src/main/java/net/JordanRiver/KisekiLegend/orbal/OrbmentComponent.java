@@ -31,7 +31,6 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
 
     public static final int SEPITH_MATCH_BONUS = 3;
 
-    // ---- EP system ----
     private static final int BASE_MAX_EP = 270;
     private int currentEP = BASE_MAX_EP;
 
@@ -48,7 +47,6 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
     public void fillToMaxEP() { this.currentEP = getMaxEP(); }
     public void setCurrentEP(int ep) { this.currentEP = Math.min(ep, getMaxEP()); }
 
-    // --------------------
 
     private final boolean[] unlockedStatus = new boolean[MAX_SLOTS];
     private final Element[] sepithLines = new Element[MAX_SLOTS];
@@ -72,29 +70,55 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
         unlockedStatus[0] = true;
     }
 
-    // --- FAVORITES LOGIC ---
     public String getFavorite(int index) {
         if (index >= 0 && index < MAX_FAVORITES) {
             return favoriteArts[index];
         }
         return "";
     }
-
     public void setFavorite(int index, String artName) {
         if (index >= 0 && index < MAX_FAVORITES) {
             favoriteArts[index] = artName == null ? "" : artName;
+            markDirty(); // Ensure persistence
         }
     }
 
     public String getLastSelectedArtName() {
-        return this.lastSelectedArtName;
+        return this.lastSelectedArtName == null ? "" : this.lastSelectedArtName;
     }
 
     public void setLastSelectedArtName(String artName) {
         this.lastSelectedArtName = artName == null ? "" : artName;
+        // Force save when setting last selected art
+        this.markDirty();
     }
-    // --- END FAVORITES LOGIC ---
+    public void setSelectedArt(String artName) {
+        setLastSelectedArtName(artName);
+    }
 
+    public String getSelectedArt() {
+        return getLastSelectedArtName();
+    }
+
+    private boolean isDirty = false;
+    public void markDirty() { this.isDirty = true; }
+    public boolean isDirty() { return this.isDirty; }
+    public void clearDirty() { this.isDirty = false; }
+    public boolean isArtAvailable(String artName) {
+        ArtsRegistry.ArtDefinition artDef = ArtsRegistry.ALL_ARTS.stream()
+                .filter(art -> art.name().equals(artName))
+                .findFirst()
+                .orElse(null);        if (artDef == null) return false;
+
+        return artDef.elementCost().entrySet().stream()
+                .allMatch(e -> getSepithCounts()[ELEMENT_INDEX.get(e.getKey())] >= e.getValue());
+    }
+
+    public List<String> getAvailableFavorites() {
+        return Arrays.stream(favoriteArts)
+                .filter(art -> !art.isEmpty() && isArtAvailable(art))
+                .collect(Collectors.toList());
+    }
     public boolean hasQuartz(String quartzId) {
         for (int i = 0; i < inventory.getSlots(); i++) {
             ItemStack s = inventory.getStackInSlot(i);
@@ -104,7 +128,12 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
         }
         return false;
     }
-
+    public void syncArtSelection(String newArtName) {
+        if (isArtAvailable(newArtName)) {
+            setLastSelectedArtName(newArtName);
+            markDirty();
+        }
+    }
     public void unlockSlot(int slot) {
         if (slot >= 0 && slot < MAX_SLOTS) {
             unlockedStatus[slot] = true;
@@ -127,9 +156,6 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
     public boolean[] getUnlockedStatus() { return unlockedStatus; }
     public SizedItemStackHandler getInventory() { return inventory; }
     public int[] getSepithCounts() { return sepith; }
-
-    // ✅✅✅ CRITICAL FIX: This method is now NON-DESTRUCTIVE. It only calculates Sepith values
-    // and no longer deletes the user's saved favorite/selected arts.
     public void recalculate() {
         updateSepithCounts();
     }
@@ -157,7 +183,6 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
             }
         }
     }
-
     public float getArtDamageMultiplier(Element artElement) {
         if (artElement == Element.NONE) return 1.0f;
         for (int i = 0; i < inventory.getSlots(); i++) {
@@ -173,7 +198,6 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
         }
         return 1.0f;
     }
-
     public void tickBuffs(Player player) {
         for (QuartzDefinition def : QuartzRegistry.all()) {
             Holder<MobEffect> h = def.getSelfBuffHolder();
@@ -189,7 +213,6 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
             if (def != null) def.applySelfBuff(player);
         }
     }
-
     public Element[] getSepithLines() { return sepithLines; }
     public boolean areLinesInitialized() { return linesInitialized; }
 
@@ -209,7 +232,6 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
         }
         this.linesInitialized = true;
     }
-
     public void setSepithLine(int slot, Element element) {
         if (slot >= 0 && slot < MAX_SLOTS) {
             if (!inventory.getStackInSlot(slot).isEmpty()) return;
@@ -217,9 +239,7 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
             updateSepithCounts();
         }
     }
-
     public void removeSepithLine(int slot) { setSepithLine(slot, Element.NONE); }
-
     public boolean isQuartzValidForSlot(int slot, ItemStack stack) {
         if (!(stack.getItem() instanceof QuartzItem quartzItem)) return false;
         Element lineElement = this.sepithLines[slot];
@@ -228,7 +248,6 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
         String lineElementName = lineElement.getName().toLowerCase();
         return quartzElement.equals(lineElementName);
     }
-
     @Override
     public CompoundTag serializeNBT(HolderLookup.Provider provider) {
         CompoundTag root = new CompoundTag();
@@ -264,6 +283,9 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
 
         if (root.contains("SepithLines", Tag.TAG_LIST)) {
             ListTag linesTag = root.getList("SepithLines", Tag.TAG_STRING);
+            // First fill all slots with NONE
+            Arrays.fill(sepithLines, Element.NONE);
+            // Then restore the saved values
             for (int i = 0; i < Math.min(linesTag.size(), MAX_SLOTS); i++) {
                 try {
                     sepithLines[i] = Element.valueOf(linesTag.getString(i));
@@ -286,7 +308,6 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
         if (root.contains("QuartzSlots", Tag.TAG_COMPOUND)) {
             inventory.deserializeNBT(provider, root.getCompound("QuartzSlots"));
         }
-        // Recalculate sepith totals after loading, but do not validate/clear arts here.
         updateSepithCounts();
     }
 }

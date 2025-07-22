@@ -55,6 +55,16 @@ public class ClientSetup {
     public static boolean showEP = true;
     public static boolean artSelectMode = false;
 
-    // Legacy index is no longer the source of truth, but can be kept for UI hints if desired
+    // This should sync with the actual selected art from the orbment
     public static int selectedArtIdx = 0;
+
+    // Method to sync the index with the actual selected art
+    public static void syncSelectedArtIndex(String selectedArtName, java.util.List<String> availableArts) {
+        if (selectedArtName != null && availableArts != null) {
+            int index = availableArts.indexOf(selectedArtName);
+            if (index >= 0) {
+                selectedArtIdx = index;
+            }
+        }
+    }
 }

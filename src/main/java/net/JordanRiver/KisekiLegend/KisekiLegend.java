@@ -9,6 +9,7 @@ import net.JordanRiver.KisekiLegend.client.ClientSetup;
 import net.JordanRiver.KisekiLegend.client.screen.OrbmentMachineRenderer;
 import net.JordanRiver.KisekiLegend.client.AuraRenderer;
 import net.JordanRiver.KisekiLegend.init.ModSoundEvents;
+import net.JordanRiver.KisekiLegend.network.NetworkHandler;
 import net.JordanRiver.KisekiLegend.particle.ModParticles;
 import net.JordanRiver.KisekiLegend.client.screen.OrbmentScreen;
 import net.JordanRiver.KisekiLegend.datagen.ModDatapackEntries;
@@ -30,6 +31,7 @@ import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
@@ -64,10 +66,18 @@ public class KisekiLegend {
         MinecraftForge.EVENT_BUS.register(this);
     }
 
-    private void commonSetup(FMLCommonSetupEvent event) {
-        LOGGER.info("KisekiLegend mod setup complete.");
+    public KisekiLegend(IEventBus modEventBus, ModContainer modContainer) {
+        // ... other registrations ...
+
+        // Register network packets
     }
 
+
+    private void commonSetup(final FMLCommonSetupEvent event) {
+        // This is the correct place to initialize networking.
+        // This single line will fix the crash.
+        event.enqueueWork(NetworkHandler::register);
+    }
     private void gatherData(GatherDataEvent event) {
         if (event.includeServer()) {
             event.getGenerator().addProvider(

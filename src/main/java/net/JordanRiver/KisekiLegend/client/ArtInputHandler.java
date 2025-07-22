@@ -59,7 +59,6 @@ public class ArtInputHandler {
             CastScheduler.scheduleCast(player, art, targetPos);
         }
     }
-
     @SubscribeEvent
     public static void onRightClick(RightClickItem ev) {
         Player player = ev.getEntity();
@@ -71,22 +70,17 @@ public class ArtInputHandler {
         if (!(orb.getItem() instanceof OrbmentItem)) return;
 
         OrbmentComponent comp = OrbmentItem.loadComponent(orb, player.level());
-        // Recalculate to get the most up-to-date availability
         comp.recalculate();
         List<ArtsRegistry.ArtDefinition> availableArts = getAvailableArts(comp);
 
-        String lastArtName = comp.getLastSelectedArtName();
+        String lastArtName = comp.getSelectedArt();
         ArtsRegistry.ArtDefinition artToCast = null;
-
-        // Find the art definition for the saved name
         if (lastArtName != null && !lastArtName.isEmpty()) {
             artToCast = ArtsRegistry.ALL_ARTS.stream()
                     .filter(art -> art.name().equals(lastArtName))
                     .findFirst()
                     .orElse(null);
         }
-
-        // ✅ FIX: Do not default to another art. If the selected art is invalid or unavailable, fail the cast.
         if (artToCast == null || !availableArts.contains(artToCast)) {
             if (artToCast != null) {
                 player.displayClientMessage(Component.literal("Cannot cast " + artToCast.name() + ": requirements not met."), true);
@@ -95,13 +89,9 @@ public class ArtInputHandler {
             ev.setCanceled(true);
             return;
         }
-
-        // Cast the chosen art
         castArt(player, artToCast, comp);
         ev.setCanceled(true);
     }
-
-
     private static List<ArtsRegistry.ArtDefinition> getAvailableArts(OrbmentComponent comp) {
         return ArtsRegistry.ALL_ARTS.stream()
                 .filter(def -> def.elementCost().entrySet().stream()
@@ -109,7 +99,6 @@ public class ArtInputHandler {
                 .sorted(Comparator.comparing(art -> art.name())) // Sort alphabetically for consistency
                 .collect(Collectors.toList());
     }
-
     private static ItemStack findOrbment(Player player) {
         if (player.getMainHandItem().getItem() instanceof OrbmentItem) return player.getMainHandItem();
         if (player.getOffhandItem().getItem() instanceof OrbmentItem) return player.getOffhandItem();
@@ -119,7 +108,6 @@ public class ArtInputHandler {
         }
         return ItemStack.EMPTY;
     }
-
     private static void playSound(SoundEvent soundEvent, Player player, float volume, float pitch) {
         if (player.level() == null || soundEvent == null) return;
         player.level().playLocalSound(

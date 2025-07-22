@@ -8,6 +8,8 @@ import net.JordanRiver.KisekiLegend.client.screen.OrbmentScreen;
 import net.JordanRiver.KisekiLegend.entity.AuraEntity;
 import net.JordanRiver.KisekiLegend.init.ModSoundEvents;
 import net.JordanRiver.KisekiLegend.items.OrbmentItem;
+import net.JordanRiver.KisekiLegend.network.NetworkHandler;
+import net.JordanRiver.KisekiLegend.network.SetSelectedArtPacket;
 import net.JordanRiver.KisekiLegend.orbal.ArtsRegistry;
 import net.JordanRiver.KisekiLegend.orbal.OrbmentComponent;
 import net.minecraft.client.Minecraft;
@@ -77,22 +79,20 @@ public class ClientEventHandler {
         Player player = mc.player;
         if (player == null) return;
 
-        // Check for radial menu opening
-        if (ClientSetup.OPEN_RADIAL_MENU.consumeClick()) {
-            if (mc.screen == null) {
-                if (findOrbmentInInventory(player).getItem() instanceof OrbmentItem) {
-                    mc.setScreen(new ArtSelectionScreen());
-                    player.playSound(ModSoundEvents.UI_CLOCK_OPEN.get(), 0.8f, 1.0f);
-                }
-            }
-        }
+        // Handle custom cursor logic
+        handleCustomCursor(mc);
 
-        // Handle other inputs only when no screen is open
+        // Handle radial menu and other inputs ONLY when no screen is open
         if (mc.screen == null) {
+            handleRadialMenuInput(mc, player);
             handleInGameInput(player);
         }
 
-        // Custom Cursor Logic
+        // Handle animation logic
+        handleAnimationLogic(mc, player);
+    }
+
+    private static void handleCustomCursor(Minecraft mc) {
         boolean shouldShowCustomCursor = mc.screen instanceof OrbmentScreen || mc.screen instanceof OrbmentMachineScreen;
         if (shouldShowCustomCursor) {
             if (!isCustomCursorSet && customCursor != 0L) {
@@ -105,10 +105,23 @@ public class ClientEventHandler {
                 isCustomCursorSet = false;
             }
         }
+    }
 
-        // Animation Logic
+    private static void handleRadialMenuInput(Minecraft mc, Player player) {
+        // Only handle radial menu input when no screen is open
+        if (ClientSetup.OPEN_RADIAL_MENU.consumeClick()) {
+            ItemStack orbment = findOrbmentInInventory(player);
+            if (orbment.getItem() instanceof OrbmentItem) {
+                mc.setScreen(new ArtSelectionScreen());
+                player.playSound(ModSoundEvents.UI_CLOCK_OPEN.get(), 0.8f, 1.0f);
+            }
+        }
+    }
+
+    private static void handleAnimationLogic(Minecraft mc, Player player) {
         ClientLevel level = mc.level;
         if (level == null) return;
+
         boolean hasAuraNearby = level.getEntitiesOfClass(AuraEntity.class, player.getBoundingBox().inflate(2.0))
                 .stream().anyMatch(e -> {
                     var uuid = e.getOwnerUUID();
@@ -126,50 +139,75 @@ public class ClientEventHandler {
     private static ItemStack findOrbmentInInventory(Player player) {
         ItemStack mainHand = player.getMainHandItem();
         if (mainHand.getItem() instanceof OrbmentItem) return mainHand;
-
         ItemStack offHand = player.getOffhandItem();
         if (offHand.getItem() instanceof OrbmentItem) return offHand;
-
         for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
             ItemStack stack = player.getInventory().getItem(i);
             if (stack.getItem() instanceof OrbmentItem) return stack;
         }
-
         return ItemStack.EMPTY;
     }
 
+    private static void syncArtSelectionIfNeeded(Player player, ItemStack orb) {
+        if (!(orb.getItem() instanceof OrbmentItem)) return;
+        OrbmentComponent comp = OrbmentItem.loadComponent(orb, player.level());
+        String currentSelection = comp.getSelectedArt();
+        if (!currentSelection.isEmpty() && !comp.isArtAvailable(currentSelection)) {
+            List<ArtsRegistry.ArtDefinition> availableArts = ArtsRegistry.ALL_ARTS.stream()
+                    .filter(def -> comp.isArtAvailable(def.name()))
+                    .sorted(Comparator.comparing(ArtsRegistry.ArtDefinition::name))
+                    .collect(Collectors.toList());
+            if (!availableArts.isEmpty()) {
+                comp.setSelectedArt(availableArts.get(0).name());
+                OrbmentItem.saveComponent(orb, comp, player.level());
+            } else {
+                comp.setSelectedArt("");
+                OrbmentItem.saveComponent(orb, comp, player.level());
+            }
+        }
+    }
+
     private static void handleInGameInput(Player player) {
+        // Handle EP HUD toggle
         if (ClientSetup.TOGGLE_EP_HUD.consumeClick()) {
             ClientSetup.showEP = !ClientSetup.showEP;
         }
 
+        // Handle legacy art select toggle
         if (ClientSetup.TOGGLE_ART_SELECT_LEGACY.consumeClick()) {
             ClientSetup.artSelectMode = !ClientSetup.artSelectMode;
             player.playSound(ModSoundEvents.ART_SELECT.get(), 0.7f, 1.0f);
             player.displayClientMessage(
                     Component.literal("Legacy Art Select " + (ClientSetup.artSelectMode ? "Enabled" : "Disabled")), true
             );
+        }
+
+        ItemStack orb = findOrbmentInInventory(player);
+        if (player.level() != null) {
+            syncArtSelectionIfNeeded(player, orb);
+        }
+
+        // Handle legacy art selection only if mode is enabled AND no screen is open
+        if (ClientSetup.artSelectMode && Minecraft.getInstance().screen == null) {
+            handleLegacyArtSelection(player, orb);
+        }
+    }
+
+    private static void handleLegacyArtSelection(Player player, ItemStack orb) {
+        if (!(orb.getItem() instanceof OrbmentItem) || player.level() == null) {
             return;
         }
 
-        if (!ClientSetup.artSelectMode) return;
-
-        ItemStack orb = findOrbmentInInventory(player);
-        if (!(orb.getItem() instanceof OrbmentItem)) return;
-
         OrbmentComponent comp = OrbmentItem.loadComponent(orb, player.level());
         comp.recalculate();
-
         List<ArtsRegistry.ArtDefinition> availableArts = ArtsRegistry.ALL_ARTS.stream()
-                .filter(def -> def.elementCost().entrySet().stream()
-                        .allMatch(e -> comp.getSepithCounts()[OrbmentComponent.ELEMENT_INDEX.get(e.getKey())] >= e.getValue()))
-                .sorted(Comparator.comparing(ArtsRegistry.ArtDefinition::name)) // Sort alphabetically for consistency
+                .filter(def -> comp.isArtAvailable(def.name()))
+                .sorted(Comparator.comparing(ArtsRegistry.ArtDefinition::name))
                 .collect(Collectors.toList());
 
         if (availableArts.isEmpty()) return;
 
-        // Find the index of the currently selected art
-        String currentArtName = comp.getLastSelectedArtName();
+        String currentArtName = comp.getSelectedArt();
         int currentIndex = -1;
         for (int i = 0; i < availableArts.size(); i++) {
             if (availableArts.get(i).name().equals(currentArtName)) {
@@ -177,9 +215,15 @@ public class ClientEventHandler {
                 break;
             }
         }
-        if (currentIndex == -1) {
-            currentIndex = 0; // Default to first art if current is not found
+
+        if (currentIndex == -1 && !availableArts.isEmpty()) {
+            currentIndex = 0;
+        } else if (currentIndex == -1) {
+            return;
         }
+
+        // Sync the ClientSetup index with actual selection
+        ClientSetup.selectedArtIdx = currentIndex;
 
         boolean changed = false;
         if (ClientSetup.ART_NEXT_LEGACY.consumeClick()) {
@@ -192,10 +236,12 @@ public class ClientEventHandler {
 
         if (changed) {
             ArtsRegistry.ArtDefinition newArt = availableArts.get(currentIndex);
-
-            // ✅ FIX: Sync the change to the persistent component data
-            comp.setLastSelectedArtName(newArt.name());
+            comp.setSelectedArt(newArt.name());
             OrbmentItem.saveComponent(orb, comp, player.level());
+
+            // Update ClientSetup index and send to server
+            ClientSetup.selectedArtIdx = currentIndex;
+            NetworkHandler.sendToServer(new SetSelectedArtPacket(newArt.name()));
 
             float pitch = 0.9f + (currentIndex * 0.1f) % 0.4f;
             player.playSound(ModSoundEvents.ART_SELECT.get(), 0.4f, pitch);

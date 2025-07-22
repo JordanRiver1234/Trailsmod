@@ -35,13 +35,10 @@ import java.util.function.Consumer;
 public class OrbmentItem extends Item implements GeoItem {
     private static final RawAnimation CAST_ANIM = RawAnimation.begin().then("cast", Animation.LoopType.PLAY_ONCE);
     private static final RawAnimation IDLE_ANIM = RawAnimation.begin().then("idle", Animation.LoopType.LOOP);
-
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
-
     public OrbmentItem(Properties properties) {
         super(properties);
     }
-
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
@@ -53,12 +50,10 @@ public class OrbmentItem extends Item implements GeoItem {
                         (windowId, inv, plyr) -> new OrbmentMenu(windowId, inv),
                         Component.literal("Orbment")
                 ));
-                // --- ADDED: Play open sound ---
                 level.playSound(null, player.getX(), player.getY(), player.getZ(), ModSoundEvents.ORBMENT_MENU_OPEN.get(), SoundSource.PLAYERS, 0.8f, 1.2f);
             }
             return InteractionResultHolder.success(stack);
         }
-
         return InteractionResultHolder.pass(stack);
     }
 
@@ -66,25 +61,14 @@ public class OrbmentItem extends Item implements GeoItem {
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
         controllers.add(new AnimationController<>(this, "cast_controller", 0, state -> {
             var controller = state.getController();
-
-            // Debug logging
-            System.out.println("Animation Controller State: " + (controller.getCurrentAnimation() != null ? controller.getCurrentAnimation().animation().name() : "null"));
-
-            // If we have a running animation that isn't finished, continue it
             if (controller.getCurrentAnimation() != null && !controller.hasAnimationFinished()) {
-                System.out.println("Animation running: " + controller.getCurrentAnimation().animation().name());
                 return PlayState.CONTINUE;
             }
-
-            // Only set idle if no animation is running or the current animation has finished
-            // This prevents idle from overriding triggered animations
             System.out.println("Setting idle animation");
             return state.setAndContinue(IDLE_ANIM);
         }).triggerableAnim("cast", CAST_ANIM)
                 .triggerableAnim("idle", IDLE_ANIM));
-
     }
-
     @Override
     public void initializeClient(Consumer<IClientItemExtensions> consumer) {
         consumer.accept(new IClientItemExtensions() {
@@ -104,13 +88,6 @@ public class OrbmentItem extends Item implements GeoItem {
     public AnimatableInstanceCache getAnimatableInstanceCache() {
         return cache;
     }
-
-    /**
-     * Saves the entire OrbmentComponent's data to the ItemStack's NBT.
-     * @param stack The ItemStack to save to.
-     * @param component The OrbmentComponent data to save.
-     * @param level The level, used to access registries.
-     */
     public static void saveComponent(ItemStack stack, OrbmentComponent component, Level level) {
         synchronized (OrbmentItem.class) {
             HolderLookup.Provider provider = level.registryAccess();
@@ -123,34 +100,45 @@ public class OrbmentItem extends Item implements GeoItem {
 
         OrbmentComponent component = loadComponent(orbmentStack, level);
         component.setLastSelectedArtName(artName);
+        component.markDirty(); // Ensure it's marked for saving
         saveComponent(orbmentStack, component, level);
+
+        // Force synchronization if on server
+        if (!level.isClientSide()) {
+            // Add packet sync here if needed
+        }
     }
-    /**
-     * Loads an OrbmentComponent from an ItemStack.
-     * If the item is new (no line data), it initializes random sepith lines.
-     * @param stack The ItemStack to load from.
-     * @param level The level, used to access registries.
-     * @return A fully loaded and initialized OrbmentComponent.
-     */
+    public static void updateFavoriteArt(ItemStack orbmentStack, int slot, String artName, Level level) {
+        if (orbmentStack.isEmpty() || !(orbmentStack.getItem() instanceof OrbmentItem)) return;
+
+        OrbmentComponent component = loadComponent(orbmentStack, level);
+        component.setFavorite(slot, artName);
+        component.markDirty();
+        saveComponent(orbmentStack, component, level);
+
+        // Add this for immediate persistence
+        if (!level.isClientSide()) {
+            // Force NBT save immediately
+            synchronized (OrbmentItem.class) {
+                HolderLookup.Provider provider = level.registryAccess();
+                CompoundTag componentTag = component.serializeNBT(provider);
+                orbmentStack.set(DataComponents.CUSTOM_DATA, CustomData.of(componentTag));
+            }
+        }
+    }
     public static OrbmentComponent loadComponent(ItemStack stack, Level level) {
         synchronized (OrbmentItem.class) {        OrbmentComponent component = new OrbmentComponent();
         HolderLookup.Provider provider = level.registryAccess();
 
-        if (stack.has(DataComponents.CUSTOM_DATA)) {
-            CustomData data = stack.get(DataComponents.CUSTOM_DATA);
-            CompoundTag tag = data.copyTag();
-            component.deserializeNBT(provider, tag);
-
-            // Force recalculation after loading
-            component.recalculate();
-        } else {
-            // Only initialize lines if there's no saved data at all
-            if (!component.areLinesInitialized()) {
+            if (stack.has(DataComponents.CUSTOM_DATA)) {
+                CustomData data = stack.get(DataComponents.CUSTOM_DATA);
+                CompoundTag tag = data.copyTag();
+                component.deserializeNBT(provider, tag);
+                component.recalculate();
+            } else {
                 component.initializeLines();
                 saveComponent(stack, component, level);
             }
-        }
-
         return component;
     }
 }}
