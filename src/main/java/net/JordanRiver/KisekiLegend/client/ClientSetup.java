@@ -17,7 +17,7 @@ import org.lwjgl.glfw.GLFW;
         bus = Mod.EventBusSubscriber.Bus.MOD,
         value = Dist.CLIENT)
 public class ClientSetup {
-
+    public static final KeyMapping RANGE_TELEPORT;
     public static final KeyMapping OPEN_RADIAL_MENU;
     public static final KeyMapping TOGGLE_EP_HUD;
     public static final KeyMapping TOGGLE_ART_SELECT_LEGACY;
@@ -30,6 +30,7 @@ public class ClientSetup {
         TOGGLE_ART_SELECT_LEGACY = new KeyMapping("key.kisekilegend.art_select_legacy", GLFW.GLFW_KEY_C, "key.categories.kisekilegend");
         ART_NEXT_LEGACY = new KeyMapping("key.kisekilegend.art_next_legacy", GLFW.GLFW_KEY_PERIOD, "key.categories.kisekilegend");
         ART_PREV_LEGACY = new KeyMapping("key.kisekilegend.art_prev_legacy", GLFW.GLFW_KEY_COMMA, "key.categories.kisekilegend");
+        RANGE_TELEPORT = new KeyMapping("key.kisekilegend.range_teleport", GLFW.GLFW_KEY_G, "key.categories.kisekilegend");
     }
 
     @SubscribeEvent
@@ -39,6 +40,7 @@ public class ClientSetup {
         ev.register(TOGGLE_ART_SELECT_LEGACY);
         ev.register(ART_NEXT_LEGACY);
         ev.register(ART_PREV_LEGACY);
+        ev.register(RANGE_TELEPORT);
     }
 
     @SubscribeEvent

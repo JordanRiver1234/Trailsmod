@@ -18,7 +18,7 @@ import net.minecraftforge.fml.common.Mod;
 public class RangeHandler {
 
     @SubscribeEvent
-    public static void onRightClick(PlayerInteractEvent.RightClickItem ev) {
+    public static void onLeftClick(LeftClickEmpty ev) {
         Player player = ev.getEntity();
         if (player.level().isClientSide) return; // Keep this check
         if (!player.isShiftKeyDown()) return;
