@@ -5,6 +5,7 @@ import net.JordanRiver.KisekiLegend.items.QuartzItem;
 import net.JordanRiver.KisekiLegend.orbal.OrbmentComponent;
 import net.JordanRiver.KisekiLegend.quartz.QuartzDefinition;
 import net.JordanRiver.KisekiLegend.quartz.QuartzRegistry;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -17,11 +18,12 @@ public class OrbmentProcHandler {
     @SubscribeEvent
     public static void onAttack(AttackEntityEvent ev) {
         if (!(ev.getEntity() instanceof Player p)) return;
+        if (p.level().isClientSide()) return; // Add this line to skip client-side
 
         ItemStack orb = p.getMainHandItem();
         if (!(orb.getItem() instanceof OrbmentItem)) return;
 
-        OrbmentComponent comp = OrbmentItem.loadComponent(orb, p.level());
+        OrbmentComponent comp = OrbmentItem.loadComponent(orb, p.level(), (ServerPlayer) p);
 
         if (!(ev.getTarget() instanceof LivingEntity target)) return;
 
@@ -40,7 +42,7 @@ public class OrbmentProcHandler {
                 // remove the quartz
                 comp.getInventory().setStackInSlot(i, ItemStack.EMPTY);
                 // Use the new, correct save method
-                OrbmentItem.saveComponent(orb, comp, p.level());
+                OrbmentItem.saveComponent(orb, comp, p.level(), (ServerPlayer) p);
             } else {
                 // normal on‐hit effect
                 def.applyOnHit(target, p);

@@ -86,7 +86,7 @@ public class OrbmentMachineScreen extends AbstractContainerScreen<OrbmentMachine
         ItemStack orb = this.menu.getOrbmentStack();
         if (orb.isEmpty() || minecraft == null || minecraft.level == null) return;
 
-        OrbmentComponent comp = OrbmentItem.loadComponent(orb, minecraft.level);
+        OrbmentComponent comp = OrbmentItem.loadComponentClientSide(orb, minecraft.level);
 
         boolean slotIsSelected = selectedSlot != -1;
         boolean isUnlocked = slotIsSelected && comp.isSlotUnlocked(selectedSlot);
@@ -112,7 +112,7 @@ public class OrbmentMachineScreen extends AbstractContainerScreen<OrbmentMachine
                     // --- MODIFIED SECTION START ---
                     ItemStack orb = this.menu.getOrbmentStack();
                     if (!orb.isEmpty() && minecraft != null && minecraft.level != null) {
-                        OrbmentComponent comp = OrbmentItem.loadComponent(orb, minecraft.level);
+                        OrbmentComponent comp = OrbmentItem.loadComponentClientSide(orb, minecraft.level);
                         if (!comp.isSlotUnlocked(i)) {
                             minecraft.getSoundManager().play(SimpleSoundInstance.forUI(ModSoundEvents.ORBMENT_SLOT_LOCKED.get(), 1.0F));
                         }
@@ -366,7 +366,7 @@ public class OrbmentMachineScreen extends AbstractContainerScreen<OrbmentMachine
 
         ItemStack orb = this.menu.getOrbmentStack();
         if (orb.isEmpty() || minecraft == null || minecraft.level == null) return;
-        OrbmentComponent comp = OrbmentItem.loadComponent(orb, minecraft.level);
+        OrbmentComponent comp = OrbmentItem.loadComponentClientSide(orb, minecraft.level);
         boolean[] unlockedStatus = comp.getUnlockedStatus();
         Element[] sepithLines = comp.getSepithLines();
 

@@ -2,6 +2,7 @@ package net.JordanRiver.KisekiLegend.events;
 
 import net.JordanRiver.KisekiLegend.items.OrbmentItem;
 import net.JordanRiver.KisekiLegend.orbal.OrbmentComponent;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.TickEvent;
@@ -13,10 +14,12 @@ public class OrbmentBuffHandler {
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
+        // CRITICAL: Check if we're on the server side before casting
+        if (event.player.level().isClientSide()) return;
         Player player = event.player;
         for (ItemStack stack : player.getInventory().items) {
             if (stack.getItem() instanceof OrbmentItem) {
-                OrbmentComponent component = OrbmentItem.loadComponent(stack, player.level());
+                OrbmentComponent component = OrbmentItem.loadComponent(stack, player.level(), (ServerPlayer) player);
                 component.tickBuffs(player);
                 return;
             }

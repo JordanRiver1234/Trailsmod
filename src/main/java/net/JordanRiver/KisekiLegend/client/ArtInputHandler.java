@@ -7,6 +7,7 @@ import net.JordanRiver.KisekiLegend.orbal.ArtsRegistry;
 import net.JordanRiver.KisekiLegend.orbal.OrbmentComponent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
@@ -25,7 +26,6 @@ import java.util.stream.Collectors;
 @Mod.EventBusSubscriber(modid = KisekiLegend.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ArtInputHandler {
     private static final Minecraft MC = Minecraft.getInstance();
-
     public static void castArt(Player player, ArtsRegistry.ArtDefinition art, OrbmentComponent comp) {
         if (player == null || art == null) return;
 
@@ -39,13 +39,23 @@ public class ArtInputHandler {
             cost = 0;
         }
 
-        if (!comp.useEP(cost)) {
-            player.displayClientMessage(Component.literal("Not enough EP!"), true);
-            playSound(ModSoundEvents.CAST_FAIL.get(), player, 0.7f, 1.0f);
-            return;
+        // Only actually consume EP on server side
+        if (!player.level().isClientSide()) {
+            if (!comp.useEP(cost)) {
+                player.displayClientMessage(Component.literal("Not enough EP!"), true);
+                playSound(ModSoundEvents.CAST_FAIL.get(), player, 0.7f, 1.0f);
+                return;
+            }
+            // Save the component after using EP
+            OrbmentItem.saveComponent(orb, comp, player.level(), (ServerPlayer) player);
+        } else {
+            // On client, just check if we have enough EP (don't actually consume)
+            if (comp.getCurrentEP() < cost) {
+                player.displayClientMessage(Component.literal("Not enough EP!"), true);
+                playSound(ModSoundEvents.CAST_FAIL.get(), player, 0.7f, 1.0f);
+                return;
+            }
         }
-
-        OrbmentItem.saveComponent(orb, comp, player.level());
 
         playSound(ModSoundEvents.CAST_START.get(), player, 0.8f, 1.0f);
 
@@ -62,14 +72,19 @@ public class ArtInputHandler {
     @SubscribeEvent
     public static void onRightClick(RightClickItem ev) {
         Player player = ev.getEntity();
-        if (player.level().isClientSide() || ev.getHand() != InteractionHand.MAIN_HAND || !player.isShiftKeyDown()) {
+        if (ev.getHand() != InteractionHand.MAIN_HAND || !player.isShiftKeyDown()) {
             return;
         }
 
         ItemStack orb = findOrbment(player);
         if (!(orb.getItem() instanceof OrbmentItem)) return;
 
-        OrbmentComponent comp = OrbmentItem.loadComponent(orb, player.level());
+        OrbmentComponent comp;
+        if (player.level().isClientSide()) {
+            comp = OrbmentItem.loadComponentClientSide(orb, player.level());
+        } else {
+            comp = OrbmentItem.loadComponent(orb, player.level(), (ServerPlayer) player);
+        }
         comp.recalculate();
         List<ArtsRegistry.ArtDefinition> availableArts = getAvailableArts(comp);
 

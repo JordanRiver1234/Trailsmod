@@ -6,6 +6,7 @@ import net.JordanRiver.KisekiLegend.items.QuartzItem;
 import net.JordanRiver.KisekiLegend.orbal.OrbmentComponent;
 import net.JordanRiver.KisekiLegend.items.SizedItemStackHandler;
 
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -24,12 +25,19 @@ public class OrbmentMenu extends AbstractContainerMenu {
         super(ModMenuTypes.ORBMENT_MENU.get(), id);
 
         Player player = inv.player;
-        this.orbmentStack = player.getItemInHand(player.getUsedItemHand());
-        this.orbmentComponent = OrbmentItem.loadComponent(orbmentStack, player.level());
+        this.orbmentStack = player.getItemInHand(player.getUsedItemHand()); // Remove .copy()
+
+// Load component and ensure it's initialized
+        this.orbmentComponent = OrbmentItem.loadComponent(orbmentStack, player.level(), player.level().isClientSide() ? null : (ServerPlayer) player);
+        if (!this.orbmentComponent.areLinesInitialized() && !player.level().isClientSide()) {
+            this.orbmentComponent.initializeLines();
+            OrbmentItem.saveComponent(orbmentStack, this.orbmentComponent, player.level(), (ServerPlayer) player);
+        }
+        // Don't save here - just use what was loaded
         this.orbmentHandler = orbmentComponent.getInventory();
 
-        // --- Orbment Core slots (Center X coordinate adjusted for centering) ---
-        int cx = 255; // MOVED RIGHT to center the panel and text over the slots
+        // Rest of the constructor remains the same...
+        int cx = 255;
         int cy = 95;
         int r = 40;
         for (int i = 0; i < ORBMENT_SLOT_COUNT; i++) {
@@ -53,13 +61,11 @@ public class OrbmentMenu extends AbstractContainerMenu {
             });
         }
 
-        // --- Player inventory (UNCHANGED from your file) ---
         int invX = 16;
         int invY = 32;
         for (int row = 0; row < 3; row++)
             for (int col = 0; col < 9; col++)
                 addSlot(new Slot(inv, col + row * 9 + 9, invX + col * 18, invY + row * 18));
-        // Hotbar
         for (int col = 0; col < 9; col++)
             addSlot(new Slot(inv, col, invX + col * 18, invY + 58));
     }
@@ -109,12 +115,19 @@ public class OrbmentMenu extends AbstractContainerMenu {
             player.playSound(ModSoundEvents.ORBMENT_MENU_CLOSE.get(), 0.7F, 1.0F);
         }
         orbmentComponent.recalculate();
-        OrbmentItem.saveComponent(orbmentStack, orbmentComponent, player.level());
+        if (!player.level().isClientSide()) {
+            // Find the actual orbment in the player's inventory and save to that
+            ItemStack actualOrbment = player.getItemInHand(player.getUsedItemHand());
+            if (actualOrbment.getItem() instanceof OrbmentItem) {
+                OrbmentItem.saveComponent(actualOrbment, this.orbmentComponent, player.level(), (ServerPlayer) player);
+            }
+        }
     }
 
     @Override
     public boolean stillValid(Player player) {
-        return player.getItemInHand(player.getUsedItemHand()) == this.orbmentStack;
+        ItemStack currentStack = player.getItemInHand(player.getUsedItemHand());
+        return !currentStack.isEmpty() && currentStack.getItem() instanceof OrbmentItem;
     }
 
     public OrbmentComponent getOrbmentComponent() {

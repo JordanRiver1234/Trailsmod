@@ -38,7 +38,7 @@ public class EPOverlay {
         }
         if (orb.isEmpty()) return;
 
-        OrbmentComponent comp = OrbmentItem.loadComponent(orb, player.level());
+        OrbmentComponent comp = OrbmentItem.loadComponentClientSide(orb, player.level());
         float ratio = (float) comp.getCurrentEP() / comp.getMaxEP();
 
         // draw at top‐left

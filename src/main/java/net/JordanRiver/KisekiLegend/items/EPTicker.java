@@ -2,6 +2,7 @@
 package net.JordanRiver.KisekiLegend.items;
 
 import net.JordanRiver.KisekiLegend.orbal.OrbmentComponent;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.TickEvent;
@@ -13,17 +14,14 @@ import net.minecraftforge.fml.common.Mod;
  */
 @Mod.EventBusSubscriber
 public class EPTicker {
-    private static int tickCounter = 0;
-
     @SubscribeEvent
-    public static void onPlayerTick(TickEvent.PlayerTickEvent ev) {
-        if (ev.phase != TickEvent.Phase.END) return;
-        Player player = ev.player;
+    public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
+        if (event.player.level().isClientSide()) return;
+        Player player = event.player;
 
-        // only tick every 40 ticks:
-        if (++tickCounter < 40) return;
-        tickCounter = 0;
-
+        // Use player's tick count instead of static counter
+        if (player.tickCount % 40 != 0) return;
         // find orbment item in inventory or offhand
         ItemStack orb = ItemStack.EMPTY;
         for (ItemStack s : player.getInventory().items) {
@@ -36,8 +34,8 @@ public class EPTicker {
         }
         if (orb.isEmpty()) return;
 
-        OrbmentComponent comp = OrbmentItem.loadComponent(orb, player.level());
+        OrbmentComponent comp = OrbmentItem.loadComponent(orb, player.level(), (ServerPlayer) player);
         comp.regenerateEP();
-        OrbmentItem.saveComponent(orb, comp, player.level());
+        OrbmentItem.saveComponent(orb, comp, player.level(), (ServerPlayer) player);
     }
 }

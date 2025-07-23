@@ -24,7 +24,8 @@ import java.util.stream.IntStream;
 
 public class OrbmentComponent implements INBTSerializable<CompoundTag> {
     public static final Capability<OrbmentComponent> CAPABILITY =
-            CapabilityManager.get(new CapabilityToken<>() {});
+            CapabilityManager.get(new CapabilityToken<>() {
+            });
 
     public static final int MAX_SLOTS = 6;
     public static final int MAX_FAVORITES = 6;
@@ -34,8 +35,14 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
     private static final int BASE_MAX_EP = 270;
     private int currentEP = BASE_MAX_EP;
 
-    public int getCurrentEP() { return this.currentEP; }
-    public int getMaxEP() { return BASE_MAX_EP + getUnlockedSlots() * 30; }
+    public int getCurrentEP() {
+        return this.currentEP;
+    }
+
+    public int getMaxEP() {
+        return BASE_MAX_EP + getUnlockedSlots() * 30;
+    }
+
     public boolean useEP(int amount) {
         if (amount <= this.currentEP) {
             this.currentEP -= amount;
@@ -43,9 +50,18 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
         }
         return false;
     }
-    public void regenerateEP() { this.currentEP = Math.min(getMaxEP(), this.currentEP + 1); }
-    public void fillToMaxEP() { this.currentEP = getMaxEP(); }
-    public void setCurrentEP(int ep) { this.currentEP = Math.min(ep, getMaxEP()); }
+
+    public void regenerateEP() {
+        this.currentEP = Math.min(getMaxEP(), this.currentEP + 1);
+    }
+
+    public void fillToMaxEP() {
+        this.currentEP = getMaxEP();
+    }
+
+    public void setCurrentEP(int ep) {
+        this.currentEP = Math.min(ep, getMaxEP());
+    }
 
 
     private final boolean[] unlockedStatus = new boolean[MAX_SLOTS];
@@ -76,6 +92,7 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
         }
         return "";
     }
+
     public void setFavorite(int index, String artName) {
         if (index >= 0 && index < MAX_FAVORITES) {
             favoriteArts[index] = artName == null ? "" : artName;
@@ -92,6 +109,7 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
         // Force save when setting last selected art
         this.markDirty();
     }
+
     public void setSelectedArt(String artName) {
         setLastSelectedArtName(artName);
     }
@@ -101,14 +119,25 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
     }
 
     private boolean isDirty = false;
-    public void markDirty() { this.isDirty = true; }
-    public boolean isDirty() { return this.isDirty; }
-    public void clearDirty() { this.isDirty = false; }
+
+    public void markDirty() {
+        this.isDirty = true;
+    }
+
+    public boolean isDirty() {
+        return this.isDirty;
+    }
+
+    public void clearDirty() {
+        this.isDirty = false;
+    }
+
     public boolean isArtAvailable(String artName) {
         ArtsRegistry.ArtDefinition artDef = ArtsRegistry.ALL_ARTS.stream()
                 .filter(art -> art.name().equals(artName))
                 .findFirst()
-                .orElse(null);        if (artDef == null) return false;
+                .orElse(null);
+        if (artDef == null) return false;
 
         return artDef.elementCost().entrySet().stream()
                 .allMatch(e -> getSepithCounts()[ELEMENT_INDEX.get(e.getKey())] >= e.getValue());
@@ -119,6 +148,7 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
                 .filter(art -> !art.isEmpty() && isArtAvailable(art))
                 .collect(Collectors.toList());
     }
+
     public boolean hasQuartz(String quartzId) {
         for (int i = 0; i < inventory.getSlots(); i++) {
             ItemStack s = inventory.getStackInSlot(i);
@@ -128,12 +158,14 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
         }
         return false;
     }
+
     public void syncArtSelection(String newArtName) {
         if (isArtAvailable(newArtName)) {
             setLastSelectedArtName(newArtName);
             markDirty();
         }
     }
+
     public void unlockSlot(int slot) {
         if (slot >= 0 && slot < MAX_SLOTS) {
             unlockedStatus[slot] = true;
@@ -153,9 +185,18 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
         return unlockedStatus[slot];
     }
 
-    public boolean[] getUnlockedStatus() { return unlockedStatus; }
-    public SizedItemStackHandler getInventory() { return inventory; }
-    public int[] getSepithCounts() { return sepith; }
+    public boolean[] getUnlockedStatus() {
+        return unlockedStatus;
+    }
+
+    public SizedItemStackHandler getInventory() {
+        return inventory;
+    }
+
+    public int[] getSepithCounts() {
+        return sepith;
+    }
+
     public void recalculate() {
         updateSepithCounts();
     }
@@ -183,6 +224,7 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
             }
         }
     }
+
     public float getArtDamageMultiplier(Element artElement) {
         if (artElement == Element.NONE) return 1.0f;
         for (int i = 0; i < inventory.getSlots(); i++) {
@@ -198,6 +240,7 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
         }
         return 1.0f;
     }
+
     public void tickBuffs(Player player) {
         for (QuartzDefinition def : QuartzRegistry.all()) {
             Holder<MobEffect> h = def.getSelfBuffHolder();
@@ -213,25 +256,128 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
             if (def != null) def.applySelfBuff(player);
         }
     }
-    public Element[] getSepithLines() { return sepithLines; }
-    public boolean areLinesInitialized() { return linesInitialized; }
+
+    public Element[] getSepithLines() {
+        return sepithLines;
+    }
+
+    public boolean areLinesInitialized() {
+        return linesInitialized;
+    }
+
+    // Replace these methods in OrbmentComponent.java
 
     public void initializeLines() {
-        if (linesInitialized) return;
+
+        if (this.linesInitialized) {
+            System.out.println("Lines already initialized, returning early");
+            return;
+        }
+
+
+        // Initialize fresh lines
         Arrays.fill(sepithLines, Element.NONE);
         int lineCount = ThreadLocalRandom.current().nextInt(1, 4);
+
         List<Integer> availableSlots = IntStream.range(0, MAX_SLOTS).boxed().collect(Collectors.toList());
         Collections.shuffle(availableSlots);
         List<Element> elements = new ArrayList<>(Arrays.asList(Element.values()));
         elements.remove(Element.NONE);
         Collections.shuffle(elements);
+
         for (int i = 0; i < lineCount; i++) {
             int slot = availableSlots.get(i);
             Element element = elements.get(i % elements.size());
             this.sepithLines[slot] = element;
+            System.out.println("Set slot " + slot + " to " + element);
         }
+
         this.linesInitialized = true;
+        this.markDirty();
+
     }
+    @Override
+    public CompoundTag serializeNBT(HolderLookup.Provider provider) {
+        CompoundTag root = new CompoundTag();
+        root.putInt("CurrentEP", this.currentEP);
+        root.putBoolean("LinesInitialized", this.linesInitialized);
+
+        byte[] unlockedBytes = new byte[MAX_SLOTS];
+        for (int i = 0; i < MAX_SLOTS; i++) unlockedBytes[i] = (byte) (unlockedStatus[i] ? 1 : 0);
+        root.putByteArray("UnlockedStatus", unlockedBytes);
+
+        // Fix: Use IntArray instead of ListTag for better reliability
+        int[] linesArray = new int[MAX_SLOTS];
+        for (int i = 0; i < MAX_SLOTS; i++) {
+            linesArray[i] = sepithLines[i].ordinal();
+        }
+        root.putIntArray("SepithLines", linesArray);
+
+        ListTag favsTag = new ListTag();
+        for (String fav : favoriteArts) favsTag.add(StringTag.valueOf(fav));
+        root.put("FavoriteArts", favsTag);
+        root.putString("LastSelectedArt", this.lastSelectedArtName);
+
+        root.put("QuartzSlots", inventory.serializeNBT(provider));
+
+        return root;
+    }
+    @Override
+    public void deserializeNBT(HolderLookup.Provider provider, CompoundTag root) {
+
+        this.currentEP = root.getInt("CurrentEP");
+
+        // Load initialization flag - this is CRITICAL
+        this.linesInitialized = root.getBoolean("LinesInitialized");
+
+        if (root.contains("UnlockedStatus", Tag.TAG_BYTE_ARRAY)) {
+            byte[] unlockedBytes = root.getByteArray("UnlockedStatus");
+            for (int i = 0; i < Math.min(unlockedBytes.length, MAX_SLOTS); i++) {
+                unlockedStatus[i] = unlockedBytes[i] == 1;
+            }
+        }
+
+// Load sepith lines
+        if (root.contains("SepithLines", Tag.TAG_INT_ARRAY)) {
+            int[] linesArray = root.getIntArray("SepithLines");
+
+            for (int i = 0; i < Math.min(linesArray.length, MAX_SLOTS); i++) {
+                try {
+                    sepithLines[i] = Element.values()[linesArray[i]];
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    sepithLines[i] = Element.NONE;
+                }
+            }
+        } else {
+            System.out.println("No SepithLines found in NBT - this should not happen if linesInitialized=true");
+            // If lines are marked initialized but no data exists, something went wrong
+            if (this.linesInitialized) {
+                System.out.println("WARNING: Lines marked initialized but no NBT data found!");
+                this.linesInitialized = false; // Force re-initialization
+            }
+        }
+
+
+        // Load favorites
+        Arrays.fill(favoriteArts, "");
+        if (root.contains("FavoriteArts", Tag.TAG_LIST)) {
+            ListTag favsTag = root.getList("FavoriteArts", Tag.TAG_STRING);
+            for (int i = 0; i < Math.min(favsTag.size(), MAX_FAVORITES); i++) {
+                favoriteArts[i] = favsTag.getString(i);
+            }
+        }
+
+        if (root.contains("LastSelectedArt", Tag.TAG_STRING)) {
+            this.lastSelectedArtName = root.getString("LastSelectedArt");
+        }
+
+        if (root.contains("QuartzSlots", Tag.TAG_COMPOUND)) {
+            inventory.deserializeNBT(provider, root.getCompound("QuartzSlots"));
+        }
+
+        updateSepithCounts();
+    }
+
     public void setSepithLine(int slot, Element element) {
         if (slot >= 0 && slot < MAX_SLOTS) {
             if (!inventory.getStackInSlot(slot).isEmpty()) return;
@@ -239,7 +385,11 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
             updateSepithCounts();
         }
     }
-    public void removeSepithLine(int slot) { setSepithLine(slot, Element.NONE); }
+
+    public void removeSepithLine(int slot) {
+        setSepithLine(slot, Element.NONE);
+    }
+
     public boolean isQuartzValidForSlot(int slot, ItemStack stack) {
         if (!(stack.getItem() instanceof QuartzItem quartzItem)) return false;
         Element lineElement = this.sepithLines[slot];
@@ -248,66 +398,5 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
         String lineElementName = lineElement.getName().toLowerCase();
         return quartzElement.equals(lineElementName);
     }
-    @Override
-    public CompoundTag serializeNBT(HolderLookup.Provider provider) {
-        CompoundTag root = new CompoundTag();
-        root.putInt("CurrentEP", this.currentEP);
-        root.putBoolean("LinesInitialized", this.linesInitialized);
-        byte[] unlockedBytes = new byte[MAX_SLOTS];
-        for(int i=0; i<MAX_SLOTS; i++) unlockedBytes[i] = (byte) (unlockedStatus[i] ? 1 : 0);
-        root.putByteArray("UnlockedStatus", unlockedBytes);
-        ListTag linesTag = new ListTag();
-        for (Element line : sepithLines) linesTag.add(StringTag.valueOf(line.name()));
-        root.put("SepithLines", linesTag);
 
-        ListTag favsTag = new ListTag();
-        for (String fav : favoriteArts) favsTag.add(StringTag.valueOf(fav));
-        root.put("FavoriteArts", favsTag);
-        root.putString("LastSelectedArt", this.lastSelectedArtName);
-
-        root.put("QuartzSlots", inventory.serializeNBT(provider));
-        return root;
-    }
-
-    @Override
-    public void deserializeNBT(HolderLookup.Provider provider, CompoundTag root) {
-        this.currentEP = root.getInt("CurrentEP");
-        this.linesInitialized = root.getBoolean("LinesInitialized");
-
-        if (root.contains("UnlockedStatus", Tag.TAG_BYTE_ARRAY)) {
-            byte[] unlockedBytes = root.getByteArray("UnlockedStatus");
-            for(int i=0; i<Math.min(unlockedBytes.length, MAX_SLOTS); i++) {
-                unlockedStatus[i] = unlockedBytes[i] == 1;
-            }
-        }
-
-        if (root.contains("SepithLines", Tag.TAG_LIST)) {
-            ListTag linesTag = root.getList("SepithLines", Tag.TAG_STRING);
-            // First fill all slots with NONE
-            Arrays.fill(sepithLines, Element.NONE);
-            // Then restore the saved values
-            for (int i = 0; i < Math.min(linesTag.size(), MAX_SLOTS); i++) {
-                try {
-                    sepithLines[i] = Element.valueOf(linesTag.getString(i));
-                } catch (IllegalArgumentException e) {
-                    sepithLines[i] = Element.NONE;
-                }
-            }
-        }
-
-        if (root.contains("FavoriteArts", Tag.TAG_LIST)) {
-            ListTag favsTag = root.getList("FavoriteArts", Tag.TAG_STRING);
-            for (int i = 0; i < Math.min(favsTag.size(), MAX_FAVORITES); i++) {
-                favoriteArts[i] = favsTag.getString(i);
-            }
-        }
-        if (root.contains("LastSelectedArt", Tag.TAG_STRING)) {
-            this.lastSelectedArtName = root.getString("LastSelectedArt");
-        }
-
-        if (root.contains("QuartzSlots", Tag.TAG_COMPOUND)) {
-            inventory.deserializeNBT(provider, root.getCompound("QuartzSlots"));
-        }
-        updateSepithCounts();
-    }
 }

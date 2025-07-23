@@ -30,9 +30,9 @@ public class SetSelectedArtPacket {
                 ItemStack orbmentStack = findOrbment(player);
                 if (!orbmentStack.isEmpty() && orbmentStack.getItem() instanceof OrbmentItem) {
                     try {
-                        OrbmentComponent component = OrbmentItem.loadComponent(orbmentStack, player.level());
+                        OrbmentComponent component = OrbmentItem.loadComponent(orbmentStack, player.level(), (ServerPlayer) player);
                         component.setLastSelectedArtName(packet.artName);
-                        OrbmentItem.saveComponent(orbmentStack, component, player.level());
+                        OrbmentItem.saveComponent(orbmentStack, component, player.level(), (ServerPlayer) player);
                         player.getInventory().setChanged();
 
                         KisekiLegend.LOGGER.info("SERVER: Set selected art to {}", packet.artName);

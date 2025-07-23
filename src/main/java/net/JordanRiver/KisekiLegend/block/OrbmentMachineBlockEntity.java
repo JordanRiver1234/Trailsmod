@@ -15,6 +15,7 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.MenuProvider;
@@ -56,9 +57,9 @@ public class OrbmentMachineBlockEntity extends BlockEntity implements MenuProvid
         setChangedAndSync();
     }
 
-    private void saveOrbmentData(OrbmentComponent component) {
+    private void saveOrbmentData(OrbmentComponent component, ServerPlayer player) {
         if (!orbment.isEmpty() && level != null) {
-            OrbmentItem.saveComponent(orbment, component, level);
+            OrbmentItem.saveComponent(orbment, component, level, player);
             setChangedAndSync();
         }
     }
@@ -68,11 +69,13 @@ public class OrbmentMachineBlockEntity extends BlockEntity implements MenuProvid
     public void tryUnlockSlot(Player player, int slot) {
         if (level == null || level.isClientSide || orbment.isEmpty() || slot < 0 || slot >= OrbmentComponent.MAX_SLOTS) return;
 
-        OrbmentComponent component = OrbmentItem.loadComponent(orbment, level);
-// Ensure lines are initialized but don't re-randomize if already set
+        OrbmentComponent component = OrbmentItem.loadComponent(orbment, level, (ServerPlayer) player);
+        // Ensure lines are initialized but don't re-randomize if already set
+        // Only initialize lines once when the orbment is first created
         if (!component.areLinesInitialized()) {
             component.initializeLines();
-        }
+            saveOrbmentData(component, (ServerPlayer) player); // Save immediately after initialization
+              }
         if (component.isSlotUnlocked(slot)) {
             player.sendSystemMessage(Component.literal("Slot is already unlocked."));
             return;
@@ -81,7 +84,7 @@ public class OrbmentMachineBlockEntity extends BlockEntity implements MenuProvid
         final int UNLOCK_COST = 1; // Cost in Sepith Mass
         if (findAndRemoveItems(player.getInventory(), ModItems.SEPITH_MASS.get(), UNLOCK_COST)) {
             component.unlockSlot(slot);
-            saveOrbmentData(component);
+            saveOrbmentData(component, (ServerPlayer) player);
             level.playSound(null, getBlockPos(), ModSoundEvents.ORBMENT_SLOT_UNLOCK.get(), SoundSource.BLOCKS, 1.0f, 1.2f); // <-- MODIFIED
             player.sendSystemMessage(Component.literal("Unlocked slot " + (slot + 1) + "!"));
         } else {
@@ -93,7 +96,7 @@ public class OrbmentMachineBlockEntity extends BlockEntity implements MenuProvid
     public void tryRemoveSepithLine(Player player, int slot) {
         if (level == null || level.isClientSide || orbment.isEmpty() || slot < 0 || slot >= OrbmentComponent.MAX_SLOTS) return;
 
-        OrbmentComponent component = OrbmentItem.loadComponent(orbment, level);
+        OrbmentComponent component = OrbmentItem.loadComponent(orbment, level, (ServerPlayer) player);
         if (!component.isSlotUnlocked(slot)) {
             player.sendSystemMessage(Component.literal("Cannot modify a locked slot."));
             return;
@@ -110,7 +113,7 @@ public class OrbmentMachineBlockEntity extends BlockEntity implements MenuProvid
         final int REMOVE_COST = 1; // Cost in Sepith Mass
         if (findAndRemoveItems(player.getInventory(), ModItems.SEPITH_MASS.get(), REMOVE_COST)) {
             component.removeSepithLine(slot);
-            saveOrbmentData(component);
+            saveOrbmentData(component, (ServerPlayer) player);
             level.playSound(null, getBlockPos(), SoundEvents.GRINDSTONE_USE, SoundSource.BLOCKS, 1.0f, 0.8f);
             player.sendSystemMessage(Component.literal("Reverted slot " + (slot + 1) + " to neutral."));
         } else {
@@ -121,7 +124,7 @@ public class OrbmentMachineBlockEntity extends BlockEntity implements MenuProvid
     public void trySetSepithLine(Player player, int slot, Element element) {
         if (level == null || level.isClientSide || orbment.isEmpty() || slot < 0 || slot >= OrbmentComponent.MAX_SLOTS || element == Element.NONE) return;
 
-        OrbmentComponent component = OrbmentItem.loadComponent(orbment, level);
+        OrbmentComponent component = OrbmentItem.loadComponent(orbment, level, (ServerPlayer) player);
         if (!component.isSlotUnlocked(slot)) {
             player.sendSystemMessage(Component.literal("Cannot modify a locked slot."));
             return;
@@ -145,7 +148,7 @@ public class OrbmentMachineBlockEntity extends BlockEntity implements MenuProvid
         final int SET_COST = 10;
         if (findAndRemoveItems(player.getInventory(), requiredMass, SET_COST)) {
             component.setSepithLine(slot, element);
-            saveOrbmentData(component);
+            saveOrbmentData(component, (ServerPlayer) player);
             level.playSound(null, getBlockPos(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.BLOCKS, 1.0f, 1.5f);
             player.sendSystemMessage(Component.literal("Set slot " + (slot + 1) + " to a " + element.getName() + " line!"));
         } else {

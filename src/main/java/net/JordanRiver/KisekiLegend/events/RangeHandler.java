@@ -2,6 +2,7 @@ package net.JordanRiver.KisekiLegend.events;
 
 import net.JordanRiver.KisekiLegend.items.OrbmentItem;
 import net.JordanRiver.KisekiLegend.orbal.OrbmentComponent;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.projectile.ThrownEnderpearl;
@@ -13,20 +14,19 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent.LeftClickEmpty
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-@Mod.EventBusSubscriber(modid = "kisekilegend", value = Dist.CLIENT) // client only
+@Mod.EventBusSubscriber(modid = "kisekilegend") // Remove Dist.CLIENT
 public class RangeHandler {
 
     @SubscribeEvent
     public static void onRightClick(PlayerInteractEvent.RightClickItem ev) {
         Player player = ev.getEntity();
-        if (player.level().isClientSide) return;
-
+        if (player.level().isClientSide) return; // Keep this check
         if (!player.isShiftKeyDown()) return;
 
         ItemStack orb = ev.getItemStack();
         if (!(orb.getItem() instanceof OrbmentItem)) return;
 
-        OrbmentComponent comp = OrbmentItem.loadComponent(orb, player.level());
+        OrbmentComponent comp = OrbmentItem.loadComponent(orb, player.level(), (ServerPlayer) player);
         if (!comp.hasQuartz("range_1")) return;
 
         ev.setCanceled(true);

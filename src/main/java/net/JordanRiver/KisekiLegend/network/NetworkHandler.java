@@ -2,6 +2,7 @@ package net.JordanRiver.KisekiLegend.network;
 
 import net.JordanRiver.KisekiLegend.KisekiLegend;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.ChannelBuilder;
 import net.minecraftforge.network.SimpleChannel;
 
@@ -29,8 +30,16 @@ public class NetworkHandler {
                 .decoder(SetSelectedArtPacket::decode)
                 .consumerMainThread(SetSelectedArtPacket::handle)
                 .add();
+        INSTANCE.messageBuilder(OrbmentSyncPacket.class, id++)
+                .encoder(OrbmentSyncPacket::encode)
+                .decoder(OrbmentSyncPacket::decode)
+                .consumerMainThread(OrbmentSyncPacket::handle)
+                .add();
     }
     public static void sendToServer(Object packet) {
         INSTANCE.send(packet, net.minecraftforge.network.PacketDistributor.SERVER.noArg());
+    }
+    public static void sendToPlayer(Object packet, ServerPlayer player) {
+        INSTANCE.send(packet, net.minecraftforge.network.PacketDistributor.PLAYER.with(player));
     }
 }

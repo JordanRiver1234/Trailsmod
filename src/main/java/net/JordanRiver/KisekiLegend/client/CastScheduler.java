@@ -181,7 +181,7 @@ public class CastScheduler {
         level.playSound(null, player.blockPosition(), ModSoundEvents.CAST_COMPLETE.get(), SoundSource.PLAYERS, 0.9f, 1.0f);
 
         // --- DAMAGE BONUS LOGIC ---
-        OrbmentComponent orbmentComponent = OrbmentItem.loadComponent(heldItem, level);
+        OrbmentComponent orbmentComponent = OrbmentItem.loadComponent(heldItem, level, player);
         float damageMultiplier = orbmentComponent.getArtDamageMultiplier(pendingCast.art.mainElement());
 
         int baseDamage = 1;

@@ -37,18 +37,7 @@ public class SizedItemStackHandler extends ItemStackHandler {
 
     @Override
     public void setStackInSlot(int slot, @NotNull ItemStack stack) {
-        if (stack.getItem() instanceof QuartzItem quartz) {
-            CompoundTag sepithTag = new CompoundTag();
-
-            for (Map.Entry<String, Integer> entry : quartz.getSepith().entrySet()) {
-                String key = entry.getKey().toLowerCase();
-                sepithTag.putInt(key, entry.getValue());
-            }
-
-            // ✅ Use the static factory method
-            stack.set(DataComponents.CUSTOM_DATA, CustomData.of(sepithTag));
-        }
-
+        // Don't modify the stack here - let OrbmentComponent handle sepith data
         super.setStackInSlot(slot, stack);
     }
 }

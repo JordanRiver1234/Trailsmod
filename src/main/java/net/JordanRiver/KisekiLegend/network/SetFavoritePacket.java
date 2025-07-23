@@ -35,13 +35,13 @@ public class SetFavoritePacket {
                 if (!orbmentStack.isEmpty() && orbmentStack.getItem() instanceof OrbmentItem) {
                     try {
                         // Load component on SERVER
-                        OrbmentComponent component = OrbmentItem.loadComponent(orbmentStack, player.level());
+                        OrbmentComponent component = OrbmentItem.loadComponent(orbmentStack, player.level(), player);
 
                         // Set favorite on SERVER
                         component.setFavorite(packet.slot, packet.artName);
 
                         // Save on SERVER
-                        OrbmentItem.saveComponent(orbmentStack, component, player.level());
+                        OrbmentItem.saveComponent(orbmentStack, component, player.level(), player);
 
                         // Mark inventory as changed on SERVER
                         player.getInventory().setChanged();

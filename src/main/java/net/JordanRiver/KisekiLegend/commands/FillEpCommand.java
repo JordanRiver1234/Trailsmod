@@ -42,9 +42,9 @@ public class FillEpCommand {
         }
 
         // Load the component, fill EP, and save it back
-        OrbmentComponent component = OrbmentItem.loadComponent(orbmentStack, player.level());
+        OrbmentComponent component = OrbmentItem.loadComponent(orbmentStack, player.level(), player);
         component.fillToMaxEP();
-        OrbmentItem.saveComponent(orbmentStack, component, player.level());
+        OrbmentItem.saveComponent(orbmentStack, component, player.level(), player);
 
         source.sendSuccess(() -> Component.literal("Your EP has been restored to maximum!"), true);
         return 1;

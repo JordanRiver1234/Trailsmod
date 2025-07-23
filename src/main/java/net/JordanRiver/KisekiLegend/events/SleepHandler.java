@@ -3,6 +3,7 @@ package net.JordanRiver.KisekiLegend.events;
 import net.JordanRiver.KisekiLegend.KisekiLegend;
 import net.JordanRiver.KisekiLegend.items.OrbmentItem;
 import net.JordanRiver.KisekiLegend.orbal.OrbmentComponent;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
@@ -29,9 +30,11 @@ public class SleepHandler {
 
     private static void refillOrb(ItemStack stack, Player player) {
         if (!(stack.getItem() instanceof OrbmentItem)) return;
-        OrbmentComponent comp = OrbmentItem.loadComponent(stack, player.level());
+        // You already have the server-side check, so cast to ServerPlayer:
+        OrbmentComponent comp = OrbmentItem.loadComponent(stack, player.level(), (ServerPlayer) player);
         comp.fillToMaxEP();
-        OrbmentItem.saveComponent(stack, comp, player.level());
+        OrbmentItem.saveComponent(stack, comp, player.level(), (ServerPlayer) player);
+
     }
 }
 

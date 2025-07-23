@@ -16,6 +16,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -150,7 +151,7 @@ public class ClientEventHandler {
 
     private static void syncArtSelectionIfNeeded(Player player, ItemStack orb) {
         if (!(orb.getItem() instanceof OrbmentItem)) return;
-        OrbmentComponent comp = OrbmentItem.loadComponent(orb, player.level());
+        OrbmentComponent comp = OrbmentItem.loadComponentClientSide(orb, player.level());
         String currentSelection = comp.getSelectedArt();
         if (!currentSelection.isEmpty() && !comp.isArtAvailable(currentSelection)) {
             List<ArtsRegistry.ArtDefinition> availableArts = ArtsRegistry.ALL_ARTS.stream()
@@ -159,10 +160,12 @@ public class ClientEventHandler {
                     .collect(Collectors.toList());
             if (!availableArts.isEmpty()) {
                 comp.setSelectedArt(availableArts.get(0).name());
-                OrbmentItem.saveComponent(orb, comp, player.level());
+// Send packet to server instead of saving directly
+                NetworkHandler.sendToServer(new SetSelectedArtPacket(availableArts.get(0).name()));
             } else {
                 comp.setSelectedArt("");
-                OrbmentItem.saveComponent(orb, comp, player.level());
+// Send packet to server instead of saving directly
+                NetworkHandler.sendToServer(new SetSelectedArtPacket(""));
             }
         }
     }
@@ -198,7 +201,7 @@ public class ClientEventHandler {
             return;
         }
 
-        OrbmentComponent comp = OrbmentItem.loadComponent(orb, player.level());
+        OrbmentComponent comp = OrbmentItem.loadComponentClientSide(orb, player.level());
         comp.recalculate();
         List<ArtsRegistry.ArtDefinition> availableArts = ArtsRegistry.ALL_ARTS.stream()
                 .filter(def -> comp.isArtAvailable(def.name()))
@@ -237,7 +240,6 @@ public class ClientEventHandler {
         if (changed) {
             ArtsRegistry.ArtDefinition newArt = availableArts.get(currentIndex);
             comp.setSelectedArt(newArt.name());
-            OrbmentItem.saveComponent(orb, comp, player.level());
 
             // Update ClientSetup index and send to server
             ClientSetup.selectedArtIdx = currentIndex;
