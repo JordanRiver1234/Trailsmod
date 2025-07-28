@@ -1,9 +1,0 @@
-{
-  "type": "minecraft:crafting_shapeless",
-  "ingredients": [
-    { "item": "minecraft:kelp" },
-    { "item": "minecraft:seagrass" },
-    { "item": "kisekilegend:water" }
-  ],
-  "result": { "id": "kisekilegend:hp_1", "count": 1 }
-}

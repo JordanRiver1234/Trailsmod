@@ -1,0 +1,71 @@
+{
+  "result": "kisekilegend:hp_2",
+  "startingNode": "start_hp2",
+  "requiredItem": "kisekilegend:hp_1",
+  "nodes": {
+    "start_hp2": {
+      "type": "QUARTZ",
+      "value": "HP Potion Base",
+      "materialRequirements": {
+        "quartz": 1
+      },
+      "unlocks": ["trait_branch1", "effect_branch1"]
+    },
+    "trait_branch1": {
+      "type": "TRAIT",
+      "value": "Regeneration I",
+      "materialRequirements": {
+        "plant": 3
+      },
+      "unlocks": ["quality_upper"]
+    },
+    "trait_branch2": {
+      "type": "TRAIT",
+      "value": "Absorption I",
+      "materialRequirements": {
+        "mystery": 2
+      },
+      "unlocks": ["quality_lower"]
+    },
+    "effect_branch1": {
+      "type": "EFFECT",
+      "value": "Healing Boost +25%",
+      "materialRequirements": {
+        "water_material": 3
+      },
+      "unlocks": ["trait_branch2", "quality_middle"]
+    },
+    "quality_upper": {
+      "type": "QUALITY",
+      "value": "20",
+      "materialRequirements": {
+        "jewel": 2
+      },
+      "unlocks": ["final_recipe"]
+    },
+    "quality_middle": {
+      "type": "QUALITY",
+      "value": "18",
+      "materialRequirements": {
+        "ingot": 3
+      },
+      "unlocks": ["final_recipe"]
+    },
+    "quality_lower": {
+      "type": "QUALITY",
+      "value": "16",
+      "materialRequirements": {
+        "cloth": 2
+      },
+      "unlocks": ["final_recipe"]
+    },
+    "final_recipe": {
+      "type": "RECIPE_MORPH",
+      "value": "Unlocks HP_3 Recipe",
+      "materialRequirements": {
+        "mystery": 1
+      },
+      "unlocks": []
+    }
+  }
+}

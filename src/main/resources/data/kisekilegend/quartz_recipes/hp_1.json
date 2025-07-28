@@ -1,0 +1,34 @@
+{
+  "result": "kisekilegend:hp_1",
+  "startingNode": "start_hp",
+  "nodes": {
+    "start_hp": {
+      "type": "EFFECT",
+      "value": "Max HP +5%",
+      "materialRequirements": {
+        "water_material": 3
+      },
+      "unlocks": [
+        "quality_boost"
+      ]
+    },
+    "quality_boost": {
+      "type": "QUALITY",
+      "value": "10",
+      "materialRequirements": {
+        "plant": 2
+      },
+      "unlocks": [
+        "recipe_unlock_hp2"
+      ]
+    },
+    "recipe_unlock_hp2": {
+      "type": "RECIPE_MORPH",
+      "value": "hp_2",
+      "materialRequirements": {
+        "mystery": 1
+      },
+      "unlocks": []
+    }
+  }
+}

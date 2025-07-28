@@ -12,6 +12,7 @@ public class ModCommands {
     public static void onCommandsRegister(RegisterCommandsEvent event) {
         // Register your command here
         FillEpCommand.register(event.getDispatcher());
+        ResetQuartzMachineCommand.register(event.getDispatcher());
 
         // This is for the default /config command, you can leave it
         ConfigCommand.register(event.getDispatcher());

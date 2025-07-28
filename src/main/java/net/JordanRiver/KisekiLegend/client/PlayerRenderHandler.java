@@ -67,9 +67,6 @@ public class PlayerRenderHandler {
         Player player = event.getEntity();
         ItemStack mainHand = player.getMainHandItem();
 
-        System.out.println("Rendering player: " + player.getName().getString() +
-                " | Has Orbment: " + (mainHand.getItem() instanceof OrbmentItem) +
-                " | Is Casting: " + isPlayerCasting(player));
 
         // Only apply casting animation if holding an Orbment
         if (!(mainHand.getItem() instanceof OrbmentItem)) return;

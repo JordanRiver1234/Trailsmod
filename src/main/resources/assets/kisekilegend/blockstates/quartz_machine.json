@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "half=lower": {
+      "model": "kisekilegend:block/quartz_machine"
+    },
+    "half=upper": {
+      "model": "kisekilegend:block/quartz_machine_up"
+    }
+  }
+}

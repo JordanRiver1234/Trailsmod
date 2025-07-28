@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "machines",
+  "pattern": [
+    "III",
+    "IQI",
+    "III"
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:iron_block"
+    },
+    "Q": {
+      "item": "minecraft:lapis_block"
+    }
+  },
+  "result": {
+    "id": "kisekilegend:quartz_machine",
+    "count": 1
+  }
+}

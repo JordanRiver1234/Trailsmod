@@ -205,25 +205,29 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
         Arrays.fill(sepith, 0);
         for (int i = 0; i < inventory.getSlots(); i++) {
             ItemStack stack = inventory.getStackInSlot(i);
-            if (!stack.isEmpty() && stack.getItem() instanceof QuartzItem) {
-                CustomData data = stack.get(DataComponents.CUSTOM_DATA);
-                if (data != null) {
-                    CompoundTag tag = data.copyTag();
-                    Element lineElement = sepithLines[i];
-                    for (var e : ELEMENT_INDEX.entrySet()) {
-                        String elementName = e.getKey();
-                        if (tag.contains(elementName, Tag.TAG_INT)) {
-                            int value = tag.getInt(elementName);
-                            if (lineElement != Element.NONE && lineElement.getName().equalsIgnoreCase(elementName)) {
-                                value += SEPITH_MATCH_BONUS;
-                            }
-                            sepith[e.getValue()] += value;
-                        }
+            if (stack.isEmpty() || !(stack.getItem() instanceof QuartzItem quartzItem)) {
+                continue;
+            }
+
+            Map<String, Integer> sepithValues = quartzItem.getSepith();
+            Element lineElement = sepithLines[i];
+
+            for (Map.Entry<String, Integer> entry : sepithValues.entrySet()) {
+                String elementName = entry.getKey();
+                if (ELEMENT_INDEX.containsKey(elementName)) {
+                    int value = entry.getValue();
+
+                    // Apply the line bonus if the element matches
+                    if (lineElement != Element.NONE && lineElement.getName().equalsIgnoreCase(elementName)) {
+                        value += SEPITH_MATCH_BONUS;
                     }
+
+                    sepith[ELEMENT_INDEX.get(elementName)] += value;
                 }
             }
         }
     }
+
 
     public float getArtDamageMultiplier(Element artElement) {
         if (artElement == Element.NONE) return 1.0f;
@@ -241,21 +245,8 @@ public class OrbmentComponent implements INBTSerializable<CompoundTag> {
         return 1.0f;
     }
 
-    public void tickBuffs(Player player) {
-        for (QuartzDefinition def : QuartzRegistry.all()) {
-            Holder<MobEffect> h = def.getSelfBuffHolder();
-            if (h != null) player.removeEffect(h);
-        }
-        Set<String> slotted = new HashSet<>();
-        for (int i = 0; i < inventory.getSlots(); i++) {
-            ItemStack s = inventory.getStackInSlot(i);
-            if (s.getItem() instanceof QuartzItem qi) slotted.add(qi.getQuartzId());
-        }
-        for (String id : slotted) {
-            QuartzDefinition def = QuartzRegistry.get(id);
-            if (def != null) def.applySelfBuff(player);
-        }
-    }
+
+
 
     public Element[] getSepithLines() {
         return sepithLines;

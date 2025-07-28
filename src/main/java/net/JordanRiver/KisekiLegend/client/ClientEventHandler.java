@@ -7,6 +7,7 @@ import net.JordanRiver.KisekiLegend.client.screen.OrbmentMachineScreen;
 import net.JordanRiver.KisekiLegend.client.screen.OrbmentScreen;
 import net.JordanRiver.KisekiLegend.entity.AuraEntity;
 import net.JordanRiver.KisekiLegend.init.ModSoundEvents;
+import net.JordanRiver.KisekiLegend.item.enhancement.ItemEnhancementSystem;
 import net.JordanRiver.KisekiLegend.items.OrbmentItem;
 import net.JordanRiver.KisekiLegend.network.NetworkHandler;
 import net.JordanRiver.KisekiLegend.network.SetSelectedArtPacket;
@@ -22,6 +23,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.lwjgl.glfw.GLFW;
@@ -72,7 +74,17 @@ public class ClientEventHandler {
             KisekiLegend.LOGGER.error("Failed to load custom cursor", e);
         }
     }
+    @SubscribeEvent
+    public static void onItemTooltip(ItemTooltipEvent event) {
+        ItemStack item = event.getItemStack();
+        List<Component> tooltip = event.getToolTip();
 
+        // Add enhancement information to tooltip
+        List<Component> enhancements = ItemEnhancementSystem.getEnhancementTooltip(item);
+        if (!enhancements.isEmpty()) {
+            tooltip.addAll(enhancements);
+        }
+    }
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent ev) {
         if (ev.phase != TickEvent.Phase.END) return;

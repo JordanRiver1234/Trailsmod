@@ -7,7 +7,6 @@ import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DropExperienceBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -32,7 +31,16 @@ public class ModBlocks {
                             .noOcclusion()
             )
     );
-
+    public static final RegistryObject<Block> QUARTZ_MACHINE = registerBlock(
+            "quartz_machine",
+            () -> new QuartzMachineBlock(
+                    BlockBehaviour.Properties
+                            .of()
+                            .strength(1.5f)
+                            .requiresCorrectToolForDrops()
+                            .noOcclusion()
+            )
+    );
 
     public static final RegistryObject<Block> EARTHVEIN_BLOCK =  registerBlock( "earthvein_block",
             () -> new Block(BlockBehaviour.Properties.of()

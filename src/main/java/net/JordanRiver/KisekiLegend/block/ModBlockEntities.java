@@ -1,6 +1,7 @@
 package net.JordanRiver.KisekiLegend.block;
 
 import net.JordanRiver.KisekiLegend.KisekiLegend;
+import net.JordanRiver.KisekiLegend.block.entity.QuartzMachineBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -21,6 +22,12 @@ public class ModBlockEntities {
             );
 
 
+    public static final RegistryObject<BlockEntityType<QuartzMachineBlockEntity>> QUARTZ_MACHINE_BLOCK_ENTITY =
+            BLOCK_ENTITIES.register("quartz_machine",
+                    () -> BlockEntityType.Builder
+                            .of(QuartzMachineBlockEntity::new, ModBlocks.QUARTZ_MACHINE.get())
+                            .build(null)
+            );
 
     public static void register(IEventBus bus) {
         BLOCK_ENTITIES.register(bus);
