@@ -1,0 +1,33 @@
+{
+  "result": "kisekilegend:mute",
+  "startingNode": "start_mute",
+  "nodes": {
+    "start_mute": {
+      "type": "EFFECT",
+      "value": "Normal attacks/crafts add 10% chance of Mute",
+      "materialRequirements": {
+        "medicinal": 5
+      },
+      "unlocks": [
+        "effect_duration",
+        "quality_node"
+      ]
+    },
+    "effect_duration": {
+      "type": "EFFECT",
+      "value": "Mute duration +1 turn",
+      "materialRequirements": {
+        "magic_tool": 3
+      },
+      "unlocks": []
+    },
+    "quality_node": {
+      "type": "QUALITY",
+      "value": 20,
+      "materialRequirements": {
+        "earth_material": 3
+      },
+      "unlocks": []
+    }
+  }
+}

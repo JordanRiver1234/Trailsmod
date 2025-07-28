@@ -1,12 +1,12 @@
 {
-  "result": "kisekilegend:hp_1",
-  "startingNode": "start_hp",
+  "result": "kisekilegend:shield_1",
+  "startingNode": "start_shield",
   "nodes": {
-    "start_hp": {
+    "start_shield": {
       "type": "EFFECT",
-      "value": "Max HP +5%",
+      "value": "ADF +5%",
       "materialRequirements": {
-        "water_material": 3
+        "wind_material": 3
       },
       "unlocks": [
         "quality_boost"
@@ -16,17 +16,17 @@
       "type": "QUALITY",
       "value": 10,
       "materialRequirements": {
-        "plant": 2
+        "threads": 2
       },
       "unlocks": [
-        "recipe_unlock_hp2"
+        "recipe_unlock_shield2"
       ]
     },
-    "recipe_unlock_hp2": {
+    "recipe_unlock_shield2": {
       "type": "RECIPE_MORPH",
-      "value": "hp_2",
+      "value": "shield_2",
       "materialRequirements": {
-        "elixir": 1
+        "mystery": 1
       },
       "unlocks": []
     }

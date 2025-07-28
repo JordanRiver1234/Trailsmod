@@ -1,0 +1,82 @@
+{
+  "result": "kisekilegend:action_2",
+  "requiredItem": "kisekilegend:action_1",
+  "startingNode": "start_action2",
+  "nodes": {
+    "start_action2": {
+      "type": "QUARTZ",
+      "value": "Action Crystal Core",
+      "materialRequirements": {
+        "quartz": 1
+      },
+      "unlocks": [
+        "effect_root_action2"
+      ]
+    },
+    "effect_root_action2": {
+      "type": "EFFECT",
+      "value": "SPD +4",
+      "materialRequirements": {
+        "time_material": 5
+      },
+      "unlocks": [
+        "trait_branch",
+        "morph_branch"
+      ]
+    },
+    "trait_branch": {
+      "type": "TRAIT",
+      "value": "Reduces action delay by 10%",
+      "materialRequirements": {
+        "liquid": 3
+      },
+      "unlocks": [
+        "quality_upper",
+        "recipe_unlock_action3"
+      ]
+    },
+    "morph_branch": {
+      "type": "EFFECT",
+      "value": "Delay Immunity +20%",
+      "materialRequirements": {
+        "supplement": 4
+      },
+      "unlocks": [
+        "morph_blind",
+        "morph_deathblow"
+      ]
+    },
+    "quality_upper": {
+      "type": "QUALITY",
+      "value": 25,
+      "materialRequirements": {
+        "jewel": 2
+      },
+      "unlocks": []
+    },
+    "morph_blind": {
+      "type": "RECIPE_MORPH",
+      "value": "blind",
+      "materialRequirements": {
+        "magic_tool": 3
+      },
+      "unlocks": []
+    },
+    "morph_deathblow": {
+      "type": "RECIPE_MORPH",
+      "value": "deathblow_1",
+      "materialRequirements": {
+        "gunpowder": 3
+      },
+      "unlocks": []
+    },
+    "recipe_unlock_action3": {
+      "type": "RECIPE_MORPH",
+      "value": "action_3",
+      "materialRequirements": {
+        "time_material": 3
+      },
+      "unlocks": []
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "result": "kisekilegend:ep_cut_3",
+  "requiredItem": "kisekilegend:ep_cut_2",
+  "startingNode": "start_epcut3",
+  "nodes": {
+    "start_epcut3": {
+      "type": "QUARTZ",
+      "value": "Seraphic Gem Core",
+      "materialRequirements": {
+        "quartz": 1
+      },
+      "unlocks": [
+        "effect_root_epcut3"
+      ]
+    },
+    "effect_root_epcut3": {
+      "type": "EFFECT",
+      "value": "EP Consumption -20%",
+      "materialRequirements": {
+        "space_material": 8
+      },
+      "unlocks": [
+        "trait_upper_branch",
+        "trait_lower_branch"
+      ]
+    },
+    "trait_upper_branch": {
+      "type": "TRAIT",
+      "value": "Restore 3% EP when taking damage",
+      "materialRequirements": {
+        "time_material": 5
+      },
+      "unlocks": [
+        "quality_upper"
+      ]
+    },
+    "trait_lower_branch": {
+      "type": "TRAIT",
+      "value": "Restore 5% EP upon defeating an enemy",
+      "materialRequirements": {
+        "mirage_material": 5
+      },
+      "unlocks": [
+        "quality_lower"
+      ]
+    },
+    "quality_upper": {
+      "type": "QUALITY",
+      "value": 55,
+      "materialRequirements": {
+        "elixir": 4
+      },
+      "unlocks": []
+    },
+    "quality_lower": {
+      "type": "QUALITY",
+      "value": 50,
+      "materialRequirements": {
+        "jewel": 5
+      },
+      "unlocks": []
+    }
+  }
+}

@@ -8,6 +8,7 @@ import net.JordanRiver.KisekiLegend.client.ArtInputHandler;
 import net.JordanRiver.KisekiLegend.client.ClientSetup;
 import net.JordanRiver.KisekiLegend.client.screen.OrbmentMachineRenderer;
 import net.JordanRiver.KisekiLegend.client.AuraRenderer;
+import net.JordanRiver.KisekiLegend.commands.RecipeProgressCommand;
 import net.JordanRiver.KisekiLegend.crafting.QuartzRecipeManager;
 import net.JordanRiver.KisekiLegend.datagen.ModItemTagProvider;
 import net.JordanRiver.KisekiLegend.init.ModSoundEvents;
@@ -35,6 +36,7 @@ import net.minecraftforge.common.data.DatapackBuiltinEntriesProvider;
 import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
+import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TagsUpdatedEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -74,7 +76,6 @@ public class KisekiLegend {
         ModItems.register(bus);
         ModBlocks.register(bus);
         ModMenuTypes.register(bus);
-
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC);
         MinecraftForge.EVENT_BUS.register(this);
     }
@@ -162,6 +163,7 @@ public class KisekiLegend {
 
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
+
         LOGGER.info("Server is starting!");
     }
     @SubscribeEvent
@@ -170,6 +172,10 @@ public class KisekiLegend {
 
         // Force tag reload - this ensures tags are loaded properly
         LOGGER.info("Adding reload listeners - tags should be available after this");
+    }
+    @SubscribeEvent
+    public void onRegisterCommands(RegisterCommandsEvent event) {
+        RecipeProgressCommand.register(event.getDispatcher());
     }
     @SubscribeEvent
     public void onTagsUpdated(TagsUpdatedEvent event) {

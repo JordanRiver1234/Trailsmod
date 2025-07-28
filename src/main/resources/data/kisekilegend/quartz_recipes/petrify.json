@@ -1,0 +1,43 @@
+{
+  "result": "kisekilegend:petrify",
+  "startingNode": "start_petrify",
+  "nodes": {
+    "start_petrify": {
+      "type": "EFFECT",
+      "value": "Normal attacks/crafts add 5% chance of Petrify",
+      "materialRequirements": {
+        "ore": 8
+      },
+      "unlocks": [
+        "effect_chance",
+        "trait_node"
+      ]
+    },
+    "effect_chance": {
+      "type": "EFFECT",
+      "value": "Petrify chance +2%",
+      "materialRequirements": {
+        "earth_material": 5
+      },
+      "unlocks": [
+        "quality_node"
+      ]
+    },
+    "trait_node": {
+      "type": "TRAIT",
+      "value": "Inflict Break on Petrified enemies",
+      "materialRequirements": {
+        "gunpowder": 3
+      },
+      "unlocks": []
+    },
+    "quality_node": {
+      "type": "QUALITY",
+      "value": 35,
+      "materialRequirements": {
+        "jewel": 3
+      },
+      "unlocks": []
+    }
+  }
+}

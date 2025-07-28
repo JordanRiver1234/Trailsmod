@@ -1,0 +1,64 @@
+{
+  "result": "kisekilegend:evade_3",
+  "requiredItem": "kisekilegend:evade_2",
+  "startingNode": "start_evade3",
+  "nodes": {
+    "start_evade3": {
+      "type": "QUARTZ",
+      "value": "Zephyros Gem Core",
+      "materialRequirements": {
+        "quartz": 1
+      },
+      "unlocks": [
+        "effect_root_evade3"
+      ]
+    },
+    "effect_root_evade3": {
+      "type": "EFFECT",
+      "value": "Evasion Rate +15%",
+      "materialRequirements": {
+        "wind_material": 8
+      },
+      "unlocks": [
+        "trait_upper_branch",
+        "trait_lower_branch"
+      ]
+    },
+    "trait_upper_branch": {
+      "type": "TRAIT",
+      "value": "Clairvoyance: 100% accuracy and critical on next attack after evading",
+      "materialRequirements": {
+        "threads": 5
+      },
+      "unlocks": [
+        "quality_upper"
+      ]
+    },
+    "trait_lower_branch": {
+      "type": "TRAIT",
+      "value": "Increase speed after a successful evasion",
+      "materialRequirements": {
+        "supplement": 4
+      },
+      "unlocks": [
+        "quality_lower"
+      ]
+    },
+    "quality_upper": {
+      "type": "QUALITY",
+      "value": 50,
+      "materialRequirements": {
+        "wool": 5
+      },
+      "unlocks": []
+    },
+    "quality_lower": {
+      "type": "QUALITY",
+      "value": 45,
+      "materialRequirements": {
+        "sundry": 8
+      },
+      "unlocks": []
+    }
+  }
+}

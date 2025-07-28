@@ -1,0 +1,33 @@
+{
+  "result": "kisekilegend:haze",
+  "startingNode": "start_haze",
+  "nodes": {
+    "start_haze": {
+      "type": "EFFECT",
+      "value": "Arts attacks/crafts add 10% chance of Blind",
+      "materialRequirements": {
+        "mirage_material": 5
+      },
+      "unlocks": [
+        "effect_debuff",
+        "quality_node"
+      ]
+    },
+    "effect_debuff": {
+      "type": "EFFECT",
+      "value": "Arts attacks/crafts add 10% chance of STR Down",
+      "materialRequirements": {
+        "earth_material": 4
+      },
+      "unlocks": []
+    },
+    "quality_node": {
+      "type": "QUALITY",
+      "value": 30,
+      "materialRequirements": {
+        "magic_tool": 4
+      },
+      "unlocks": []
+    }
+  }
+}

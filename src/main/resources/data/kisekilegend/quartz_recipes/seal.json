@@ -1,0 +1,33 @@
+{
+  "result": "kisekilegend:seal",
+  "startingNode": "start_seal",
+  "nodes": {
+    "start_seal": {
+      "type": "EFFECT",
+      "value": "Normal attacks/crafts add 10% chance of Seal",
+      "materialRequirements": {
+        "magic_tool": 5
+      },
+      "unlocks": [
+        "effect_duration",
+        "quality_node"
+      ]
+    },
+    "effect_duration": {
+      "type": "EFFECT",
+      "value": "Seal duration +1 turn",
+      "materialRequirements": {
+        "fire_material": 3
+      },
+      "unlocks": []
+    },
+    "quality_node": {
+      "type": "QUALITY",
+      "value": 20,
+      "materialRequirements": {
+        "spice": 3
+      },
+      "unlocks": []
+    }
+  }
+}

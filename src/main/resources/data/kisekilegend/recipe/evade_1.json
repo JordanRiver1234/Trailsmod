@@ -1,9 +1,0 @@
-{
-  "type": "minecraft:crafting_shapeless",
-  "ingredients": [
-    { "item": "minecraft:feather" },
-    { "item": "minecraft:feather" },
-    { "item": "kisekilegend:wind" }
-  ],
-  "result": { "id": "kisekilegend:evade_1", "count": 1 }
-}

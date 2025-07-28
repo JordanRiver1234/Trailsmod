@@ -1,23 +1,23 @@
 {
-  "result": "kisekilegend:hp_2",
-  "requiredItem": "kisekilegend:hp_1",
-  "startingNode": "start_hp2",
+  "result": "kisekilegend:attack_2",
+  "requiredItem": "kisekilegend:attack_1",
+  "startingNode": "start_atk2",
   "nodes": {
-    "start_hp2": {
+    "start_atk2": {
       "type": "QUARTZ",
-      "value": "HP Crystal Core",
+      "value": "Attack Crystal Core",
       "materialRequirements": {
         "quartz": 1
       },
       "unlocks": [
-        "effect_root_hp2"
+        "effect_root_atk2"
       ]
     },
-    "effect_root_hp2": {
+    "effect_root_atk2": {
       "type": "EFFECT",
-      "value": "Max HP +10%",
+      "value": "STR +15",
       "materialRequirements": {
-        "water_material": 5
+        "fire_material": 5
       },
       "unlocks": [
         "trait_branch",
@@ -26,24 +26,24 @@
     },
     "trait_branch": {
       "type": "TRAIT",
-      "value": "HP Regeneration S",
+      "value": "Physical Critical Chance +5%",
       "materialRequirements": {
-        "medicinal": 3
+        "ingot": 3
       },
       "unlocks": [
         "quality_upper",
-        "morph_freeze"
+        "morph_seal"
       ]
     },
     "effect_branch": {
       "type": "EFFECT",
-      "value": "Healing Received +10%",
+      "value": "Inflict 10% more Break damage",
       "materialRequirements": {
-        "liquid": 4
+        "gunpowder": 4
       },
       "unlocks": [
         "quality_lower",
-        "morph_mind1"
+        "morph_confuse"
       ]
     },
     "quality_upper": {
@@ -53,7 +53,7 @@
         "jewel": 2
       },
       "unlocks": [
-        "recipe_unlock_hp3"
+        "recipe_unlock_atk3"
       ]
     },
     "quality_lower": {
@@ -63,30 +63,30 @@
         "sundry": 5
       },
       "unlocks": [
-        "recipe_unlock_hp3"
+        "recipe_unlock_atk3"
       ]
     },
-    "morph_freeze": {
+    "morph_seal": {
       "type": "RECIPE_MORPH",
-      "value": "freeze",
+      "value": "seal",
       "materialRequirements": {
-        "ore": 3
+        "magic_tool": 3
       },
       "unlocks": []
     },
-    "morph_mind1": {
+    "morph_confuse": {
       "type": "RECIPE_MORPH",
-      "value": "mind_1",
+      "value": "confuse",
       "materialRequirements": {
         "mystery": 2
       },
       "unlocks": []
     },
-    "recipe_unlock_hp3": {
+    "recipe_unlock_atk3": {
       "type": "RECIPE_MORPH",
-      "value": "hp_3",
+      "value": "attack_3",
       "materialRequirements": {
-        "water_material": 3
+        "fire_material": 3
       },
       "unlocks": []
     }

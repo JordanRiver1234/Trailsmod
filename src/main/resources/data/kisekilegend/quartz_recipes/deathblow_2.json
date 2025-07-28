@@ -1,0 +1,44 @@
+{
+  "result": "kisekilegend:deathblow_2",
+  "requiredItem": "kisekilegend:deathblow_1",
+  "startingNode": "start_db2",
+  "nodes": {
+    "start_db2": {
+      "type": "QUARTZ",
+      "value": "Deathblow Crystal Core",
+      "materialRequirements": {
+        "quartz": 1
+      },
+      "unlocks": [
+        "effect_root_db2"
+      ]
+    },
+    "effect_root_db2": {
+      "type": "EFFECT",
+      "value": "20% chance to inflict Faint with attacks/crafts",
+      "materialRequirements": {
+        "time_material": 8
+      },
+      "unlocks": [
+        "trait_branch",
+        "quality_node"
+      ]
+    },
+    "trait_branch": {
+      "type": "TRAIT",
+      "value": "10% chance to inflict instant Death with attacks/crafts",
+      "materialRequirements": {
+        "poison": 5
+      },
+      "unlocks": []
+    },
+    "quality_node": {
+      "type": "QUALITY",
+      "value": 40,
+      "materialRequirements": {
+        "mystery": 5
+      },
+      "unlocks": []
+    }
+  }
+}

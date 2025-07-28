@@ -1,0 +1,33 @@
+{
+  "result": "kisekilegend:heal",
+  "startingNode": "start_heal",
+  "nodes": {
+    "start_heal": {
+      "type": "EFFECT",
+      "value": "Recover HP each turn",
+      "materialRequirements": {
+        "water_material": 5
+      },
+      "unlocks": [
+        "effect_time",
+        "quality_node"
+      ]
+    },
+    "effect_time": {
+      "type": "EFFECT",
+      "value": "Reduce cast time for healing arts",
+      "materialRequirements": {
+        "time_material": 4
+      },
+      "unlocks": []
+    },
+    "quality_node": {
+      "type": "QUALITY",
+      "value": 30,
+      "materialRequirements": {
+        "medicinal": 5
+      },
+      "unlocks": []
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "result": "kisekilegend:move_2",
+  "requiredItem": "kisekilegend:move_1",
+  "startingNode": "start_move2",
+  "nodes": {
+    "start_move2": {
+      "type": "QUARTZ",
+      "value": "Move Crystal Core",
+      "materialRequirements": {
+        "quartz": 1
+      },
+      "unlocks": [
+        "effect_root_move2"
+      ]
+    },
+    "effect_root_move2": {
+      "type": "EFFECT",
+      "value": "MOV +4",
+      "materialRequirements": {
+        "space_material": 5
+      },
+      "unlocks": [
+        "trait_branch",
+        "morph_range"
+      ]
+    },
+    "trait_branch": {
+      "type": "TRAIT",
+      "value": "Move without consuming turn on first action",
+      "materialRequirements": {
+        "time_material": 3
+      },
+      "unlocks": [
+        "quality_node"
+      ]
+    },
+    "quality_node": {
+      "type": "QUALITY",
+      "value": 25,
+      "materialRequirements": {
+        "supplement": 4
+      },
+      "unlocks": [
+        "recipe_unlock_move3"
+      ]
+    },
+    "morph_range": {
+      "type": "RECIPE_MORPH",
+      "value": "range_1",
+      "materialRequirements": {
+        "magic_tool": 3
+      },
+      "unlocks": []
+    },
+    "recipe_unlock_move3": {
+      "type": "RECIPE_MORPH",
+      "value": "move_3",
+      "materialRequirements": {
+        "space_material": 3
+      },
+      "unlocks": []
+    }
+  }
+}

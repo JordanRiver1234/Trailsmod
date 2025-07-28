@@ -1,9 +1,0 @@
-{
-  "type": "minecraft:crafting_shapeless",
-  "ingredients": [
-    { "item": "kisekilegend:time" },
-    { "item": "minecraft:clock" },
-    { "item": "kisekilegend:time" }
-  ],
-  "result": { "id": "kisekilegend:action_1", "count": 1 }
-}

@@ -1,0 +1,64 @@
+{
+  "result": "kisekilegend:shield_2",
+  "requiredItem": "kisekilegend:shield_1",
+  "startingNode": "start_shield2",
+  "nodes": {
+    "start_shield2": {
+      "type": "QUARTZ",
+      "value": "Shield Crystal Core",
+      "materialRequirements": {
+        "quartz": 1
+      },
+      "unlocks": [
+        "effect_root_shield2"
+      ]
+    },
+    "effect_root_shield2": {
+      "type": "EFFECT",
+      "value": "ADF +10%",
+      "materialRequirements": {
+        "wind_material": 5
+      },
+      "unlocks": [
+        "trait_branch",
+        "morph_sleep"
+      ]
+    },
+    "trait_branch": {
+      "type": "TRAIT",
+      "value": "Chance to reflect Arts damage",
+      "materialRequirements": {
+        "magic_tool": 3
+      },
+      "unlocks": [
+        "quality_node"
+      ]
+    },
+    "quality_node": {
+      "type": "QUALITY",
+      "value": 25,
+      "materialRequirements": {
+        "cloth": 4
+      },
+      "unlocks": [
+        "recipe_unlock_shield3"
+      ]
+    },
+    "morph_sleep": {
+      "type": "RECIPE_MORPH",
+      "value": "sleep",
+      "materialRequirements": {
+        "plant": 3
+      },
+      "unlocks": []
+    },
+    "recipe_unlock_shield3": {
+      "type": "RECIPE_MORPH",
+      "value": "shield_3",
+      "materialRequirements": {
+        "wind_material": 3
+      },
+      "unlocks": []
+    }
+  }
+}

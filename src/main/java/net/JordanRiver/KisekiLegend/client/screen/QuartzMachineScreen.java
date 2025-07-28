@@ -3,6 +3,7 @@ package net.JordanRiver.KisekiLegend.client.screen;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.JordanRiver.KisekiLegend.KisekiLegend;
 import net.JordanRiver.KisekiLegend.block.entity.QuartzMachineBlockEntity;
+import net.JordanRiver.KisekiLegend.capability.PlayerRecipeProgressProvider;
 import net.JordanRiver.KisekiLegend.crafting.recipe.QuartzCraftingRecipe;
 import net.JordanRiver.KisekiLegend.menu.QuartzMachineMenu;
 import net.JordanRiver.KisekiLegend.network.*;
@@ -57,19 +58,75 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
     private final Map<Integer, Integer> filteredSlotMapping = new HashMap<>(); // displaySlot -> actualSlot
     private int clickedDisplaySlot = -1;
     private boolean isRecipeUnlocked(QuartzCraftingRecipe recipe) {
-        // Implement your recipe unlocking logic here
-        // For example, hp_1 is always unlocked, hp_2 requires hp_1 to be completed
+        if (minecraft.player == null) return false;
+
         String recipeId = recipe.getId().getPath();
 
-        if (recipeId.equals("hp_1")) {
-            return true; // Always unlocked
-        } else if (recipeId.equals("hp_2")) {
-            // Check if player has completed hp_1 (you'll need to track this)
-            // For now, return true for testing
+        // Always unlock tier 1 recipes
+        if (recipeId.endsWith("_1")) {
             return true;
         }
 
-        return true; // Default to unlocked for other recipes
+        // Special case for freeze - unlocked by either hp_2 OR mind_2
+        if (recipeId.equals("freeze")) {
+            return hasCompletedRecipe("hp_2") || hasCompletedRecipe("mind_2");
+        }
+
+        // Check if prerequisite is completed
+        String prerequisite = getPrerequisiteRecipe(recipeId);
+        if (prerequisite != null) {
+            return hasCompletedRecipe(prerequisite); // CHANGED: Use helper method consistently
+        }
+
+        return true; // Fallback for recipes without prerequisites
+    }
+
+    private String getPrerequisiteRecipe(String recipeId) {
+        // Map each recipe to its prerequisite
+        if (recipeId.endsWith("_2")) {
+            return recipeId.replace("_2", "_1");
+        } else if (recipeId.endsWith("_3")) {
+            return recipeId.replace("_3", "_2");
+        }
+
+        // Handle morph recipes - they unlock when their base recipe is completed
+        Map<String, String> morphPrerequisites = Map.of(
+                "freeze", "hp_2", // Also available from mind_2, but we'll check hp_2
+                "poison", "defense_2",
+                "mute", "defense_2",
+                "petrify", "defense_3",
+                "heal", "hp_3",
+                "seal", "attack_2",
+                "confuse", "attack_2",
+                "strike", "attack_3",
+                "sleep", "shield_2",
+                "scent", "evade_2"
+        );
+
+        // Additional morph prerequisites (Map.of has a 10 entry limit)
+        Map<String, String> additionalMorphs = Map.of(
+                "blind", "action_2",
+                "range_1", "move_2",
+                "eagle_eye", "ep_cut_2",
+                "information", "ep_2",
+                "haze", "ep_2",
+                "cloak", "hit_2"
+        );
+
+        String prerequisite = morphPrerequisites.get(recipeId);
+        if (prerequisite == null) {
+            prerequisite = additionalMorphs.get(recipeId);
+        }
+
+        return prerequisite;
+    }
+
+    private boolean hasCompletedRecipe(String recipeId) {
+        if (minecraft.player == null) return false;
+
+        return minecraft.player.getCapability(PlayerRecipeProgressProvider.PLAYER_RECIPE_PROGRESS)
+                .map(progress -> progress.hasCompletedRecipe(recipeId))
+                .orElse(false);
     }
     private List<String> getAllMaterialTypes() {
         return List.of(
@@ -181,56 +238,28 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
         initializeCategoryRecipes();
 
         // Clear existing positions
+
         nodePositions.clear();
+        updateNodePositions(); // Initial setup
 
-        // Get the current active recipe to determine which positions to use
-        QuartzMachineBlockEntity blockEntity = this.menu.getBlockEntity();
-        if (blockEntity != null && blockEntity.getActiveRecipeId() != null) {
-            String recipeId = blockEntity.getActiveRecipeId().getPath();
 
-            if (recipeId.equals("hp_1")) {
-                // HP_1 positions (your existing ones)
-                nodePositions.put("start_hp", new Pos(this.width / 2 - 80, this.height / 2));
-                nodePositions.put("quality_boost", new Pos(this.width / 2, this.height / 2));
-                nodePositions.put("recipe_unlock_hp2", new Pos(this.width / 2 + 80, this.height / 2));
-            } else if (recipeId.equals("hp_2")) {
-                // HP_2 positions - balanced branching layout
-                int centerX = this.width / 2;
-                int centerY = this.height / 2;
 
-                // Starting node at center-left
-                nodePositions.put("start_hp2", new Pos(centerX - 120, centerY));
 
-                // First branch level (from start) - moderate spread
-                nodePositions.put("trait_branch1", new Pos(centerX - 40, centerY - 50));
-                nodePositions.put("effect_branch1", new Pos(centerX - 40, centerY + 50));
-
-                // Second branch level - positioned between first and quality nodes
-                nodePositions.put("trait_branch2", new Pos(centerX + 30, centerY + 25));
-
-                // Quality nodes (convergence level) - closer together
-                nodePositions.put("quality_upper", new Pos(centerX + 90, centerY - 40));
-                nodePositions.put("quality_middle", new Pos(centerX + 90, centerY));
-                nodePositions.put("quality_lower", new Pos(centerX + 90, centerY + 40));
-
-                // Final recipe node (end)
-                nodePositions.put("final_recipe", new Pos(centerX + 150, centerY));
-            }
-        }
         this.synthesisButton = addRenderableWidget(Button.builder(Component.literal("Synthesize"), this::onSynthesisButtonPressed)
                 .bounds(this.width / 2 - 100, 10, 120, 20)
                 .build());
+
     }
 
     private void initializeCategoryRecipes() {
         Map<String, List<String>> categoryToPatterns = Map.of(
-                "water", List.of("hp_", "heal_"),
-                "fire", List.of("attack_"),
-                "earth", List.of("defense_"),
-                "wind", List.of("speed_"),
-                "time", List.of("time_"),
-                "space", List.of("space_"),
-                "mirage", List.of("mirage_")
+                "water", List.of("hp_", "heal", "freeze", "heal", "mind_"),
+                "fire", List.of("attack_", "confuse", "strike", "seal"),
+                "earth", List.of("defense_", "mute", "petrify" , "poison"),
+                "wind", List.of("speed_", "evade_", "impede_", "scent", "shield_", "sleep"),
+                "time", List.of("action_", "blind", "cast_", "deathblow_"),
+                "space", List.of( "eagle_eye" , "ep_cut_","move_", "range_"),
+                "mirage", List.of( "cloak", "ep_", "haze", "hit_", "information")
         );
 
         // Initialize all categories as collapsed
@@ -246,10 +275,509 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
                     .toList();
 
             categoryRecipes.put(category, recipes);
-        }
-    }
 
-    private void onSynthesisButtonPressed(Button button) {
+        }
+
+    }
+    private void updateNodePositions() {
+        nodePositions.clear();
+
+        QuartzMachineBlockEntity blockEntity = this.menu.getBlockEntity();
+        if (blockEntity == null || blockEntity.getActiveRecipeId() == null) {
+            return;
+        }
+
+        String recipeId = blockEntity.getActiveRecipeId().getPath();
+        System.out.println("updateNodePositions() - Setting positions for recipe: " + recipeId);
+
+        if (recipeId.equals("hp_1")) {
+            // HP_1 positions (as per your original file, unmodified)
+            nodePositions.put("start_hp", new Pos(this.width / 2 - 80, this.height / 2));
+            nodePositions.put("quality_boost", new Pos(this.width / 2, this.height / 2));
+            nodePositions.put("recipe_unlock_hp2", new Pos(this.width / 2 + 80, this.height / 2));
+        } else if (recipeId.equals("hp_2")) {
+            // HP_2 positions - a wide, branching layout
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_hp2", new Pos(centerX - 140, centerY));
+            nodePositions.put("effect_root_hp2", new Pos(centerX - 60, centerY));
+            nodePositions.put("trait_branch", new Pos(centerX + 20, centerY - 55));
+            nodePositions.put("effect_branch", new Pos(centerX + 20, centerY + 55));
+            nodePositions.put("quality_upper", new Pos(centerX + 100, centerY - 70));
+            nodePositions.put("quality_lower", new Pos(centerX + 100, centerY + 70));
+            nodePositions.put("morph_freeze", new Pos(centerX + 100, centerY - 20));
+            nodePositions.put("morph_mind1", new Pos(centerX + 100, centerY + 20));
+            nodePositions.put("recipe_unlock_hp3", new Pos(centerX + 180, centerY));
+        } else if (recipeId.equals("hp_3")) {
+            // HP_3 positions - a tall, symmetrical "fountain" layout
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_hp3", new Pos(centerX, centerY + 90));
+            nodePositions.put("effect_root_hp3", new Pos(centerX, centerY + 30));
+            nodePositions.put("trait_upper_branch", new Pos(centerX - 60, centerY - 20));
+            nodePositions.put("trait_lower_branch", new Pos(centerX + 60, centerY - 20));
+            nodePositions.put("quality_upper", new Pos(centerX - 70, centerY - 80));
+            nodePositions.put("morph_heal", new Pos(centerX - 10, centerY - 80));
+            nodePositions.put("quality_lower", new Pos(centerX + 70, centerY - 80));
+            nodePositions.put("effect_final_boost", new Pos(centerX + 10, centerY - 80));
+        } else if (recipeId.equals("defense_1")) {
+            // Defense_1 positions - simple horizontal line
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_def", new Pos(centerX - 75, centerY));
+            nodePositions.put("quality_boost", new Pos(centerX, centerY));
+            nodePositions.put("recipe_unlock_def2", new Pos(centerX + 75, centerY));
+        } else if (recipeId.equals("defense_2")) {
+            // Defense_2 positions - an "arrowhead" layout pointing right
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_def2", new Pos(centerX - 120, centerY));
+            nodePositions.put("effect_root_def2", new Pos(centerX - 50, centerY));
+            nodePositions.put("trait_branch", new Pos(centerX + 20, centerY - 45));
+            nodePositions.put("effect_branch", new Pos(centerX + 20, centerY + 45));
+            nodePositions.put("quality_upper", new Pos(centerX + 90, centerY - 45));
+            nodePositions.put("morph_poison", new Pos(centerX + 90, centerY - 15));
+            nodePositions.put("quality_lower", new Pos(centerX + 90, centerY + 45));
+            nodePositions.put("morph_mute", new Pos(centerX + 90, centerY + 15));
+            nodePositions.put("recipe_unlock_def3", new Pos(centerX + 160, centerY));
+        } else if (recipeId.equals("defense_3")) {
+            // Defense_3 positions - a wide, diamond-like layout
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_def3", new Pos(centerX - 150, centerY));
+            nodePositions.put("effect_root_def3", new Pos(centerX - 70, centerY));
+            nodePositions.put("trait_upper_branch", new Pos(centerX, centerY - 60));
+            nodePositions.put("trait_lower_branch", new Pos(centerX, centerY + 60));
+            nodePositions.put("quality_upper", new Pos(centerX + 80, centerY - 70));
+            nodePositions.put("morph_petrify", new Pos(centerX + 80, centerY - 20));
+            nodePositions.put("quality_lower", new Pos(centerX + 80, centerY + 70));
+            nodePositions.put("effect_final_boost", new Pos(centerX + 80, centerY + 20));
+        } else if (recipeId.equals("poison")) {
+            // Poison positions - a small triangle
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_poison", new Pos(centerX, centerY + 40));
+            nodePositions.put("effect_potency", new Pos(centerX - 50, centerY - 20));
+            nodePositions.put("quality_node", new Pos(centerX + 50, centerY - 20));
+        } else if (recipeId.equals("mute")) {
+            // Mute positions - a 'Y' shape
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_mute", new Pos(centerX, centerY + 40));
+            nodePositions.put("effect_duration", new Pos(centerX - 50, centerY - 30));
+            nodePositions.put("quality_node", new Pos(centerX + 50, centerY - 30));
+        } else if (recipeId.equals("petrify")) {
+            // Petrify positions - a fork with an extra branch
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_petrify", new Pos(centerX - 80, centerY));
+            nodePositions.put("effect_chance", new Pos(centerX, centerY - 40));
+            nodePositions.put("trait_node", new Pos(centerX, centerY + 40));
+            nodePositions.put("quality_node", new Pos(centerX + 80, centerY - 40));
+        } else if (recipeId.equals("mind_1")) {
+            // Mind_1 positions - simple horizontal
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_mind", new Pos(centerX - 70, centerY));
+            nodePositions.put("quality_boost", new Pos(centerX, centerY));
+            nodePositions.put("recipe_unlock_mind2", new Pos(centerX + 70, centerY));
+        } else if (recipeId.equals("mind_2")) {
+            // Mind_2 positions - top-down flow
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_mind2", new Pos(centerX, centerY - 80));
+            nodePositions.put("effect_root_mind2", new Pos(centerX, centerY - 30));
+            nodePositions.put("trait_branch", new Pos(centerX - 50, centerY + 20));
+            nodePositions.put("morph_freeze", new Pos(centerX + 50, centerY + 20));
+            nodePositions.put("quality_node", new Pos(centerX - 50, centerY + 70));
+            nodePositions.put("recipe_unlock_mind3", new Pos(centerX + 50, centerY + 70));
+        } else if (recipeId.equals("mind_3")) {
+            // Mind_3 positions - an open, square-like structure
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_mind3", new Pos(centerX - 90, centerY - 40));
+            nodePositions.put("effect_root_mind3", new Pos(centerX, centerY));
+            nodePositions.put("trait_upper_branch", new Pos(centerX + 90, centerY - 40));
+            nodePositions.put("trait_lower_branch", new Pos(centerX - 90, centerY + 40));
+            nodePositions.put("quality_upper", new Pos(centerX, centerY - 80));
+            nodePositions.put("quality_lower", new Pos(centerX, centerY + 80));
+        } else if (recipeId.equals("freeze")) {
+            // Freeze positions - angled line
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_freeze", new Pos(centerX - 60, centerY + 30));
+            nodePositions.put("effect_potency", new Pos(centerX, centerY));
+            nodePositions.put("quality_node", new Pos(centerX + 60, centerY - 30));
+        } else if (recipeId.equals("heal")) {
+            // Heal positions - gentle curve
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_heal", new Pos(centerX - 70, centerY));
+            nodePositions.put("effect_time", new Pos(centerX, centerY - 40));
+            nodePositions.put("quality_node", new Pos(centerX + 70, centerY));
+        } else if (recipeId.equals("attack_1")) {
+            // Attack_1 positions - simple horizontal
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_atk", new Pos(centerX - 80, centerY));
+            nodePositions.put("quality_boost", new Pos(centerX, centerY));
+            nodePositions.put("recipe_unlock_atk2", new Pos(centerX + 80, centerY));
+        } else if (recipeId.equals("attack_2")) {
+            // Attack_2 positions - asymmetrical branching
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_atk2", new Pos(centerX - 130, centerY));
+            nodePositions.put("effect_root_atk2", new Pos(centerX - 60, centerY));
+            nodePositions.put("trait_branch", new Pos(centerX, centerY - 50));
+            nodePositions.put("effect_branch", new Pos(centerX + 30, centerY + 50));
+            nodePositions.put("quality_upper", new Pos(centerX + 70, centerY - 50));
+            nodePositions.put("quality_lower", new Pos(centerX + 100, centerY + 50));
+            nodePositions.put("morph_seal", new Pos(centerX, centerY));
+            nodePositions.put("morph_confuse", new Pos(centerX + 80, centerY));
+            nodePositions.put("recipe_unlock_atk3", new Pos(centerX + 170, centerY));
+        } else if (recipeId.equals("attack_3")) {
+            // Attack_3 positions - aggressive, sharp-angled layout
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_atk3", new Pos(centerX - 100, centerY));
+            nodePositions.put("effect_root_atk3", new Pos(centerX - 30, centerY));
+            nodePositions.put("trait_upper_branch", new Pos(centerX + 40, centerY - 60));
+            nodePositions.put("trait_lower_branch", new Pos(centerX + 40, centerY + 60));
+            nodePositions.put("quality_upper", new Pos(centerX + 120, centerY - 60));
+            nodePositions.put("quality_lower", new Pos(centerX + 120, centerY + 60));
+            nodePositions.put("effect_final_boost", new Pos(centerX + 120, centerY + 20));
+            nodePositions.put("morph_strike", new Pos(centerX + 120, centerY - 20));
+        } else if (recipeId.equals("seal")) {
+            // Seal positions - simple fork
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_seal", new Pos(centerX - 50, centerY));
+            nodePositions.put("effect_duration", new Pos(centerX + 40, centerY - 30));
+            nodePositions.put("quality_node", new Pos(centerX + 40, centerY + 30));
+        } else if (recipeId.equals("confuse")) {
+            // Confuse positions - zig-zag
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_confuse", new Pos(centerX - 60, centerY));
+            nodePositions.put("effect_potency", new Pos(centerX, centerY - 40));
+            nodePositions.put("quality_node", new Pos(centerX + 60, centerY));
+        } else if (recipeId.equals("strike")) {
+            // Strike positions - balanced fork
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_strike", new Pos(centerX - 60, centerY));
+            nodePositions.put("trait_node", new Pos(centerX + 20, centerY - 40));
+            nodePositions.put("quality_node", new Pos(centerX + 20, centerY + 40));
+        } else if (recipeId.equals("shield_1")) {
+            // Shield_1 positions
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_shield", new Pos(centerX - 75, centerY));
+            nodePositions.put("quality_boost", new Pos(centerX, centerY));
+            nodePositions.put("recipe_unlock_shield2", new Pos(centerX + 75, centerY));
+        } else if (recipeId.equals("shield_2")) {
+            // Shield_2 positions - wide and simple
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_shield2", new Pos(centerX - 100, centerY));
+            nodePositions.put("effect_root_shield2", new Pos(centerX - 30, centerY));
+            nodePositions.put("trait_branch", new Pos(centerX + 40, centerY - 40));
+            nodePositions.put("quality_node", new Pos(centerX + 110, centerY - 40));
+            nodePositions.put("morph_sleep", new Pos(centerX + 40, centerY + 40));
+            nodePositions.put("recipe_unlock_shield3", new Pos(centerX + 110, centerY + 40));
+        } else if (recipeId.equals("shield_3")) {
+            // Shield_3 positions - a full, protective circle-like layout
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_shield3", new Pos(centerX, centerY));
+            nodePositions.put("effect_root_shield3", new Pos(centerX, centerY - 60));
+            nodePositions.put("trait_upper_branch", new Pos(centerX + 70, centerY - 60));
+            nodePositions.put("quality_upper", new Pos(centerX + 70, centerY));
+            nodePositions.put("trait_lower_branch", new Pos(centerX - 70, centerY - 60));
+            nodePositions.put("quality_lower", new Pos(centerX - 70, centerY));
+        } else if (recipeId.equals("evade_1")) {
+            // Evade_1 positions
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_evade", new Pos(centerX - 70, centerY));
+            nodePositions.put("quality_boost", new Pos(centerX, centerY));
+            nodePositions.put("recipe_unlock_evade2", new Pos(centerX + 70, centerY));
+        } else if (recipeId.equals("evade_2")) {
+            // Evade_2 positions - a 'Z' flow
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_evade2", new Pos(centerX - 90, centerY - 40));
+            nodePositions.put("effect_root_evade2", new Pos(centerX, centerY - 40));
+            nodePositions.put("trait_branch", new Pos(centerX, centerY + 40));
+            nodePositions.put("morph_scent", new Pos(centerX + 90, centerY - 40));
+            nodePositions.put("quality_node", new Pos(centerX - 90, centerY + 40));
+            nodePositions.put("recipe_unlock_evade3", new Pos(centerX + 90, centerY + 40));
+        } else if (recipeId.equals("evade_3")) {
+            // Evade_3 positions - a flowing "S" curve
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_evade3", new Pos(centerX - 100, centerY - 60));
+            nodePositions.put("effect_root_evade3", new Pos(centerX - 30, centerY - 30));
+            nodePositions.put("trait_upper_branch", new Pos(centerX + 40, centerY));
+            nodePositions.put("trait_lower_branch", new Pos(centerX - 30, centerY + 30));
+            nodePositions.put("quality_upper", new Pos(centerX + 110, centerY + 30));
+            nodePositions.put("quality_lower", new Pos(centerX + 40, centerY + 60));
+        } else if (recipeId.equals("impede_1")) {
+            // Impede_1 positions
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_impede", new Pos(centerX - 75, centerY));
+            nodePositions.put("quality_boost", new Pos(centerX, centerY));
+            nodePositions.put("recipe_unlock_impede2", new Pos(centerX + 75, centerY));
+        } else if (recipeId.equals("impede_2")) {
+            // Impede_2 positions - simple balanced fork
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_impede2", new Pos(centerX - 80, centerY));
+            nodePositions.put("effect_root_impede2", new Pos(centerX, centerY));
+            nodePositions.put("trait_branch", new Pos(centerX + 80, centerY - 40));
+            nodePositions.put("quality_node", new Pos(centerX + 80, centerY + 40));
+            nodePositions.put("recipe_unlock_impede3", new Pos(centerX + 150, centerY));
+        } else if (recipeId.equals("impede_3")) {
+            // Impede_3 positions - tall and linear
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_impede3", new Pos(centerX, centerY - 80));
+            nodePositions.put("effect_root_impede3", new Pos(centerX, centerY - 30));
+            nodePositions.put("trait_branch", new Pos(centerX, centerY + 20));
+            nodePositions.put("quality_node", new Pos(centerX, centerY + 70));
+        } else if (recipeId.equals("sleep")) {
+            // Sleep positions
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_sleep", new Pos(centerX - 50, centerY + 30));
+            nodePositions.put("effect_potency", new Pos(centerX, centerY - 20));
+            nodePositions.put("quality_node", new Pos(centerX + 50, centerY + 30));
+        } else if (recipeId.equals("scent")) {
+            // Scent positions
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_scent", new Pos(centerX - 60, centerY));
+            nodePositions.put("effect_range", new Pos(centerX + 20, centerY - 40));
+            nodePositions.put("quality_node", new Pos(centerX + 20, centerY + 40));
+        } else if (recipeId.equals("action_1")) {
+            // Action_1 positions
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_action", new Pos(centerX - 80, centerY));
+            nodePositions.put("quality_boost", new Pos(centerX, centerY));
+            nodePositions.put("recipe_unlock_action2", new Pos(centerX + 80, centerY));
+        } else if (recipeId.equals("action_2")) {
+            // Action_2 positions - multi-fork layout
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_action2", new Pos(centerX - 120, centerY));
+            nodePositions.put("effect_root_action2", new Pos(centerX - 50, centerY));
+            nodePositions.put("trait_branch", new Pos(centerX + 20, centerY - 50));
+            nodePositions.put("morph_branch", new Pos(centerX + 20, centerY + 50));
+            nodePositions.put("quality_upper", new Pos(centerX + 90, centerY - 70));
+            nodePositions.put("recipe_unlock_action3", new Pos(centerX + 160, centerY - 50));
+            nodePositions.put("morph_blind", new Pos(centerX + 90, centerY + 30));
+            nodePositions.put("morph_deathblow", new Pos(centerX + 90, centerY + 70));
+        } else if (recipeId.equals("action_3")) {
+            // Action_3 positions - ladder layout
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_action3", new Pos(centerX - 90, centerY));
+            nodePositions.put("effect_root_action3", new Pos(centerX - 30, centerY));
+            nodePositions.put("trait_upper_branch", new Pos(centerX + 30, centerY - 40));
+            nodePositions.put("trait_lower_branch", new Pos(centerX + 30, centerY + 40));
+            nodePositions.put("quality_upper", new Pos(centerX + 90, centerY - 40));
+            nodePositions.put("quality_lower", new Pos(centerX + 90, centerY + 40));
+        } else if (recipeId.equals("blind")) {
+            // Blind positions
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_blind", new Pos(centerX - 60, centerY));
+            nodePositions.put("effect_potency", new Pos(centerX, centerY + 40));
+            nodePositions.put("quality_node", new Pos(centerX + 60, centerY));
+        } else if (recipeId.equals("cast_1")) {
+            // Cast_1 positions
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_cast", new Pos(centerX - 70, centerY));
+            nodePositions.put("quality_boost", new Pos(centerX, centerY));
+            nodePositions.put("recipe_unlock_cast2", new Pos(centerX + 70, centerY));
+        } else if (recipeId.equals("cast_2")) {
+            // Cast_2 positions - compact fork
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_cast2", new Pos(centerX - 60, centerY));
+            nodePositions.put("effect_root_cast2", new Pos(centerX, centerY));
+            nodePositions.put("trait_branch", new Pos(centerX + 60, centerY - 35));
+            nodePositions.put("quality_node", new Pos(centerX + 60, centerY + 35));
+        } else if (recipeId.equals("deathblow_1")) {
+            // Deathblow_1 positions
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_db1", new Pos(centerX - 60, centerY));
+            nodePositions.put("quality_boost", new Pos(centerX, centerY));
+            nodePositions.put("recipe_unlock_db2", new Pos(centerX + 60, centerY));
+        } else if (recipeId.equals("deathblow_2")) {
+            // Deathblow_2 positions
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_db2", new Pos(centerX - 70, centerY));
+            nodePositions.put("effect_root_db2", new Pos(centerX, centerY));
+            nodePositions.put("trait_branch", new Pos(centerX + 70, centerY - 40));
+            nodePositions.put("quality_node", new Pos(centerX + 70, centerY + 40));
+        } else if (recipeId.equals("move_1")) {
+            // Move_1 positions
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_move", new Pos(centerX - 70, centerY));
+            nodePositions.put("quality_boost", new Pos(centerX, centerY));
+            nodePositions.put("recipe_unlock_move2", new Pos(centerX + 70, centerY));
+        } else if (recipeId.equals("move_2")) {
+            // Move_2 positions
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_move2", new Pos(centerX - 90, centerY));
+            nodePositions.put("effect_root_move2", new Pos(centerX - 30, centerY));
+            nodePositions.put("trait_branch", new Pos(centerX + 30, centerY - 40));
+            nodePositions.put("morph_range", new Pos(centerX + 30, centerY + 40));
+            nodePositions.put("quality_node", new Pos(centerX + 90, centerY - 40));
+            nodePositions.put("recipe_unlock_move3", new Pos(centerX + 90, centerY + 40));
+        } else if (recipeId.equals("move_3")) {
+            // Move_3 positions
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_move3", new Pos(centerX, centerY + 70));
+            nodePositions.put("effect_root_move3", new Pos(centerX, centerY + 20));
+            nodePositions.put("trait_branch", new Pos(centerX, centerY - 30));
+            nodePositions.put("quality_node", new Pos(centerX, centerY - 80));
+        } else if (recipeId.equals("ep_cut_1")) {
+            // EP_Cut_1 positions
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_epcut", new Pos(centerX - 80, centerY));
+            nodePositions.put("quality_boost", new Pos(centerX, centerY));
+            nodePositions.put("recipe_unlock_epcut2", new Pos(centerX + 80, centerY));
+        } else if (recipeId.equals("ep_cut_2")) {
+            // EP_Cut_2 positions
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_epcut2", new Pos(centerX - 100, centerY));
+            nodePositions.put("effect_root_epcut2", new Pos(centerX - 30, centerY));
+            nodePositions.put("trait_branch", new Pos(centerX + 40, centerY - 40));
+            nodePositions.put("morph_eagle_eye", new Pos(centerX + 40, centerY + 40));
+            nodePositions.put("quality_node", new Pos(centerX + 110, centerY - 40));
+            nodePositions.put("recipe_unlock_epcut3", new Pos(centerX + 110, centerY + 40));
+        } else if (recipeId.equals("ep_cut_3")) {
+            // EP_Cut_3 positions
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_epcut3", new Pos(centerX - 140, centerY));
+            nodePositions.put("effect_root_epcut3", new Pos(centerX - 70, centerY));
+            nodePositions.put("trait_upper_branch", new Pos(centerX, centerY - 50));
+            nodePositions.put("trait_lower_branch", new Pos(centerX, centerY + 50));
+            nodePositions.put("quality_upper", new Pos(centerX + 70, centerY - 50));
+            nodePositions.put("quality_lower", new Pos(centerX + 70, centerY + 50));
+        } else if (recipeId.equals("range_1")) {
+            // Range_1 positions
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_range", new Pos(centerX - 60, centerY));
+            nodePositions.put("trait_node", new Pos(centerX + 10, centerY - 40));
+            nodePositions.put("quality_node", new Pos(centerX + 10, centerY + 40));
+        } else if (recipeId.equals("eagle_eye")) {
+            // Eagle_Eye positions
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_eagle", new Pos(centerX - 60, centerY));
+            nodePositions.put("effect_accuracy", new Pos(centerX, centerY - 40));
+            nodePositions.put("quality_node", new Pos(centerX + 60, centerY));
+        } else if (recipeId.equals("ep_1")) {
+            // EP_1 positions
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_ep", new Pos(centerX - 80, centerY));
+            nodePositions.put("quality_boost", new Pos(centerX, centerY));
+            nodePositions.put("recipe_unlock_ep2", new Pos(centerX + 80, centerY));
+        } else if (recipeId.equals("ep_2")) {
+            // EP_2 positions
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_ep2", new Pos(centerX - 110, centerY));
+            nodePositions.put("effect_root_ep2", new Pos(centerX - 40, centerY));
+            nodePositions.put("trait_branch", new Pos(centerX + 30, centerY - 50));
+            nodePositions.put("morph_branch", new Pos(centerX + 30, centerY + 50));
+            nodePositions.put("quality_upper", new Pos(centerX + 100, centerY - 50));
+            nodePositions.put("morph_info", new Pos(centerX + 100, centerY + 20));
+            nodePositions.put("morph_haze", new Pos(centerX + 100, centerY + 80));
+            nodePositions.put("recipe_unlock_ep3", new Pos(centerX + 170, centerY - 50));
+        } else if (recipeId.equals("ep_3")) {
+            // EP_3 positions
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_ep3", new Pos(centerX - 130, centerY));
+            nodePositions.put("effect_root_ep3", new Pos(centerX - 60, centerY));
+            nodePositions.put("trait_upper_branch", new Pos(centerX, centerY - 60));
+            nodePositions.put("trait_lower_branch", new Pos(centerX, centerY + 60));
+            nodePositions.put("quality_upper", new Pos(centerX + 70, centerY - 60));
+            nodePositions.put("quality_lower", new Pos(centerX + 70, centerY + 60));
+        } else if (recipeId.equals("hit_1")) {
+            // Hit_1 positions
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_hit", new Pos(centerX - 70, centerY));
+            nodePositions.put("quality_boost", new Pos(centerX, centerY));
+            nodePositions.put("recipe_unlock_hit2", new Pos(centerX + 70, centerY));
+        } else if (recipeId.equals("hit_2")) {
+            // Hit_2 positions
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_hit2", new Pos(centerX - 90, centerY));
+            nodePositions.put("effect_root_hit2", new Pos(centerX, centerY));
+            nodePositions.put("trait_branch", new Pos(centerX + 70, centerY - 45));
+            nodePositions.put("morph_cloak", new Pos(centerX + 70, centerY + 45));
+            nodePositions.put("quality_node", new Pos(centerX + 140, centerY - 45));
+            nodePositions.put("recipe_unlock_hit3", new Pos(centerX + 140, centerY));
+        } else if (recipeId.equals("hit_3")) {
+            // Hit_3 positions
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_hit3", new Pos(centerX - 110, centerY));
+            nodePositions.put("effect_root_hit3", new Pos(centerX - 40, centerY));
+            nodePositions.put("trait_upper_branch", new Pos(centerX + 30, centerY - 40));
+            nodePositions.put("trait_lower_branch", new Pos(centerX + 30, centerY + 40));
+            nodePositions.put("quality_upper", new Pos(centerX + 100, centerY - 40));
+            nodePositions.put("quality_lower", new Pos(centerX + 100, centerY + 40));
+        } else if (recipeId.equals("information")) {
+            // Information positions
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_info", new Pos(centerX - 60, centerY));
+            nodePositions.put("trait_node", new Pos(centerX, centerY - 40));
+            nodePositions.put("quality_node", new Pos(centerX + 60, centerY));
+        } else if (recipeId.equals("haze")) {
+            // Haze positions
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_haze", new Pos(centerX - 60, centerY));
+            nodePositions.put("effect_debuff", new Pos(centerX + 20, centerY + 40));
+            nodePositions.put("quality_node", new Pos(centerX + 20, centerY - 40));
+        } else if (recipeId.equals("cloak")) {
+            // Cloak positions
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            nodePositions.put("start_cloak", new Pos(centerX, centerY + 50));
+            nodePositions.put("effect_stealth", new Pos(centerX - 50, centerY - 20));
+            nodePositions.put("quality_node", new Pos(centerX + 50, centerY - 20));
+        } else {
+            System.out.println("DEBUG init() - No matching recipe found for: " + recipeId + " - node positions will be empty");
+        }
+
+        }
+
+
+
+        private void onSynthesisButtonPressed(Button button) {
         QuartzMachineBlockEntity blockEntity = this.menu.getBlockEntity();
         if (blockEntity != null) {
             NetworkHandler.sendToServer(new StartSynthesisPacket(blockEntity.getBlockPos()));
@@ -338,6 +866,9 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
         }
 
     }
+    public void onRecipeChanged() {
+        updateNodePositions();
+    }
     // 5. Add this new method to draw inventory tabs:
     private void drawInventoryTabs(GuiGraphics graphics, int panelX, int tabY) {
         List<String> materialTypes = getAllMaterialTypes();
@@ -401,31 +932,39 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
             }
         }
 
-        // Update max scroll offset
-        maxScrollOffset = Math.max(0, totalLines - VISIBLE_LINES);
+        // Update max scroll offset with more generous scrolling
+        int availableLines = Math.min(VISIBLE_LINES, (this.height - 40) / 12); // Dynamic based on screen height
+        maxScrollOffset = Math.max(0, totalLines - availableLines);
         scrollOffset = Math.max(0, Math.min(scrollOffset, maxScrollOffset));
 
         // Set up clipping for the scrollable area
         int panelX = 5;
-        int panelY = 15;
+        int panelY = 35; // Moved down to make room for progress bar
         int panelWidth = 80;
-        int panelHeight = VISIBLE_LINES * 12; // Use consistent line height for calculation
+        int panelHeight = availableLines * 12; // Dynamic height
+
+        // Draw progress bar at the top
+        drawOverallProgressBar(graphics, panelX, 5, panelWidth);
+
+        // Draw scroll background
+        graphics.fill(panelX, panelY, panelX + panelWidth, panelY + panelHeight, 0xBF3B270A);
+        graphics.renderOutline(panelX, panelY, panelWidth, panelHeight, 0xFF1A1104);
 
         // Enable scissor test for clipping
         graphics.enableScissor(panelX, panelY, panelX + panelWidth, panelY + panelHeight);
 
         int currentLine = 0;
-        int drawY = panelY - (scrollOffset * 12); // This calculation is now correct
+        int drawY = panelY - (scrollOffset * 12);
 
         for (String category : elementalCategories) {
             boolean isExpanded = categoryExpanded.get(category);
 
             // Draw category header if it's visible
-            if (currentLine >= scrollOffset && currentLine < scrollOffset + VISIBLE_LINES) {
+            if (currentLine >= scrollOffset && currentLine < scrollOffset + availableLines) {
                 String indicator = isExpanded ? "▼ " : "► ";
                 Component categoryText = Component.literal(indicator + category);
-                graphics.drawString(this.font, categoryText, 15, drawY, 0xFFFFFFFF, true);
-            }
+                graphics.drawString(this.font, categoryText, 4, drawY + 2, 0xFFFFFFFF, true); // Moved left and down
+                }
 
             drawY += 12;
             currentLine++;
@@ -434,7 +973,7 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
             if (isExpanded) {
                 List<QuartzCraftingRecipe> recipes = categoryRecipes.get(category);
                 for (QuartzCraftingRecipe recipe : recipes) {
-                    if (currentLine >= scrollOffset && currentLine < scrollOffset + VISIBLE_LINES) {
+                    if (currentLine >= scrollOffset && currentLine < scrollOffset + availableLines) {
                         String resultId = recipe.getResult();
                         String displayName = resultId.substring(resultId.lastIndexOf(':') + 1);
                         Component name = Component.literal("    " + displayName);
@@ -447,13 +986,15 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
                             color = 0xFF666666;
                             name = Component.literal("  🔒 " + displayName);
                         } else if (blockEntity != null && recipe.getId().equals(blockEntity.getActiveRecipeId())) {
-                            color = 0xFFFFAA00;
+                            color = 0xFFFFAA00; // Orange for selected
+                            name = Component.literal("  ★ " + displayName); // Star for active
                         } else {
-                            color = 0xFFCCCCCC;
+                            color = 0xFF88FF88; // Light green for unlocked
+                            name = Component.literal("  ✓ " + displayName); // Checkmark for unlocked
                         }
-                        graphics.drawString(this.font, name, 20, drawY, color, false);
-                    }
-                    drawY += 12; // UNIFIED LINE HEIGHT: Changed from 10 to 12
+                        graphics.drawString(this.font, name, 8, drawY + 2, color, false); // Moved left and down
+                        }
+                    drawY += 12;
                     currentLine++;
                 }
             }
@@ -462,10 +1003,66 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
         // Disable scissor test
         graphics.disableScissor();
 
-        // Draw scroll indicator if needed
+        // Enhanced scroll indicator
         if (maxScrollOffset > 0) {
-            drawScrollIndicator(graphics, panelX + panelWidth - 10, panelY, panelHeight);
+            drawEnhancedScrollIndicator(graphics, panelX + panelWidth - 8, panelY, panelHeight);
         }
+    }
+    private void drawOverallProgressBar(GuiGraphics graphics, int x, int y, int width) {
+        QuartzMachineBlockEntity blockEntity = this.menu.getBlockEntity();
+        if (blockEntity == null || blockEntity.getActiveRecipeId() == null) {
+            return;
+        }
+
+        QuartzCraftingRecipe activeRecipe = KisekiLegend.getQuartzRecipeManager().getRecipe(blockEntity.getActiveRecipeId());
+        if (activeRecipe == null) {
+            return;
+        }
+
+        // Calculate progress for active recipe
+        int totalNodes = activeRecipe.getNodes().size();
+        int completedNodes = 0;
+
+        for (String nodeId : activeRecipe.getNodes().keySet()) {
+            if (blockEntity.isNodeCompleted(nodeId)) {
+                completedNodes++;
+            }
+        }
+
+        float progress = totalNodes > 0 ? (float) completedNodes / totalNodes : 0f;
+
+        // Draw progress bar background
+        int barHeight = 20;
+        graphics.fill(x, y, x + width, y + barHeight, 0xFF2D1F15);
+        graphics.renderOutline(x, y, width, barHeight, 0xFF666666);
+
+        // Draw progress bar fill
+        if (progress > 0) {
+            int fillWidth = (int) ((width - 2) * progress);
+            graphics.fill(x + 1, y + 1, x + 1 + fillWidth, y + barHeight - 1, 0xFF00AA00);
+        }
+
+        // Draw progress text
+        String progressText = completedNodes + "/" + totalNodes;
+        int textX = x + (width / 2) - (this.font.width(progressText) / 2);
+        int textY = y + 6;
+        graphics.drawString(this.font, Component.literal(progressText), textX, textY, 0xFFFFFFFF, true);
+    }
+
+    private void drawEnhancedScrollIndicator(GuiGraphics graphics, int x, int y, int height) {
+        // Draw scroll track
+        graphics.fill(x, y, x + 6, y + height, 0xFF444444);
+        graphics.renderOutline(x, y, 6, height, 0xFF666666);
+
+        // Calculate scroll thumb position and size
+        int availableLines = Math.min(VISIBLE_LINES, (this.height - 40) / 12);
+        float scrollPercentage = maxScrollOffset > 0 ? (float) scrollOffset / maxScrollOffset : 0;
+        float thumbHeight = Math.max(15, height * 0.3f); // Minimum thumb size
+        float thumbY = y + (height - thumbHeight) * scrollPercentage;
+
+        // Draw scroll thumb with gradient effect
+        graphics.fill(x + 1, (int) thumbY, x + 5, (int) (thumbY + thumbHeight), 0xFFAAAAAA);
+        graphics.renderOutline(x + 1, (int) thumbY, 4, (int) thumbHeight, 0xFFCCCCCC);
     }
     private void drawScrollIndicator(GuiGraphics graphics, int x, int y, int height) {
         // Draw scroll track
@@ -501,11 +1098,28 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
     }
     @Override
     public boolean mouseScrolled(double pMouseX, double pMouseY, double pScrollX, double pScrollY) {
-        // Check if mouse is over the left panel
-        if (pMouseX >= 5 && pMouseX <= 125 && pMouseY >= 15) {
-            int scrollDirection = pScrollY > 0 ? -1 : 1; // Reverse for natural scrolling
+        // Check if mouse is over the left panel with expanded bounds
+        if (pMouseX >= 5 && pMouseX <= 85 && pMouseY >= 15 && pMouseY <= this.height - 25) {
+            int scrollDirection = pScrollY > 0 ? -3 : 3; // Faster scrolling, 3 lines at a time
             scrollOffset = Math.max(0, Math.min(maxScrollOffset, scrollOffset + scrollDirection));
             return true;
+        }
+
+        // Also handle inventory panel scrolling if in material insertion mode
+        if (currentState == ScreenState.INSERTING_MATERIAL) {
+            int invPanelX = this.width / 2 - 140;
+            int invPanelY = this.height / 2 + 30;
+            if (pMouseX >= invPanelX && pMouseX <= invPanelX + 200 &&
+                    pMouseY >= invPanelY && pMouseY <= invPanelY + 120) {
+                // Handle inventory tab scrolling
+                if (pScrollY > 0 && selectedInventoryTab > 0) {
+                    selectedInventoryTab--;
+                    return true;
+                } else if (pScrollY < 0 && selectedInventoryTab < getAllMaterialTypes().size() - 1) {
+                    selectedInventoryTab++;
+                    return true;
+                }
+            }
         }
 
         return super.mouseScrolled(pMouseX, pMouseY, pScrollX, pScrollY);
@@ -687,12 +1301,16 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
     private boolean handleCategoryClick(double pMouseX, double pMouseY, int pButton) {
         // Define the clickable area for the recipe list
         int panelX = 10;
-        int panelY = 15;
+        int panelY = 35;
         int panelWidth = 75;
-        int panelHeight = VISIBLE_LINES * 12;
+        int panelHeight = Math.min(VISIBLE_LINES, (this.height - 40) / 12) * 12;
 
-        // Ignore clicks outside the recipe panel
-        if (pMouseX < panelX || pMouseX > panelX + panelWidth || pMouseY < panelY || pMouseY > panelY + panelHeight) {
+        // Use dynamic panel height
+        int availableLines = Math.min(VISIBLE_LINES, (this.height - 40) / 12);
+        int dynamicPanelHeight = availableLines * 12;
+
+// Ignore clicks outside the recipe panel
+        if (pMouseX < panelX || pMouseX > panelX + panelWidth || pMouseY < panelY || pMouseY > panelY + dynamicPanelHeight) {
             return false;
         }
 
@@ -1025,7 +1643,6 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
             return;
         }
         Set<String> unlocked = blockEntity.getUnlockedNodes();
-        System.out.println("Unlocked nodes: " + unlocked + ", node positions: " + nodePositions);
         CompoundTag allProgress = blockEntity.getStoredItems();
 
         // Draw connections first

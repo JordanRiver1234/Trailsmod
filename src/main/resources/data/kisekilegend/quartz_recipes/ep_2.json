@@ -1,0 +1,82 @@
+{
+  "result": "kisekilegend:ep_2",
+  "requiredItem": "kisekilegend:ep_1",
+  "startingNode": "start_ep2",
+  "nodes": {
+    "start_ep2": {
+      "type": "QUARTZ",
+      "value": "EP Crystal Core",
+      "materialRequirements": {
+        "quartz": 1
+      },
+      "unlocks": [
+        "effect_root_ep2"
+      ]
+    },
+    "effect_root_ep2": {
+      "type": "EFFECT",
+      "value": "Max EP +20%",
+      "materialRequirements": {
+        "mirage_material": 5
+      },
+      "unlocks": [
+        "trait_branch",
+        "morph_branch"
+      ]
+    },
+    "trait_branch": {
+      "type": "TRAIT",
+      "value": "EP Regeneration S",
+      "materialRequirements": {
+        "space_material": 3
+      },
+      "unlocks": [
+        "quality_upper",
+        "recipe_unlock_ep3"
+      ]
+    },
+    "morph_branch": {
+      "type": "EFFECT",
+      "value": "Reduces EP cost when HP is low",
+      "materialRequirements": {
+        "time_material": 3
+      },
+      "unlocks": [
+        "morph_info",
+        "morph_haze"
+      ]
+    },
+    "quality_upper": {
+      "type": "QUALITY",
+      "value": 30,
+      "materialRequirements": {
+        "jewel": 2
+      },
+      "unlocks": []
+    },
+    "morph_info": {
+      "type": "RECIPE_MORPH",
+      "value": "information",
+      "materialRequirements": {
+        "magic_tool": 3
+      },
+      "unlocks": []
+    },
+    "morph_haze": {
+      "type": "RECIPE_MORPH",
+      "value": "haze",
+      "materialRequirements": {
+        "earth_material": 3
+      },
+      "unlocks": []
+    },
+    "recipe_unlock_ep3": {
+      "type": "RECIPE_MORPH",
+      "value": "ep_3",
+      "materialRequirements": {
+        "mystery": 3
+      },
+      "unlocks": []
+    }
+  }
+}

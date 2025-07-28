@@ -1,0 +1,33 @@
+{
+  "result": "kisekilegend:information",
+  "startingNode": "start_info",
+  "nodes": {
+    "start_info": {
+      "type": "EFFECT",
+      "value": "Enables analysis of enemies in battle",
+      "materialRequirements": {
+        "mirage_material": 4
+      },
+      "unlocks": [
+        "trait_node",
+        "quality_node"
+      ]
+    },
+    "trait_node": {
+      "type": "TRAIT",
+      "value": "Increases damage dealt to analyzed enemies",
+      "materialRequirements": {
+        "magic_tool": 4
+      },
+      "unlocks": []
+    },
+    "quality_node": {
+      "type": "QUALITY",
+      "value": 25,
+      "materialRequirements": {
+        "supplement": 3
+      },
+      "unlocks": []
+    }
+  }
+}

@@ -1,12 +1,12 @@
 {
-  "result": "kisekilegend:hp_1",
-  "startingNode": "start_hp",
+  "result": "kisekilegend:attack_1",
+  "startingNode": "start_atk",
   "nodes": {
-    "start_hp": {
+    "start_atk": {
       "type": "EFFECT",
-      "value": "Max HP +5%",
+      "value": "STR +5",
       "materialRequirements": {
-        "water_material": 3
+        "fire_material": 3
       },
       "unlocks": [
         "quality_boost"
@@ -16,17 +16,17 @@
       "type": "QUALITY",
       "value": 10,
       "materialRequirements": {
-        "plant": 2
+        "gunpowder": 2
       },
       "unlocks": [
-        "recipe_unlock_hp2"
+        "recipe_unlock_atk2"
       ]
     },
-    "recipe_unlock_hp2": {
+    "recipe_unlock_atk2": {
       "type": "RECIPE_MORPH",
-      "value": "hp_2",
+      "value": "attack_2",
       "materialRequirements": {
-        "elixir": 1
+        "mystery": 1
       },
       "unlocks": []
     }

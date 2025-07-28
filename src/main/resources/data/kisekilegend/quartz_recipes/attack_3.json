@@ -1,0 +1,82 @@
+{
+  "result": "kisekilegend:attack_3",
+  "requiredItem": "kisekilegend:attack_2",
+  "startingNode": "start_atk3",
+  "nodes": {
+    "start_atk3": {
+      "type": "QUARTZ",
+      "value": "Mars Gem Core",
+      "materialRequirements": {
+        "quartz": 1
+      },
+      "unlocks": [
+        "effect_root_atk3"
+      ]
+    },
+    "effect_root_atk3": {
+      "type": "EFFECT",
+      "value": "STR +30",
+      "materialRequirements": {
+        "fire_material": 8
+      },
+      "unlocks": [
+        "trait_upper_branch",
+        "trait_lower_branch"
+      ]
+    },
+    "trait_upper_branch": {
+      "type": "TRAIT",
+      "value": "Physical Critical Chance +10%",
+      "materialRequirements": {
+        "ingot": 5
+      },
+      "unlocks": [
+        "quality_upper",
+        "morph_strike"
+      ]
+    },
+    "trait_lower_branch": {
+      "type": "TRAIT",
+      "value": "Inflict 25% more Break damage",
+      "materialRequirements": {
+        "gunpowder": 6
+      },
+      "unlocks": [
+        "quality_lower",
+        "effect_final_boost"
+      ]
+    },
+    "quality_upper": {
+      "type": "QUALITY",
+      "value": 45,
+      "materialRequirements": {
+        "jewel": 4
+      },
+      "unlocks": []
+    },
+    "quality_lower": {
+      "type": "QUALITY",
+      "value": 40,
+      "materialRequirements": {
+        "bomb": 8
+      },
+      "unlocks": []
+    },
+    "effect_final_boost": {
+      "type": "EFFECT",
+      "value": "STR +5% when HP > 80%",
+      "materialRequirements": {
+        "elixir": 2
+      },
+      "unlocks": []
+    },
+    "morph_strike": {
+      "type": "RECIPE_MORPH",
+      "value": "strike",
+      "materialRequirements": {
+        "fire_material": 5
+      },
+      "unlocks": []
+    }
+  }
+}

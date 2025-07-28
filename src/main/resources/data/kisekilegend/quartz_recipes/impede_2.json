@@ -1,0 +1,56 @@
+{
+  "result": "kisekilegend:impede_2",
+  "requiredItem": "kisekilegend:impede_1",
+  "startingNode": "start_impede2",
+  "nodes": {
+    "start_impede2": {
+      "type": "QUARTZ",
+      "value": "Impede Crystal Core",
+      "materialRequirements": {
+        "quartz": 1
+      },
+      "unlocks": [
+        "effect_root_impede2"
+      ]
+    },
+    "effect_root_impede2": {
+      "type": "EFFECT",
+      "value": "Impede Arts/Crafts by 2",
+      "materialRequirements": {
+        "wind_material": 5
+      },
+      "unlocks": [
+        "trait_branch",
+        "quality_node"
+      ]
+    },
+    "trait_branch": {
+      "type": "TRAIT",
+      "value": "50% chance to impede by an additional 1",
+      "materialRequirements": {
+        "magic_tool": 3
+      },
+      "unlocks": [
+        "recipe_unlock_impede3"
+      ]
+    },
+    "quality_node": {
+      "type": "QUALITY",
+      "value": 25,
+      "materialRequirements": {
+        "sundry": 4
+      },
+      "unlocks": [
+        "recipe_unlock_impede3"
+      ]
+    },
+    "recipe_unlock_impede3": {
+      "type": "RECIPE_MORPH",
+      "value": "impede_3",
+      "materialRequirements": {
+        "wind_material": 3
+      },
+      "unlocks": []
+    }
+  }
+}

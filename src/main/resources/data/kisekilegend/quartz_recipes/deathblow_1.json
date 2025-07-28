@@ -1,12 +1,12 @@
 {
-  "result": "kisekilegend:hp_1",
-  "startingNode": "start_hp",
+  "result": "kisekilegend:deathblow_1",
+  "startingNode": "start_db1",
   "nodes": {
-    "start_hp": {
+    "start_db1": {
       "type": "EFFECT",
-      "value": "Max HP +5%",
+      "value": "10% chance to inflict Faint with attacks/crafts",
       "materialRequirements": {
-        "water_material": 3
+        "time_material": 5
       },
       "unlocks": [
         "quality_boost"
@@ -14,19 +14,19 @@
     },
     "quality_boost": {
       "type": "QUALITY",
-      "value": 10,
+      "value": 20,
       "materialRequirements": {
-        "plant": 2
+        "gunpowder": 4
       },
       "unlocks": [
-        "recipe_unlock_hp2"
+        "recipe_unlock_db2"
       ]
     },
-    "recipe_unlock_hp2": {
+    "recipe_unlock_db2": {
       "type": "RECIPE_MORPH",
-      "value": "hp_2",
+      "value": "deathblow_2",
       "materialRequirements": {
-        "elixir": 1
+        "mystery": 2
       },
       "unlocks": []
     }

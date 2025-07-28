@@ -1,0 +1,33 @@
+{
+  "result": "kisekilegend:scent",
+  "startingNode": "start_scent",
+  "nodes": {
+    "start_scent": {
+      "type": "EFFECT",
+      "value": "Enemies are more likely to target user",
+      "materialRequirements": {
+        "wind_material": 4
+      },
+      "unlocks": [
+        "effect_range",
+        "quality_node"
+      ]
+    },
+    "effect_range": {
+      "type": "EFFECT",
+      "value": "Increases detection range of enemies on field",
+      "materialRequirements": {
+        "space_material": 4
+      },
+      "unlocks": []
+    },
+    "quality_node": {
+      "type": "QUALITY",
+      "value": 30,
+      "materialRequirements": {
+        "spice": 5
+      },
+      "unlocks": []
+    }
+  }
+}

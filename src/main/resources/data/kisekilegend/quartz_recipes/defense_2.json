@@ -1,23 +1,23 @@
 {
-  "result": "kisekilegend:hp_2",
-  "requiredItem": "kisekilegend:hp_1",
-  "startingNode": "start_hp2",
+  "result": "kisekilegend:defense_2",
+  "requiredItem": "kisekilegend:defense_1",
+  "startingNode": "start_def2",
   "nodes": {
-    "start_hp2": {
+    "start_def2": {
       "type": "QUARTZ",
-      "value": "HP Crystal Core",
+      "value": "Defense Crystal Core",
       "materialRequirements": {
         "quartz": 1
       },
       "unlocks": [
-        "effect_root_hp2"
+        "effect_root_def2"
       ]
     },
-    "effect_root_hp2": {
+    "effect_root_def2": {
       "type": "EFFECT",
-      "value": "Max HP +10%",
+      "value": "DEF +15, ADF +15",
       "materialRequirements": {
-        "water_material": 5
+        "earth_material": 5
       },
       "unlocks": [
         "trait_branch",
@@ -26,24 +26,24 @@
     },
     "trait_branch": {
       "type": "TRAIT",
-      "value": "HP Regeneration S",
+      "value": "Physical Damage -5%",
       "materialRequirements": {
-        "medicinal": 3
+        "ingot": 3
       },
       "unlocks": [
         "quality_upper",
-        "morph_freeze"
+        "morph_poison"
       ]
     },
     "effect_branch": {
       "type": "EFFECT",
-      "value": "Healing Received +10%",
+      "value": "Arts Damage -5%",
       "materialRequirements": {
-        "liquid": 4
+        "cloth": 4
       },
       "unlocks": [
         "quality_lower",
-        "morph_mind1"
+        "morph_mute"
       ]
     },
     "quality_upper": {
@@ -53,7 +53,7 @@
         "jewel": 2
       },
       "unlocks": [
-        "recipe_unlock_hp3"
+        "recipe_unlock_def3"
       ]
     },
     "quality_lower": {
@@ -63,30 +63,30 @@
         "sundry": 5
       },
       "unlocks": [
-        "recipe_unlock_hp3"
+        "recipe_unlock_def3"
       ]
     },
-    "morph_freeze": {
+    "morph_poison": {
       "type": "RECIPE_MORPH",
-      "value": "freeze",
+      "value": "poison",
       "materialRequirements": {
-        "ore": 3
+        "poison": 3
       },
       "unlocks": []
     },
-    "morph_mind1": {
+    "morph_mute": {
       "type": "RECIPE_MORPH",
-      "value": "mind_1",
+      "value": "mute",
       "materialRequirements": {
         "mystery": 2
       },
       "unlocks": []
     },
-    "recipe_unlock_hp3": {
+    "recipe_unlock_def3": {
       "type": "RECIPE_MORPH",
-      "value": "hp_3",
+      "value": "defense_3",
       "materialRequirements": {
-        "water_material": 3
+        "earth_material": 3
       },
       "unlocks": []
     }

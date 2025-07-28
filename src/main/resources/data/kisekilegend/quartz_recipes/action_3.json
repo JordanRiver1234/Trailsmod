@@ -1,0 +1,64 @@
+{
+  "result": "kisekilegend:action_3",
+  "requiredItem": "kisekilegend:action_2",
+  "startingNode": "start_action3",
+  "nodes": {
+    "start_action3": {
+      "type": "QUARTZ",
+      "value": "Chronos Gem Core",
+      "materialRequirements": {
+        "quartz": 1
+      },
+      "unlocks": [
+        "effect_root_action3"
+      ]
+    },
+    "effect_root_action3": {
+      "type": "EFFECT",
+      "value": "SPD +8",
+      "materialRequirements": {
+        "time_material": 8
+      },
+      "unlocks": [
+        "trait_upper_branch",
+        "trait_lower_branch"
+      ]
+    },
+    "trait_upper_branch": {
+      "type": "TRAIT",
+      "value": "Reduces action delay by 20%",
+      "materialRequirements": {
+        "elixir": 3
+      },
+      "unlocks": [
+        "quality_upper"
+      ]
+    },
+    "trait_lower_branch": {
+      "type": "TRAIT",
+      "value": "Delay Immunity +50%",
+      "materialRequirements": {
+        "supplement": 6
+      },
+      "unlocks": [
+        "quality_lower"
+      ]
+    },
+    "quality_upper": {
+      "type": "QUALITY",
+      "value": 50,
+      "materialRequirements": {
+        "oil": 5
+      },
+      "unlocks": []
+    },
+    "quality_lower": {
+      "type": "QUALITY",
+      "value": 45,
+      "materialRequirements": {
+        "jewel": 4
+      },
+      "unlocks": []
+    }
+  }
+}

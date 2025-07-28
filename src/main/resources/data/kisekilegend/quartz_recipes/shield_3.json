@@ -1,0 +1,64 @@
+{
+  "result": "kisekilegend:shield_3",
+  "requiredItem": "kisekilegend:shield_2",
+  "startingNode": "start_shield3",
+  "nodes": {
+    "start_shield3": {
+      "type": "QUARTZ",
+      "value": "Apsalus Gem Core",
+      "materialRequirements": {
+        "quartz": 1
+      },
+      "unlocks": [
+        "effect_root_shield3"
+      ]
+    },
+    "effect_root_shield3": {
+      "type": "EFFECT",
+      "value": "ADF +15%",
+      "materialRequirements": {
+        "wind_material": 8
+      },
+      "unlocks": [
+        "trait_upper_branch",
+        "trait_lower_branch"
+      ]
+    },
+    "trait_upper_branch": {
+      "type": "TRAIT",
+      "value": "Increases Arts reflection chance",
+      "materialRequirements": {
+        "magic_tool": 5
+      },
+      "unlocks": [
+        "quality_upper"
+      ]
+    },
+    "trait_lower_branch": {
+      "type": "TRAIT",
+      "value": "Generate an Arts shield after taking damage",
+      "materialRequirements": {
+        "jewel": 4
+      },
+      "unlocks": [
+        "quality_lower"
+      ]
+    },
+    "quality_upper": {
+      "type": "QUALITY",
+      "value": 50,
+      "materialRequirements": {
+        "wool": 5
+      },
+      "unlocks": []
+    },
+    "quality_lower": {
+      "type": "QUALITY",
+      "value": 45,
+      "materialRequirements": {
+        "mystery": 5
+      },
+      "unlocks": []
+    }
+  }
+}

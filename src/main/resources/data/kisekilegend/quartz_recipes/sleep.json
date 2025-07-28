@@ -1,0 +1,33 @@
+{
+  "result": "kisekilegend:sleep",
+  "startingNode": "start_sleep",
+  "nodes": {
+    "start_sleep": {
+      "type": "EFFECT",
+      "value": "Normal attacks/crafts add 10% chance of Sleep",
+      "materialRequirements": {
+        "plant": 5
+      },
+      "unlocks": [
+        "effect_potency",
+        "quality_node"
+      ]
+    },
+    "effect_potency": {
+      "type": "EFFECT",
+      "value": "First hit on sleeping enemies is always critical",
+      "materialRequirements": {
+        "wind_material": 3
+      },
+      "unlocks": []
+    },
+    "quality_node": {
+      "type": "QUALITY",
+      "value": 20,
+      "materialRequirements": {
+        "medicinal": 3
+      },
+      "unlocks": []
+    }
+  }
+}

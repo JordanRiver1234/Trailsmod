@@ -1,0 +1,44 @@
+{
+  "result": "kisekilegend:cast_2",
+  "requiredItem": "kisekilegend:cast_1",
+  "startingNode": "start_cast2",
+  "nodes": {
+    "start_cast2": {
+      "type": "QUARTZ",
+      "value": "Cast Crystal Core",
+      "materialRequirements": {
+        "quartz": 1
+      },
+      "unlocks": [
+        "effect_root_cast2"
+      ]
+    },
+    "effect_root_cast2": {
+      "type": "EFFECT",
+      "value": "Reduces Arts casting time by 1/2",
+      "materialRequirements": {
+        "time_material": 5
+      },
+      "unlocks": [
+        "trait_branch",
+        "quality_node"
+      ]
+    },
+    "trait_branch": {
+      "type": "TRAIT",
+      "value": "Chance to instantly cast an Art",
+      "materialRequirements": {
+        "magic_tool": 4
+      },
+      "unlocks": []
+    },
+    "quality_node": {
+      "type": "QUALITY",
+      "value": 30,
+      "materialRequirements": {
+        "jewel": 3
+      },
+      "unlocks": []
+    }
+  }
+}

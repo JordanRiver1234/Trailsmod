@@ -1,12 +1,12 @@
 {
-  "result": "kisekilegend:hp_1",
-  "startingNode": "start_hp",
+  "result": "kisekilegend:action_1",
+  "startingNode": "start_action",
   "nodes": {
-    "start_hp": {
+    "start_action": {
       "type": "EFFECT",
-      "value": "Max HP +5%",
+      "value": "SPD +2",
       "materialRequirements": {
-        "water_material": 3
+        "time_material": 3
       },
       "unlocks": [
         "quality_boost"
@@ -16,17 +16,17 @@
       "type": "QUALITY",
       "value": 10,
       "materialRequirements": {
-        "plant": 2
+        "supplement": 2
       },
       "unlocks": [
-        "recipe_unlock_hp2"
+        "recipe_unlock_action2"
       ]
     },
-    "recipe_unlock_hp2": {
+    "recipe_unlock_action2": {
       "type": "RECIPE_MORPH",
-      "value": "hp_2",
+      "value": "action_2",
       "materialRequirements": {
-        "elixir": 1
+        "threads": 1
       },
       "unlocks": []
     }

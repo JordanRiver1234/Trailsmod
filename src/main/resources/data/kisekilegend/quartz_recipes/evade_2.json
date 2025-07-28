@@ -1,0 +1,64 @@
+{
+  "result": "kisekilegend:evade_2",
+  "requiredItem": "kisekilegend:evade_1",
+  "startingNode": "start_evade2",
+  "nodes": {
+    "start_evade2": {
+      "type": "QUARTZ",
+      "value": "Evasion Crystal Core",
+      "materialRequirements": {
+        "quartz": 1
+      },
+      "unlocks": [
+        "effect_root_evade2"
+      ]
+    },
+    "effect_root_evade2": {
+      "type": "EFFECT",
+      "value": "Evasion Rate +10%",
+      "materialRequirements": {
+        "wind_material": 5
+      },
+      "unlocks": [
+        "trait_branch",
+        "morph_scent"
+      ]
+    },
+    "trait_branch": {
+      "type": "TRAIT",
+      "value": "Clairvoyance: 100% accuracy on next attack after evading",
+      "materialRequirements": {
+        "threads": 3
+      },
+      "unlocks": [
+        "quality_node"
+      ]
+    },
+    "quality_node": {
+      "type": "QUALITY",
+      "value": 25,
+      "materialRequirements": {
+        "sundry": 4
+      },
+      "unlocks": [
+        "recipe_unlock_evade3"
+      ]
+    },
+    "morph_scent": {
+      "type": "RECIPE_MORPH",
+      "value": "scent",
+      "materialRequirements": {
+        "space_material": 3
+      },
+      "unlocks": []
+    },
+    "recipe_unlock_evade3": {
+      "type": "RECIPE_MORPH",
+      "value": "evade_3",
+      "materialRequirements": {
+        "wind_material": 3
+      },
+      "unlocks": []
+    }
+  }
+}

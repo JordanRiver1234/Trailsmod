@@ -1,0 +1,33 @@
+{
+  "result": "kisekilegend:cloak",
+  "startingNode": "start_cloak",
+  "nodes": {
+    "start_cloak": {
+      "type": "EFFECT",
+      "value": "Enemies are less likely to target user",
+      "materialRequirements": {
+        "mirage_material": 5
+      },
+      "unlocks": [
+        "effect_stealth",
+        "quality_node"
+      ]
+    },
+    "effect_stealth": {
+      "type": "EFFECT",
+      "value": "Increases damage dealt when attacking from behind",
+      "materialRequirements": {
+        "fire_material": 4
+      },
+      "unlocks": []
+    },
+    "quality_node": {
+      "type": "QUALITY",
+      "value": 30,
+      "materialRequirements": {
+        "cloth": 5
+      },
+      "unlocks": []
+    }
+  }
+}

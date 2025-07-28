@@ -1,0 +1,33 @@
+{
+  "result": "kisekilegend:blind",
+  "startingNode": "start_blind",
+  "nodes": {
+    "start_blind": {
+      "type": "EFFECT",
+      "value": "Normal attacks/crafts add 10% chance of Blind",
+      "materialRequirements": {
+        "time_material": 5
+      },
+      "unlocks": [
+        "effect_potency",
+        "quality_node"
+      ]
+    },
+    "effect_potency": {
+      "type": "EFFECT",
+      "value": "Blind reduces target's Accuracy and Evasion by 50%",
+      "materialRequirements": {
+        "sundry": 3
+      },
+      "unlocks": []
+    },
+    "quality_node": {
+      "type": "QUALITY",
+      "value": 20,
+      "materialRequirements": {
+        "magic_tool": 3
+      },
+      "unlocks": []
+    }
+  }
+}

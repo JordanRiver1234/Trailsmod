@@ -1,0 +1,82 @@
+{
+  "result": "kisekilegend:defense_3",
+  "requiredItem": "kisekilegend:defense_2",
+  "startingNode": "start_def3",
+  "nodes": {
+    "start_def3": {
+      "type": "QUARTZ",
+      "value": "Aegis Crystal Core",
+      "materialRequirements": {
+        "quartz": 1
+      },
+      "unlocks": [
+        "effect_root_def3"
+      ]
+    },
+    "effect_root_def3": {
+      "type": "EFFECT",
+      "value": "DEF +30, ADF +30",
+      "materialRequirements": {
+        "earth_material": 8
+      },
+      "unlocks": [
+        "trait_upper_branch",
+        "trait_lower_branch"
+      ]
+    },
+    "trait_upper_branch": {
+      "type": "TRAIT",
+      "value": "Physical Damage -10%",
+      "materialRequirements": {
+        "ingot": 5
+      },
+      "unlocks": [
+        "quality_upper",
+        "morph_petrify"
+      ]
+    },
+    "trait_lower_branch": {
+      "type": "TRAIT",
+      "value": "Arts Damage -10%",
+      "materialRequirements": {
+        "cloth": 6
+      },
+      "unlocks": [
+        "quality_lower",
+        "effect_final_boost"
+      ]
+    },
+    "quality_upper": {
+      "type": "QUALITY",
+      "value": 45,
+      "materialRequirements": {
+        "jewel": 4
+      },
+      "unlocks": []
+    },
+    "quality_lower": {
+      "type": "QUALITY",
+      "value": 40,
+      "materialRequirements": {
+        "sundry": 8
+      },
+      "unlocks": []
+    },
+    "effect_final_boost": {
+      "type": "EFFECT",
+      "value": "Max HP +5%",
+      "materialRequirements": {
+        "elixir": 2
+      },
+      "unlocks": []
+    },
+    "morph_petrify": {
+      "type": "RECIPE_MORPH",
+      "value": "petrify",
+      "materialRequirements": {
+        "ore": 5
+      },
+      "unlocks": []
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "result": "kisekilegend:poison",
+  "startingNode": "start_poison",
+  "nodes": {
+    "start_poison": {
+      "type": "EFFECT",
+      "value": "Normal attacks/crafts add 10% chance of Poison",
+      "materialRequirements": {
+        "poison": 5
+      },
+      "unlocks": [
+        "effect_potency",
+        "quality_node"
+      ]
+    },
+    "effect_potency": {
+      "type": "EFFECT",
+      "value": "Poison damage +20%",
+      "materialRequirements": {
+        "liquid": 3
+      },
+      "unlocks": []
+    },
+    "quality_node": {
+      "type": "QUALITY",
+      "value": 20,
+      "materialRequirements": {
+        "earth_material": 3
+      },
+      "unlocks": []
+    }
+  }
+}

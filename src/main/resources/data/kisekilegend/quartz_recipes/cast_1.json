@@ -1,12 +1,12 @@
 {
-  "result": "kisekilegend:hp_1",
-  "startingNode": "start_hp",
+  "result": "kisekilegend:cast_1",
+  "startingNode": "start_cast",
   "nodes": {
-    "start_hp": {
+    "start_cast": {
       "type": "EFFECT",
-      "value": "Max HP +5%",
+      "value": "Reduces Arts casting time by 1/3",
       "materialRequirements": {
-        "water_material": 3
+        "time_material": 3
       },
       "unlocks": [
         "quality_boost"
@@ -16,17 +16,17 @@
       "type": "QUALITY",
       "value": 10,
       "materialRequirements": {
-        "plant": 2
+        "magic_tool": 2
       },
       "unlocks": [
-        "recipe_unlock_hp2"
+        "recipe_unlock_cast2"
       ]
     },
-    "recipe_unlock_hp2": {
+    "recipe_unlock_cast2": {
       "type": "RECIPE_MORPH",
-      "value": "hp_2",
+      "value": "cast_2",
       "materialRequirements": {
-        "elixir": 1
+        "mystery": 1
       },
       "unlocks": []
     }

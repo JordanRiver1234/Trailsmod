@@ -1,0 +1,33 @@
+{
+  "result": "kisekilegend:strike",
+  "startingNode": "start_strike",
+  "nodes": {
+    "start_strike": {
+      "type": "EFFECT",
+      "value": "Increases critical hit damage by 15%",
+      "materialRequirements": {
+        "fire_material": 5
+      },
+      "unlocks": [
+        "trait_node",
+        "quality_node"
+      ]
+    },
+    "trait_node": {
+      "type": "TRAIT",
+      "value": "Gain CP on critical hit",
+      "materialRequirements": {
+        "ingot": 4
+      },
+      "unlocks": []
+    },
+    "quality_node": {
+      "type": "QUALITY",
+      "value": 25,
+      "materialRequirements": {
+        "jewel": 3
+      },
+      "unlocks": []
+    }
+  }
+}

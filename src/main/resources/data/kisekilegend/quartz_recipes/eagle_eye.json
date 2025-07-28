@@ -1,0 +1,33 @@
+{
+  "result": "kisekilegend:eagle_eye",
+  "startingNode": "start_eagle",
+  "nodes": {
+    "start_eagle": {
+      "type": "EFFECT",
+      "value": "Attack Range +2",
+      "materialRequirements": {
+        "space_material": 5
+      },
+      "unlocks": [
+        "effect_accuracy",
+        "quality_node"
+      ]
+    },
+    "effect_accuracy": {
+      "type": "EFFECT",
+      "value": "Accuracy +50%",
+      "materialRequirements": {
+        "mirage_material": 4
+      },
+      "unlocks": []
+    },
+    "quality_node": {
+      "type": "QUALITY",
+      "value": 30,
+      "materialRequirements": {
+        "jewel": 4
+      },
+      "unlocks": []
+    }
+  }
+}

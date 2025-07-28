@@ -1,0 +1,33 @@
+{
+  "result": "kisekilegend:range_1",
+  "startingNode": "start_range",
+  "nodes": {
+    "start_range": {
+      "type": "EFFECT",
+      "value": "Attack/Craft Range +1",
+      "materialRequirements": {
+        "space_material": 5
+      },
+      "unlocks": [
+        "trait_node",
+        "quality_node"
+      ]
+    },
+    "trait_node": {
+      "type": "TRAIT",
+      "value": "Increases range of normal attacks",
+      "materialRequirements": {
+        "magic_tool": 4
+      },
+      "unlocks": []
+    },
+    "quality_node": {
+      "type": "QUALITY",
+      "value": 25,
+      "materialRequirements": {
+        "ingot": 3
+      },
+      "unlocks": []
+    }
+  }
+}

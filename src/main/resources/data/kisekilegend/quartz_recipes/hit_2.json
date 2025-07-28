@@ -1,0 +1,64 @@
+{
+  "result": "kisekilegend:hit_2",
+  "requiredItem": "kisekilegend:hit_1",
+  "startingNode": "start_hit2",
+  "nodes": {
+    "start_hit2": {
+      "type": "QUARTZ",
+      "value": "Hit Crystal Core",
+      "materialRequirements": {
+        "quartz": 1
+      },
+      "unlocks": [
+        "effect_root_hit2"
+      ]
+    },
+    "effect_root_hit2": {
+      "type": "EFFECT",
+      "value": "Accuracy +25%",
+      "materialRequirements": {
+        "mirage_material": 5
+      },
+      "unlocks": [
+        "trait_branch",
+        "morph_cloak"
+      ]
+    },
+    "trait_branch": {
+      "type": "TRAIT",
+      "value": "Attacks cannot be evaded",
+      "materialRequirements": {
+        "jewel": 3
+      },
+      "unlocks": [
+        "quality_node"
+      ]
+    },
+    "quality_node": {
+      "type": "QUALITY",
+      "value": 25,
+      "materialRequirements": {
+        "sundry": 4
+      },
+      "unlocks": [
+        "recipe_unlock_hit3"
+      ]
+    },
+    "morph_cloak": {
+      "type": "RECIPE_MORPH",
+      "value": "cloak",
+      "materialRequirements": {
+        "fire_material": 3
+      },
+      "unlocks": []
+    },
+    "recipe_unlock_hit3": {
+      "type": "RECIPE_MORPH",
+      "value": "hit_3",
+      "materialRequirements": {
+        "mirage_material": 3
+      },
+      "unlocks": []
+    }
+  }
+}

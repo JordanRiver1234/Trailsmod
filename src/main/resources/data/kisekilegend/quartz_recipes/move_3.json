@@ -1,0 +1,45 @@
+{
+  "result": "kisekilegend:move_3",
+  "requiredItem": "kisekilegend:move_2",
+  "startingNode": "start_move3",
+  "nodes": {
+    "start_move3": {
+      "type": "QUARTZ",
+      "value": "Deus Gem Core",
+      "materialRequirements": {
+        "quartz": 1
+      },
+      "unlocks": [
+        "effect_root_move3"
+      ]
+    },
+    "effect_root_move3": {
+      "type": "EFFECT",
+      "value": "MOV +8",
+      "materialRequirements": {
+        "space_material": 8
+      },
+      "unlocks": [
+        "trait_branch"
+      ]
+    },
+    "trait_branch": {
+      "type": "TRAIT",
+      "value": "Move without consuming turn at any time (once per battle)",
+      "materialRequirements": {
+        "time_material": 5
+      },
+      "unlocks": [
+        "quality_node"
+      ]
+    },
+    "quality_node": {
+      "type": "QUALITY",
+      "value": 50,
+      "materialRequirements": {
+        "elixir": 4
+      },
+      "unlocks": []
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "result": "kisekilegend:freeze",
+  "startingNode": "start_freeze",
+  "nodes": {
+    "start_freeze": {
+      "type": "EFFECT",
+      "value": "Normal attacks/crafts add 10% chance of Freeze",
+      "materialRequirements": {
+        "water_material": 5
+      },
+      "unlocks": [
+        "effect_potency",
+        "quality_node"
+      ]
+    },
+    "effect_potency": {
+      "type": "EFFECT",
+      "value": "Critical damage to Frozen enemies +50%",
+      "materialRequirements": {
+        "accessory": 3
+      },
+      "unlocks": []
+    },
+    "quality_node": {
+      "type": "QUALITY",
+      "value": 20,
+      "materialRequirements": {
+        "liquid": 3
+      },
+      "unlocks": []
+    }
+  }
+}

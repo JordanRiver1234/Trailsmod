@@ -1,0 +1,64 @@
+{
+  "result": "kisekilegend:mind_3",
+  "requiredItem": "kisekilegend:mind_2",
+  "startingNode": "start_mind3",
+  "nodes": {
+    "start_mind3": {
+      "type": "QUARTZ",
+      "value": "Diabolos Gem Core",
+      "materialRequirements": {
+        "quartz": 1
+      },
+      "unlocks": [
+        "effect_root_mind3"
+      ]
+    },
+    "effect_root_mind3": {
+      "type": "EFFECT",
+      "value": "ATS +30",
+      "materialRequirements": {
+        "water_material": 8
+      },
+      "unlocks": [
+        "trait_upper_branch",
+        "trait_lower_branch"
+      ]
+    },
+    "trait_upper_branch": {
+      "type": "TRAIT",
+      "value": "Arts Critical Chance +10%",
+      "materialRequirements": {
+        "jewel": 5
+      },
+      "unlocks": [
+        "quality_upper"
+      ]
+    },
+    "trait_lower_branch": {
+      "type": "TRAIT",
+      "value": "Arts Unbalance Chance +15%",
+      "materialRequirements": {
+        "magic_tool": 6
+      },
+      "unlocks": [
+        "quality_lower"
+      ]
+    },
+    "quality_upper": {
+      "type": "QUALITY",
+      "value": 50,
+      "materialRequirements": {
+        "medicinal": 5
+      },
+      "unlocks": []
+    },
+    "quality_lower": {
+      "type": "QUALITY",
+      "value": 45,
+      "materialRequirements": {
+        "sundry": 8
+      },
+      "unlocks": []
+    }
+  }
+}

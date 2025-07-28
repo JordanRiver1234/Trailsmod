@@ -1,0 +1,64 @@
+{
+  "result": "kisekilegend:ep_3",
+  "requiredItem": "kisekilegend:ep_2",
+  "startingNode": "start_ep3",
+  "nodes": {
+    "start_ep3": {
+      "type": "QUARTZ",
+      "value": "Vajra Gem Core",
+      "materialRequirements": {
+        "quartz": 1
+      },
+      "unlocks": [
+        "effect_root_ep3"
+      ]
+    },
+    "effect_root_ep3": {
+      "type": "EFFECT",
+      "value": "Max EP +30%",
+      "materialRequirements": {
+        "mirage_material": 8
+      },
+      "unlocks": [
+        "trait_upper_branch",
+        "trait_lower_branch"
+      ]
+    },
+    "trait_upper_branch": {
+      "type": "TRAIT",
+      "value": "EP Regeneration L",
+      "materialRequirements": {
+        "space_material": 5
+      },
+      "unlocks": [
+        "quality_upper"
+      ]
+    },
+    "trait_lower_branch": {
+      "type": "TRAIT",
+      "value": "Reduce EP cost of first Art to 0",
+      "materialRequirements": {
+        "time_material": 5
+      },
+      "unlocks": [
+        "quality_lower"
+      ]
+    },
+    "quality_upper": {
+      "type": "QUALITY",
+      "value": 55,
+      "materialRequirements": {
+        "elixir": 4
+      },
+      "unlocks": []
+    },
+    "quality_lower": {
+      "type": "QUALITY",
+      "value": 50,
+      "materialRequirements": {
+        "mystery": 5
+      },
+      "unlocks": []
+    }
+  }
+}

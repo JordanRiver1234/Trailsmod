@@ -1,10 +1,10 @@
 {
-  "result": "kisekilegend:hp_1",
-  "startingNode": "start_hp",
+  "result": "kisekilegend:mind_1",
+  "startingNode": "start_mind",
   "nodes": {
-    "start_hp": {
+    "start_mind": {
       "type": "EFFECT",
-      "value": "Max HP +5%",
+      "value": "ATS +5",
       "materialRequirements": {
         "water_material": 3
       },
@@ -16,17 +16,17 @@
       "type": "QUALITY",
       "value": 10,
       "materialRequirements": {
-        "plant": 2
+        "magic_tool": 2
       },
       "unlocks": [
-        "recipe_unlock_hp2"
+        "recipe_unlock_mind2"
       ]
     },
-    "recipe_unlock_hp2": {
+    "recipe_unlock_mind2": {
       "type": "RECIPE_MORPH",
-      "value": "hp_2",
+      "value": "mind_2",
       "materialRequirements": {
-        "elixir": 1
+        "medicine": 1
       },
       "unlocks": []
     }

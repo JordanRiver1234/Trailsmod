@@ -1,0 +1,64 @@
+{
+  "result": "kisekilegend:mind_2",
+  "requiredItem": "kisekilegend:mind_1",
+  "startingNode": "start_mind2",
+  "nodes": {
+    "start_mind2": {
+      "type": "QUARTZ",
+      "value": "Mind Crystal Core",
+      "materialRequirements": {
+        "quartz": 1
+      },
+      "unlocks": [
+        "effect_root_mind2"
+      ]
+    },
+    "effect_root_mind2": {
+      "type": "EFFECT",
+      "value": "ATS +15",
+      "materialRequirements": {
+        "water_material": 5
+      },
+      "unlocks": [
+        "trait_branch",
+        "morph_freeze"
+      ]
+    },
+    "trait_branch": {
+      "type": "TRAIT",
+      "value": "Arts Critical Chance +5%",
+      "materialRequirements": {
+        "jewel": 3
+      },
+      "unlocks": [
+        "quality_node"
+      ]
+    },
+    "quality_node": {
+      "type": "QUALITY",
+      "value": 25,
+      "materialRequirements": {
+        "magic_tool": 4
+      },
+      "unlocks": [
+        "recipe_unlock_mind3"
+      ]
+    },
+    "morph_freeze": {
+      "type": "RECIPE_MORPH",
+      "value": "freeze",
+      "materialRequirements": {
+        "water_material": 3
+      },
+      "unlocks": []
+    },
+    "recipe_unlock_mind3": {
+      "type": "RECIPE_MORPH",
+      "value": "mind_3",
+      "materialRequirements": {
+        "mystery": 3
+      },
+      "unlocks": []
+    }
+  }
+}

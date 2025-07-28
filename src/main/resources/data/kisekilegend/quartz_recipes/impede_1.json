@@ -1,12 +1,12 @@
 {
-  "result": "kisekilegend:hp_1",
-  "startingNode": "start_hp",
+  "result": "kisekilegend:impede_1",
+  "startingNode": "start_impede",
   "nodes": {
-    "start_hp": {
+    "start_impede": {
       "type": "EFFECT",
-      "value": "Max HP +5%",
+      "value": "Impede Arts/Crafts by 1",
       "materialRequirements": {
-        "water_material": 3
+        "wind_material": 3
       },
       "unlocks": [
         "quality_boost"
@@ -16,17 +16,17 @@
       "type": "QUALITY",
       "value": 10,
       "materialRequirements": {
-        "plant": 2
+        "gunpowder": 2
       },
       "unlocks": [
-        "recipe_unlock_hp2"
+        "recipe_unlock_impede2"
       ]
     },
-    "recipe_unlock_hp2": {
+    "recipe_unlock_impede2": {
       "type": "RECIPE_MORPH",
-      "value": "hp_2",
+      "value": "impede_2",
       "materialRequirements": {
-        "elixir": 1
+        "mystery": 1
       },
       "unlocks": []
     }

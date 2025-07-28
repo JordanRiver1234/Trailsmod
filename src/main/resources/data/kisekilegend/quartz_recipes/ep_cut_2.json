@@ -1,0 +1,64 @@
+{
+  "result": "kisekilegend:ep_cut_2",
+  "requiredItem": "kisekilegend:ep_cut_1",
+  "startingNode": "start_epcut2",
+  "nodes": {
+    "start_epcut2": {
+      "type": "QUARTZ",
+      "value": "EP Cut Crystal Core",
+      "materialRequirements": {
+        "quartz": 1
+      },
+      "unlocks": [
+        "effect_root_epcut2"
+      ]
+    },
+    "effect_root_epcut2": {
+      "type": "EFFECT",
+      "value": "EP Consumption -10%",
+      "materialRequirements": {
+        "space_material": 5
+      },
+      "unlocks": [
+        "trait_branch",
+        "morph_eagle_eye"
+      ]
+    },
+    "trait_branch": {
+      "type": "TRAIT",
+      "value": "Restore 1% EP when taking damage",
+      "materialRequirements": {
+        "time_material": 3
+      },
+      "unlocks": [
+        "quality_node"
+      ]
+    },
+    "quality_node": {
+      "type": "QUALITY",
+      "value": 30,
+      "materialRequirements": {
+        "mirage_material": 3
+      },
+      "unlocks": [
+        "recipe_unlock_epcut3"
+      ]
+    },
+    "morph_eagle_eye": {
+      "type": "RECIPE_MORPH",
+      "value": "eagle_eye",
+      "materialRequirements": {
+        "mirage_material": 3
+      },
+      "unlocks": []
+    },
+    "recipe_unlock_epcut3": {
+      "type": "RECIPE_MORPH",
+      "value": "ep_cut_3",
+      "materialRequirements": {
+        "mystery": 3
+      },
+      "unlocks": []
+    }
+  }
+}

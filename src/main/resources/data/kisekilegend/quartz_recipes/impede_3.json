@@ -1,0 +1,45 @@
+{
+  "result": "kisekilegend:impede_3",
+  "requiredItem": "kisekilegend:impede_2",
+  "startingNode": "start_impede3",
+  "nodes": {
+    "start_impede3": {
+      "type": "QUARTZ",
+      "value": "Gale Gem Core",
+      "materialRequirements": {
+        "quartz": 1
+      },
+      "unlocks": [
+        "effect_root_impede3"
+      ]
+    },
+    "effect_root_impede3": {
+      "type": "EFFECT",
+      "value": "Impede Arts/Crafts by 3",
+      "materialRequirements": {
+        "wind_material": 8
+      },
+      "unlocks": [
+        "trait_branch"
+      ]
+    },
+    "trait_branch": {
+      "type": "TRAIT",
+      "value": "Guaranteed chance to impede by an additional 1",
+      "materialRequirements": {
+        "magic_tool": 5
+      },
+      "unlocks": [
+        "quality_node"
+      ]
+    },
+    "quality_node": {
+      "type": "QUALITY",
+      "value": 50,
+      "materialRequirements": {
+        "jewel": 5
+      },
+      "unlocks": []
+    }
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "result": "kisekilegend:hp_3",
+  "requiredItem": "kisekilegend:hp_2",
+  "startingNode": "start_hp3",
+  "nodes": {
+    "start_hp3": {
+      "type": "QUARTZ",
+      "value": "Life Crystal Core",
+      "materialRequirements": {
+        "quartz": 1
+      },
+      "unlocks": [
+        "effect_root_hp3"
+      ]
+    },
+    "effect_root_hp3": {
+      "type": "EFFECT",
+      "value": "Max HP +15%",
+      "materialRequirements": {
+        "water_material": 5
+      },
+      "unlocks": [
+        "trait_upper_branch",
+        "trait_lower_branch"
+      ]
+    },
+    "trait_upper_branch": {
+      "type": "TRAIT",
+      "value": "HP Regeneration L",
+      "materialRequirements": {
+        "medicinal": 5
+      },
+      "unlocks": [
+        "quality_upper",
+        "morph_heal"
+      ]
+    },
+    "trait_lower_branch": {
+      "type": "TRAIT",
+      "value": "Healing Received +20%",
+      "materialRequirements": {
+        "liquid": 6
+      },
+      "unlocks": [
+        "quality_lower",
+        "effect_final_boost"
+      ]
+    },
+    "quality_upper": {
+      "type": "QUALITY",
+      "value": 45,
+      "materialRequirements": {
+        "elixir": 3
+      },
+      "unlocks": []
+    },
+    "quality_lower": {
+      "type": "QUALITY",
+      "value": 40,
+      "materialRequirements": {
+        "plant": 6
+      },
+      "unlocks": []
+    },
+    "effect_final_boost": {
+      "type": "EFFECT",
+      "value": "Revive with 20% HP",
+      "materialRequirements": {
+        "mystery": 4
+      },
+      "unlocks": []
+    },
+    "morph_heal": {
+      "type": "RECIPE_MORPH",
+      "value": "heal",
+      "materialRequirements": {
+        "time_material": 3
+      },
+      "unlocks": []
+    }
+  }
+}

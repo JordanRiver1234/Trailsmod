@@ -35,7 +35,15 @@ public class NetworkHandler {
                 .decoder(QuartzMachineSyncPacket::decode)
                 .consumerMainThread(QuartzMachineSyncPacket::handle) // Ensure this is consumerMainThread
                 .add();
-        // ADD THESE THREE PACKETS
+        // ADD THESE THREE
+
+
+        // In your NetworkHandler class, replace the sync packet registration with:
+        INSTANCE.messageBuilder(SyncRecipeProgressPacket.class, id++)
+                .decoder(SyncRecipeProgressPacket::decode)
+                .encoder(SyncRecipeProgressPacket::encode)
+                .consumerMainThread(SyncRecipeProgressPacket::handle)
+                .add();
         INSTANCE.messageBuilder(InsertMaterialPacket.class, id++)
                 .encoder(InsertMaterialPacket::encode)
                 .decoder(InsertMaterialPacket::decode)
@@ -70,16 +78,19 @@ public class NetworkHandler {
     /**
      * Sends a packet from the server to a specific player.
      */
-    public static void sendToPlayer(Object packet, ServerPlayer player) {
-        // The packet object comes FIRST, then the target.
-        INSTANCE.send(packet, PacketDistributor.PLAYER.with(player));
+    // Remove the duplicate sendToAllClients method that's causing the erasure error
+// Keep only this one:
+    public static <MSG> void sendToAllClients(MSG message) {
+        INSTANCE.send(message, net.minecraftforge.network.PacketDistributor.ALL.noArg());
+    }
+
+    // Fix the sendToPlayer method for Forge 1.21.1:
+    public static <MSG> void sendToPlayer(MSG message, net.minecraft.server.level.ServerPlayer player) {
+        INSTANCE.send(message, net.minecraftforge.network.PacketDistributor.PLAYER.with(player));
     }
 
     /**
      * Sends a packet from the server to all connected clients.
      */
-    public static void sendToAllClients(Object packet) {
-        // The packet object comes FIRST, then the target.
-        INSTANCE.send(packet, PacketDistributor.ALL.noArg());
-    }
+
 }

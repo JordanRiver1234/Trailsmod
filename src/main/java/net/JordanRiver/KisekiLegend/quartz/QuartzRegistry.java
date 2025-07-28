@@ -37,7 +37,7 @@ public class QuartzRegistry {
         // ──────────────── WATER ────────────────
         MAP.put("hp_1", new QuartzDefinition());
         MAP.put("hp_2", new QuartzDefinition());
-        MAP.put("hp_3", new QuartzDefinition());
+        MAP.put("hp_3.json", new QuartzDefinition());
         MAP.put("mind_1", new QuartzDefinition());
         MAP.put("mind_2", new QuartzDefinition());
         MAP.put("mind_3", new QuartzDefinition());

@@ -1,12 +1,12 @@
 {
-  "result": "kisekilegend:hp_1",
-  "startingNode": "start_hp",
+  "result": "kisekilegend:ep_cut_1",
+  "startingNode": "start_epcut",
   "nodes": {
-    "start_hp": {
+    "start_epcut": {
       "type": "EFFECT",
-      "value": "Max HP +5%",
+      "value": "EP Consumption -5%",
       "materialRequirements": {
-        "water_material": 3
+        "space_material": 3
       },
       "unlocks": [
         "quality_boost"
@@ -14,19 +14,19 @@
     },
     "quality_boost": {
       "type": "QUALITY",
-      "value": 10,
+      "value": 15,
       "materialRequirements": {
-        "plant": 2
+        "time_material": 2
       },
       "unlocks": [
-        "recipe_unlock_hp2"
+        "recipe_unlock_epcut2"
       ]
     },
-    "recipe_unlock_hp2": {
+    "recipe_unlock_epcut2": {
       "type": "RECIPE_MORPH",
-      "value": "hp_2",
+      "value": "ep_cut_2",
       "materialRequirements": {
-        "elixir": 1
+        "mirage_material": 2
       },
       "unlocks": []
     }

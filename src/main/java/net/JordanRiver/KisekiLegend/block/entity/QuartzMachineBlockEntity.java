@@ -2,6 +2,7 @@ package net.JordanRiver.KisekiLegend.block.entity;
 
 import net.JordanRiver.KisekiLegend.KisekiLegend;
 import net.JordanRiver.KisekiLegend.block.ModBlockEntities;
+import net.JordanRiver.KisekiLegend.capability.PlayerRecipeProgressProvider;
 import net.JordanRiver.KisekiLegend.client.screen.QuartzMachineScreen;
 import net.JordanRiver.KisekiLegend.crafting.recipe.QuartzCraftingRecipe;
 import net.JordanRiver.KisekiLegend.item.ModItems;
@@ -10,6 +11,7 @@ import net.JordanRiver.KisekiLegend.item.enhancement.MaterialQualitySystem;
 import net.JordanRiver.KisekiLegend.menu.QuartzMachineMenu;
 import net.JordanRiver.KisekiLegend.network.NetworkHandler;
 import net.JordanRiver.KisekiLegend.network.QuartzMachineSyncPacket;
+import net.JordanRiver.KisekiLegend.network.SyncRecipeProgressPacket;
 import net.JordanRiver.KisekiLegend.util.ModTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -1507,7 +1509,37 @@ public class QuartzMachineBlockEntity extends BlockEntity implements MenuProvide
 
                 Item resultItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse(recipe.getResult()));
                 ItemStack resultStack = new ItemStack(resultItem);
+// Mark recipe as completed for the player who synthesized it
 
+                if (level instanceof ServerLevel serverLevel) {
+                    Player nearestPlayer = serverLevel.getNearestPlayer(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), 10, false);
+                    if (nearestPlayer != null) {
+                        nearestPlayer.getCapability(PlayerRecipeProgressProvider.PLAYER_RECIPE_PROGRESS).ifPresent(progress -> {
+                            // Only mark as completed if at least one recipe_morph node was completed
+                            boolean hasRecipeMorphCompleted = completedNodes.stream().anyMatch(nodeId -> {
+                                QuartzCraftingRecipe.Node nodeData = recipe.getNode(nodeId);
+                                return nodeData != null && "recipe_morph".equals(nodeData.getType().toLowerCase());
+                            });
+
+                            if (hasRecipeMorphCompleted) {
+                                progress.markRecipeCompleted(this.activeRecipeId);
+                                System.out.println("Marked recipe completed for player: " + nearestPlayer.getName().getString() + ", recipe: " + this.activeRecipeId);
+
+                                // Send sync packet when recipe is completed
+                                if (nearestPlayer instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                                    NetworkHandler.sendToPlayer(new SyncRecipeProgressPacket(progress.getCompletedRecipes(), serverPlayer.getUUID()), serverPlayer);
+                                }
+                            } else {
+                                System.out.println("Recipe not marked as completed - no recipe_morph nodes were completed");
+                            }
+
+                            // Send sync packet when recipe is completed
+                            if (nearestPlayer instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                                NetworkHandler.sendToPlayer(new SyncRecipeProgressPacket(progress.getCompletedRecipes(), serverPlayer.getUUID()), serverPlayer);
+                            }
+                        });
+                    }
+                }
                 // NEW: Apply completion-based modifications
                 resultStack = applyCompletionEffects(resultStack, completedNodes, allNodes, recipe);
                 // Clear stored items and completion state now that synthesis is finishing
@@ -1552,6 +1584,8 @@ public class QuartzMachineBlockEntity extends BlockEntity implements MenuProvide
     public void setActiveRecipe(@Nullable ResourceLocation recipeId) {
         System.out.println("setActiveRecipe called: " + recipeId + " (was: " + this.activeRecipeId + ")");
 
+        // Clear stored items and reset state first
+        this.storedItems = new CompoundTag();
         this.activeRecipeId = recipeId;
         this.unlockedNodes.clear();
         this.completedNodes.clear();
@@ -1563,9 +1597,13 @@ public class QuartzMachineBlockEntity extends BlockEntity implements MenuProvide
         }
 
         setChanged();
-        syncToClient();
+        // Force immediate sync for recipe changes
+        if (level != null && !level.isClientSide()) {
+            syncToClient();
+            // Additional sync after a tick to ensure client receives the update
+            level.scheduleTick(worldPosition, level.getBlockState(worldPosition).getBlock(), 2);
+        }
     }
-
     // Replace the updateStateFromServer method with this THREAD-SAFE version:
     public void updateStateFromServer(@Nullable ResourceLocation recipeId, Set<String> unlocked, CompoundTag receivedStoredItems, Set<String> completedFromServer) {
         // CRITICAL: Only update on client side and on main thread
@@ -1580,10 +1618,7 @@ public class QuartzMachineBlockEntity extends BlockEntity implements MenuProvide
             return;
         }
 
-        System.out.println("CLIENT: Updating state from server");
-        System.out.println("Received recipe: " + recipeId);
-        System.out.println("Received unlocked nodes: " + unlocked);
-        System.out.println("Received stored items keys: " + receivedStoredItems.getAllKeys());
+
 
         // Update all state atomically
         this.activeRecipeId = recipeId;
@@ -1597,10 +1632,14 @@ public class QuartzMachineBlockEntity extends BlockEntity implements MenuProvide
         // CRITICAL: Deep copy to prevent reference issues
         this.storedItems = receivedStoredItems.copy();
 
-        System.out.println("CLIENT: State updated - activeRecipeId: " + this.activeRecipeId + ", unlockedNodes: " + this.unlockedNodes);
 
         // Force block entity to mark as changed for rendering updates
         setChanged();
+
+// Notify the screen if it's open
+        if (net.minecraft.client.Minecraft.getInstance().screen instanceof QuartzMachineScreen screen) {
+            screen.onRecipeChanged();
+        }
 
 
     }
@@ -1622,8 +1661,6 @@ public class QuartzMachineBlockEntity extends BlockEntity implements MenuProvide
         this.floatingItems.addAll(items);
         this.isSynthesizing = synthesizing;
         this.synthesisStartTime = startTime;
-        System.out.println("Client received " + items.size() + " floating items for animation");
-        System.out.println("Floating items: " + items);
     }
     private long lastSyncTime = 0;
     private static final long SYNC_COOLDOWN = 100; // Increased to 100ms
@@ -1647,7 +1684,6 @@ public class QuartzMachineBlockEntity extends BlockEntity implements MenuProvide
             CompoundTag safeStoredItems = this.storedItems.copy();
             List<ItemStack> safeFloatingItems = List.copyOf(this.floatingItems);
 
-            System.out.println("Syncing to client - recipe: " + safeRecipeId + ", unlocked nodes: " + safeUnlockedNodes + ", stored items keys: " + safeStoredItems.getAllKeys());
 
 // Single network packet
             NetworkHandler.sendToAllClients(new QuartzMachineSyncPacket(
@@ -1666,8 +1702,6 @@ public class QuartzMachineBlockEntity extends BlockEntity implements MenuProvide
         }
     }
 
-    // REMOVED: This method is no longer needed as syncing is now event-driven.
-    // public void scheduledSync() { ... }
 
     public CompoundTag getStoredItems() {
         return this.storedItems;
