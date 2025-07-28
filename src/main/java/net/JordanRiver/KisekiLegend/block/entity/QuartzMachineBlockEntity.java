@@ -1604,7 +1604,6 @@ public class QuartzMachineBlockEntity extends BlockEntity implements MenuProvide
             level.scheduleTick(worldPosition, level.getBlockState(worldPosition).getBlock(), 2);
         }
     }
-    // Replace the updateStateFromServer method with this THREAD-SAFE version:
     public void updateStateFromServer(@Nullable ResourceLocation recipeId, Set<String> unlocked, CompoundTag receivedStoredItems, Set<String> completedFromServer) {
         // CRITICAL: Only update on client side and on main thread
         if (level == null || !level.isClientSide()) {
@@ -1618,30 +1617,60 @@ public class QuartzMachineBlockEntity extends BlockEntity implements MenuProvide
             return;
         }
 
+        // Store old state for comparison
+        ResourceLocation oldRecipeId = this.activeRecipeId;
+        boolean stateChanged = false;
 
-
-        // Update all state atomically
-        this.activeRecipeId = recipeId;
-
-        this.unlockedNodes.clear();
-        this.unlockedNodes.addAll(unlocked);
-
-        this.completedNodes.clear();
-        this.completedNodes.addAll(completedFromServer);
-
-        // CRITICAL: Deep copy to prevent reference issues
-        this.storedItems = receivedStoredItems.copy();
-
-
-        // Force block entity to mark as changed for rendering updates
-        setChanged();
-
-// Notify the screen if it's open
-        if (net.minecraft.client.Minecraft.getInstance().screen instanceof QuartzMachineScreen screen) {
-            screen.onRecipeChanged();
+        // Update recipe ID
+        if (!Objects.equals(this.activeRecipeId, recipeId)) {
+            this.activeRecipeId = recipeId;
+            stateChanged = true;
         }
 
+        // Update unlocked nodes
+        if (!this.unlockedNodes.equals(unlocked)) {
+            this.unlockedNodes.clear();
+            this.unlockedNodes.addAll(unlocked);
+            stateChanged = true;
+        }
 
+        // Update completed nodes
+        if (!this.completedNodes.equals(completedFromServer)) {
+            this.completedNodes.clear();
+            this.completedNodes.addAll(completedFromServer);
+            stateChanged = true;
+        }
+
+        // Update stored items with deep comparison - MORE THOROUGH VERSION
+        boolean itemsChanged = false;
+        if (this.storedItems.size() != receivedStoredItems.size()) {
+            itemsChanged = true;
+        } else {
+            for (String key : this.storedItems.getAllKeys()) {
+                if (!receivedStoredItems.contains(key) ||
+                        !this.storedItems.get(key).equals(receivedStoredItems.get(key))) {
+                    itemsChanged = true;
+                    break;
+                }
+            }
+        }
+
+        if (itemsChanged) {
+            this.storedItems = receivedStoredItems.copy();
+            stateChanged = true;
+        }
+
+        // Only trigger updates if state actually changed
+        if (stateChanged) {
+            setChanged();
+
+            // Notify the screen with a small delay to ensure rendering stability
+            mc.execute(() -> {
+                if (mc.screen instanceof QuartzMachineScreen screen) {
+                    screen.onRecipeChanged();
+                }
+            });
+        }
     }
     private void debugTagCheck(ItemStack item) {
         System.out.println("=== TAG DEBUG ===");

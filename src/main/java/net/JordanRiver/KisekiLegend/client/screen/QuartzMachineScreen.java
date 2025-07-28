@@ -5,16 +5,20 @@ import net.JordanRiver.KisekiLegend.KisekiLegend;
 import net.JordanRiver.KisekiLegend.block.entity.QuartzMachineBlockEntity;
 import net.JordanRiver.KisekiLegend.capability.PlayerRecipeProgressProvider;
 import net.JordanRiver.KisekiLegend.crafting.recipe.QuartzCraftingRecipe;
+import net.JordanRiver.KisekiLegend.init.ModSoundEvents;
 import net.JordanRiver.KisekiLegend.menu.QuartzMachineMenu;
 import net.JordanRiver.KisekiLegend.network.*;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.tags.TagKey;
@@ -48,6 +52,13 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
     private long lastCategoryClickTime = 0;
     private String lastClickedCategory = "";
     private int lastMouseY = 0;
+    private boolean isInitializing = true;
+    private boolean startupSoundPlayed = false;
+    private boolean processingSoundPlayed = false;
+    private boolean completeSoundPlayed = false;
+
+    private long initStartTime = 0;
+    private static final int LOADING_DURATION = 60; // 3 seconds at 20 TPS
     private int selectedInventoryTab = 0;
     private int inventoryTabScrollOffset = 0;
     private static final int MAX_VISIBLE_TABS = 8;
@@ -219,6 +230,17 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
 
     public QuartzMachineScreen(QuartzMachineMenu pMenu, Inventory pPlayerInventory, Component pTitle) {
         super(pMenu, pPlayerInventory, pTitle);
+
+        // Clear and initialize existing maps to prevent null pointer exceptions
+        this.categoryExpanded.clear();
+        this.categoryRecipes.clear();
+        this.nodePositions.clear();
+
+        // Initialize all categories as collapsed
+        for (String category : elementalCategories) {
+            this.categoryExpanded.put(category, false);
+            this.categoryRecipes.put(category, new ArrayList<>());
+        }
     }
 
     @Override
@@ -229,55 +251,74 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
     @Override
     protected void init() {
         super.init();
+
+        // Start loading sequence IMMEDIATELY
+        this.isInitializing = true;
+        this.initStartTime = System.currentTimeMillis();
+
+        // Reset loading sounds
+        resetLoadingSounds();
+
+        System.out.println("Starting loading sequence at: " + initStartTime);
+
         this.titleLabelX = -200;
         this.inventoryLabelX = -200;
         this.titleLabelY = -200;
         this.inventoryLabelY = -200;
 
-        // Initialize category recipes instead of updateRecipeList()
-        initializeCategoryRecipes();
-
-        // Clear existing positions
-
         nodePositions.clear();
-        updateNodePositions(); // Initial setup
-
-
-
 
         this.synthesisButton = addRenderableWidget(Button.builder(Component.literal("Synthesize"), this::onSynthesisButtonPressed)
                 .bounds(this.width / 2 - 100, 10, 120, 20)
                 .build());
 
+        // Initialize categories immediately (don't delay this)
+        initializeCategoryRecipes();
+        // Don't call updateNodePositions here - let onRecipeChanged handle it
     }
 
+    private boolean isLoadingComplete() {
+        if (!isInitializing) return true;
+
+        long elapsed = System.currentTimeMillis() - initStartTime;
+
+        // Force minimum 3 second loading duration
+        return elapsed >= 3000; // 3000ms = 3 seconds
+    }
     private void initializeCategoryRecipes() {
         Map<String, List<String>> categoryToPatterns = Map.of(
-                "water", List.of("hp_", "heal", "freeze", "heal", "mind_"),
-                "fire", List.of("attack_", "confuse", "strike", "seal"),
-                "earth", List.of("defense_", "mute", "petrify" , "poison"),
-                "wind", List.of("speed_", "evade_", "impede_", "scent", "shield_", "sleep"),
-                "time", List.of("action_", "blind", "cast_", "deathblow_"),
-                "space", List.of( "eagle_eye" , "ep_cut_","move_", "range_"),
-                "mirage", List.of( "cloak", "ep_", "haze", "hit_", "information")
+                "water", List.of("hp_1", "hp_2", "hp_3", "mind_1", "mind_2", "mind_3", "freeze", "heal"),
+                "fire", List.of("attack_1", "attack_2", "attack_3", "confuse", "strike", "seal"),
+                "earth", List.of("defense_1", "defense_2", "defense_3", "mute", "petrify", "poison"),
+                "wind", List.of("shield_1", "shield_2", "shield_3", "evade_1", "evade_2", "evade_3", "impede_1", "impede_2", "impede_3", "sleep", "scent"),
+                "time", List.of("action_1", "action_2", "action_3", "blind", "cast_1", "cast_2", "deathblow_1", "deathblow_2"),
+                "space", List.of("move_1", "move_2", "move_3", "ep_cut_1", "ep_cut_2", "ep_cut_3", "range_1", "eagle_eye"),
+                "mirage", List.of("ep_1", "ep_2", "ep_3", "hit_1", "hit_2", "hit_3", "information", "haze", "cloak")
         );
 
-        // Initialize all categories as collapsed
+        categoryExpanded.clear();
+        categoryRecipes.clear();
+
         for (String category : elementalCategories) {
             categoryExpanded.put(category, false);
 
-            List<String> patterns = categoryToPatterns.getOrDefault(category, List.of(category));
-            List<QuartzCraftingRecipe> recipes = KisekiLegend.getQuartzRecipeManager().getRecipes().values().stream()
-                    .filter(r -> {
-                        String recipeId = r.getId().getPath();
-                        return patterns.stream().anyMatch(pattern -> recipeId.contains(pattern));
-                    })
-                    .toList();
+            List<String> patterns = categoryToPatterns.getOrDefault(category, List.of());
+            Set<String> addedRecipes = new HashSet<>(); // Prevent duplicates
+            List<QuartzCraftingRecipe> recipes = new ArrayList<>();
+
+            for (QuartzCraftingRecipe recipe : KisekiLegend.getQuartzRecipeManager().getRecipes().values()) {
+                String recipeId = recipe.getId().getPath();
+
+                // Only add if not already added and matches pattern
+                if (!addedRecipes.contains(recipeId) && patterns.contains(recipeId)) {
+                    recipes.add(recipe);
+                    addedRecipes.add(recipeId);
+                    System.out.println("Added recipe: " + recipeId + " to category: " + category);
+                }
+            }
 
             categoryRecipes.put(category, recipes);
-
         }
-
     }
     private void updateNodePositions() {
         nodePositions.clear();
@@ -777,23 +818,24 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
 
 
 
-        private void onSynthesisButtonPressed(Button button) {
-        QuartzMachineBlockEntity blockEntity = this.menu.getBlockEntity();
-        if (blockEntity != null) {
-            NetworkHandler.sendToServer(new StartSynthesisPacket(blockEntity.getBlockPos()));
-        }
-    }
+
 
     @Override
     public void render(GuiGraphics pGuiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
         this.renderBackground(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
 
-        // Left Panel
         int panelWidth = 80;
         pGuiGraphics.fill(5, 5, 5 + panelWidth, this.height - 5, 0xBF3B270A);
         pGuiGraphics.renderOutline(5, 5, panelWidth, this.height - 10, 0xFF1A1104);
 
-        drawCategoryDropdowns(pGuiGraphics);
+// Only draw categories if loading is complete
+        if (isLoadingComplete()) {
+            drawCategoryDropdowns(pGuiGraphics);
+        } else {
+            // Draw "Loading..." text in the left panel during loading
+            pGuiGraphics.drawString(this.font, Component.literal("Loading..."), 10, 50, 0xFFFFFFFF, false);
+        }
+
 
 
 // Render player inventory first (if in material insertion mode)
@@ -840,8 +882,16 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
         this.synthesisButton.visible = (currentState == ScreenState.SELECTING_RECIPE && anyNodeCompleted);
 
 // Continue with the existing code...
-        if (blockEntity != null && blockEntity.getActiveRecipeId() != null && currentState == ScreenState.SELECTING_RECIPE) {
-            drawRecipeGraph(pGuiGraphics);
+        // Show loading screen during initialization, regardless of recipe state
+        if (currentState == ScreenState.SELECTING_RECIPE) {
+            if (isLoadingComplete()) {
+                // Only draw recipe graph if we have a recipe AND loading is complete
+                if (blockEntity != null && blockEntity.getActiveRecipeId() != null) {
+                    drawRecipeGraph(pGuiGraphics);
+                }
+            } else {
+                drawLoadingScreen(pGuiGraphics);
+            }
         }
 
 
@@ -866,7 +916,483 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
         }
 
     }
+    // Replace the drawLoadingScreen method with this enhanced version
+    private void drawLoadingScreen(GuiGraphics graphics) {
+        long elapsed = System.currentTimeMillis() - initStartTime;
+        float progress = Math.min(1.0f, elapsed / 3000.0f);
+
+        // Cover the ENTIRE screen with a gradient background
+        drawTechGradientBackground(graphics);
+
+        int centerX = this.width / 2;
+        int centerY = this.height / 2;
+
+        // Draw custom logo if available (you'll need to add your logo texture)
+        drawCustomLogo(graphics, centerX, centerY - 100);
+
+        // Enhanced loading text with glow effect
+        String dots = getDynamicLoadingDots(elapsed);
+        Component loadingText = Component.literal("Initializing Quartz Matrix" + dots);
+
+        // Draw text with shadow and glow
+        drawGlowText(graphics, loadingText, centerX, centerY - 40, 0xFF4A8FB8, 0xFF1A3A4A);
+
+        // Enhanced armored hand progress bar
+        drawArmoredHandProgressBar(graphics, centerX, centerY - 10, progress);
+
+        // System status with typewriter effect
+        drawSystemStatus(graphics, centerX, centerY + 30, elapsed, progress);
+
+        // Enhanced tech circuit animation
+        drawTechCircuitPattern(graphics, centerX, centerY, elapsed);
+
+        // Add particle effects
+        drawTechParticles(graphics, centerX, centerY, elapsed);
+
+        // Play loading sounds (you'll need to implement sound triggering)
+        playLoadingSounds(elapsed);
+    }
+
+    // Brownish-blue gradient background
+    private void drawTechGradientBackground(GuiGraphics graphics) {
+        int topColor = 0xFF2D1F15;    // Dark brown
+        int middleColor = 0xFF1A3A4A; // Dark brownish-blue
+        int bottomColor = 0xFF0F2A3A; // Darker blue
+
+        int height = this.height;
+        for (int y = 0; y < height; y++) {
+            float ratio = (float) y / height;
+            int color;
+
+            if (ratio < 0.5f) {
+                // Top to middle
+                float localRatio = ratio * 2;
+                color = interpolateColor(topColor, middleColor, localRatio);
+            } else {
+                // Middle to bottom
+                float localRatio = (ratio - 0.5f) * 2;
+                color = interpolateColor(middleColor, bottomColor, localRatio);
+            }
+
+            graphics.fill(0, y, this.width, y + 1, color);
+        }
+    }
+
+    // Custom logo rendering (add your logo texture path)
+    private void drawCustomLogo(GuiGraphics graphics, int centerX, int centerY) {
+        try {
+            // Replace with your actual logo texture path
+            ResourceLocation logoTexture = ResourceLocation.fromNamespaceAndPath("kisekilegend", "textures/gui/quartz_logo.png");
+            RenderSystem.setShaderTexture(0, logoTexture);
+
+            // Pulsing logo effect
+            long time = System.currentTimeMillis();
+            float pulse = (float)(Math.sin(time * 0.003) * 0.1 + 0.9);
+            RenderSystem.setShaderColor(pulse, pulse, pulse, 1.0f);
+
+            // Draw logo (adjust size as needed)
+            graphics.blit(logoTexture, centerX - 32, centerY - 32, 0, 0, 64, 64, 64, 64);
+
+            RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+        } catch (Exception e) {
+            // Fallback: draw text logo
+            Component logoText = Component.literal("KISEKI LEGEND");
+            drawGlowText(graphics, logoText, centerX, centerY, 0xFF4A8FB8, 0xFF1A3A4A);
+        }
+    }
+
+    // Dynamic loading dots animation
+    private String getDynamicLoadingDots(long elapsed) {
+        int dotCount = (int)((elapsed / 300) % 5); // Cycle every 1.5 seconds
+        return switch (dotCount) {
+            case 0 -> "";
+            case 1 -> ".";
+            case 2 -> "..";
+            case 3 -> "...";
+            case 4 -> "....";
+            default -> "";
+        };
+    }
+
+    // Glowing text effect
+    private void drawGlowText(GuiGraphics graphics, Component text, int x, int y, int mainColor, int glowColor) {
+        // Draw glow (larger, darker)
+        for (int offsetX = -1; offsetX <= 1; offsetX++) {
+            for (int offsetY = -1; offsetY <= 1; offsetY++) {
+                if (offsetX != 0 || offsetY != 0) {
+                    graphics.drawCenteredString(this.font, text, x + offsetX, y + offsetY, glowColor);
+                }
+            }
+        }
+
+        // Draw main text
+        graphics.drawCenteredString(this.font, text, x, y, mainColor);
+    }
+
+    // Armored hand progress bar
+    private void drawArmoredHandProgressBar(GuiGraphics graphics, int centerX, int centerY, float progress) {
+        int barWidth = 240;
+        int barHeight = 24;
+        int barX = centerX - barWidth / 2;
+        int barY = centerY;
+
+        // Draw hand outline (empty state)
+        drawArmoredHandOutline(graphics, barX, barY, barWidth, barHeight);
+
+        // Draw progress fill with armor segments
+        if (progress > 0) {
+            drawArmoredHandFill(graphics, barX, barY, barWidth, barHeight, progress);
+        }
+
+        // Draw progress percentage with custom positioning
+        String progressText = String.format("%.0f%%", progress * 100);
+        drawGlowText(graphics, Component.literal(progressText), centerX, centerY + barHeight + 8, 0xFF4A8FB8, 0xFF1A3A4A);
+    }
+
+    // Armored hand outline shape
+    private void drawArmoredHandOutline(GuiGraphics graphics, int x, int y, int width, int height) {
+        // Main body
+        graphics.fill(x, y, x + width, y + height, 0xFF2D1F15);
+
+        // Fingers (simplified geometric representation)
+        int fingerWidth = width / 6;
+        for (int i = 0; i < 4; i++) {
+            int fingerX = x + (i + 1) * fingerWidth;
+            int fingerY = y - 8;
+            graphics.fill(fingerX, fingerY, fingerX + fingerWidth - 2, fingerY + 8, 0xFF2D1F15);
+            graphics.renderOutline(fingerX, fingerY, fingerWidth - 2, 8, 0xFF4A3426);
+        }
+
+        // Thumb
+        int thumbX = x - 12;
+        int thumbY = y + height / 3;
+        graphics.fill(thumbX, thumbY, thumbX + 12, thumbY + height / 2, 0xFF2D1F15);
+        graphics.renderOutline(thumbX, thumbY, 12, height / 2, 0xFF4A3426);
+
+        // Main outline
+        graphics.renderOutline(x, y, width, height, 0xFF4A3426);
+    }
+
+    // Armored hand fill animation
+    private void drawArmoredHandFill(GuiGraphics graphics, int x, int y, int width, int height, float progress) {
+        int fillWidth = (int)(width * progress);
+
+        // Segment the fill to look like armor plates
+        int segmentCount = 8;
+        int segmentWidth = fillWidth / segmentCount;
+
+        for (int i = 0; i < segmentCount && i * segmentWidth < fillWidth; i++) {
+            int segX = x + 2 + (i * (width / segmentCount));
+            int segWidth = Math.min(segmentWidth - 2, fillWidth - (i * segmentWidth));
+
+            if (segWidth > 0) {
+                // Gradient from brownish to blue
+                int segmentColor = interpolateColor(0xFF6B4423, 0xFF4A8FB8, (float)i / segmentCount);
+                graphics.fill(segX, y + 2, segX + segWidth, y + height - 2, segmentColor);
+
+                // Add metallic highlight
+                graphics.fill(segX, y + 2, segX + segWidth, y + 4, 0xFF8BB8D8);
+            }
+        }
+
+        // Fill fingers based on progress
+        int fingerWidth = width / 6;
+        int filledFingers = (int)(progress * 4);
+        for (int i = 0; i < filledFingers; i++) {
+            int fingerX = x + (i + 1) * fingerWidth;
+            int fingerY = y - 8;
+            graphics.fill(fingerX + 1, fingerY + 1, fingerX + fingerWidth - 3, fingerY + 7, 0xFF4A8FB8);
+        }
+
+        // Fill thumb if progress > 80%
+        if (progress > 0.8f) {
+            int thumbX = x - 12;
+            int thumbY = y + height / 3;
+            graphics.fill(thumbX + 1, thumbY + 1, thumbX + 11, thumbY + height / 2 - 1, 0xFF4A8FB8);
+        }
+    }
+
+    // System status with typewriter effect
+    private void drawSystemStatus(GuiGraphics graphics, int centerX, int centerY, long elapsed, float progress) {
+        String[] statusMessages = {
+                "Calibrating resonance frequencies...",
+                "Synchronizing elemental matrices...",
+                "Loading synthesis protocols...",
+                "Establishing quantum links...",
+                "Armoring systems online...",
+                "Aeon System complete!"
+        };
+
+        int statusIndex = Math.min(statusMessages.length - 1, (int)(progress * statusMessages.length));
+        String fullMessage = statusMessages[statusIndex];
+
+        // Typewriter effect
+        int visibleChars = (int)((elapsed % 2000) / 50); // 50ms per character
+        String displayMessage = fullMessage.substring(0, Math.min(visibleChars, fullMessage.length()));
+
+        // Position status text lower and with different styling
+        drawGlowText(graphics, Component.literal(displayMessage), centerX, centerY, 0xFF88B8AA, 0xFF2D4A3A);
+    }
+
+    // Enhanced tech circuit pattern
+    private void drawTechCircuitPattern(GuiGraphics graphics, int centerX, int centerY, long elapsed) {
+        float pulse = (float)(Math.sin(elapsed * 0.008) * 0.3 + 0.7);
+
+        // Draw multiple circuit rings
+        drawCircuitRing(graphics, centerX, centerY, 100, elapsed * 0.001, 0xFF4A8FB8, pulse);
+        drawCircuitRing(graphics, centerX, centerY, 140, elapsed * -0.0008, 0xFF6B7B88, pulse * 0.8f);
+        drawCircuitRing(graphics, centerX, centerY, 180, elapsed * 0.0006, 0xFF4A6B58, pulse * 0.6f);
+
+        // Central hub
+        drawTechHub(graphics, centerX, centerY, pulse);
+    }
+    // Background circuit animation for recipe view
+    private void drawBackgroundCircuitPattern(GuiGraphics graphics, int centerX, int centerY, long elapsed) {
+        float pulse = (float)(Math.sin(elapsed * 0.003) * 0.2 + 0.3); // Slower and more subtle pulse
+
+        // Draw multiple circuit rings with much lower opacity
+        drawBackgroundCircuitRing(graphics, centerX, centerY, 150, elapsed * 0.0003, 0x20406080, pulse); // Much slower rotation
+        drawBackgroundCircuitRing(graphics, centerX, centerY, 200, elapsed * -0.0002, 0x20304050, pulse * 0.8f);
+        drawBackgroundCircuitRing(graphics, centerX, centerY, 250, elapsed * 0.0001, 0x20203040, pulse * 0.6f);
+
+        // Central hub with very low opacity
+        drawBackgroundTechHub(graphics, centerX, centerY, pulse);
+    }
+
+    // Individual circuit ring
+    private void drawCircuitRing(GuiGraphics graphics, int centerX, int centerY, int radius, double rotation, int baseColor, float intensity) {
+        int nodeCount = 12;
+        for (int i = 0; i < nodeCount; i++) {
+            double angle = rotation + (i * 2 * Math.PI / nodeCount);
+            int x = centerX + (int)(Math.cos(angle) * radius);
+            int y = centerY + (int)(Math.sin(angle) * radius);
+
+            // Draw circuit nodes (hexagonal instead of circular)
+            drawHexagonalNode(graphics, x, y, 3, baseColor, intensity);
+
+            // Draw connecting lines
+            if (i < nodeCount - 1) {
+                double nextAngle = rotation + ((i + 1) * 2 * Math.PI / nodeCount);
+                int nextX = centerX + (int)(Math.cos(nextAngle) * radius);
+                int nextY = centerY + (int)(Math.sin(nextAngle) * radius);
+
+                int lineColor = (int)(baseColor & 0x00FFFFFF) | ((int)(intensity * 128) << 24);
+                drawTechLine(graphics, x, y, nextX, nextY, lineColor);
+            }
+        }
+    }
+
+    // Hexagonal circuit node
+    private void drawHexagonalNode(GuiGraphics graphics, int centerX, int centerY, int size, int color, float intensity) {
+        int glowColor = (int)((color & 0x00FFFFFF) | ((int)(intensity * 255) << 24));
+
+        // Draw hexagon approximation
+        for (int i = 0; i < 6; i++) {
+            double angle1 = i * Math.PI / 3;
+            double angle2 = (i + 1) * Math.PI / 3;
+
+            int x1 = centerX + (int)(Math.cos(angle1) * size);
+            int y1 = centerY + (int)(Math.sin(angle1) * size);
+            int x2 = centerX + (int)(Math.cos(angle2) * size);
+            int y2 = centerY + (int)(Math.sin(angle2) * size);
+
+            drawTechLine(graphics, x1, y1, x2, y2, glowColor);
+        }
+
+        // Central glow
+        graphics.fill(centerX - 1, centerY - 1, centerX + 2, centerY + 2, glowColor);
+    }
+
+    // Technical line drawing with thickness
+    private void drawTechLine(GuiGraphics graphics, int x1, int y1, int x2, int y2, int color) {
+        // Enhanced line drawing with anti-aliasing effect
+        drawLine(graphics, x1, y1, x2, y2, color);
+        drawLine(graphics, x1 + 1, y1, x2 + 1, y2, color & 0x7FFFFFFF); // Semi-transparent parallel line
+    }
+
+    // Central technology hub
+    private void drawTechHub(GuiGraphics graphics, int centerX, int centerY, float pulse) {
+        int hubSize = (int)(20 + pulse * 5);
+
+        // Outer glow ring
+        drawCircle(graphics, centerX, centerY, hubSize + 3, (int)(0x4A4A8FB8 | ((int)(pulse * 100) << 24)));
+
+        // Main hub body
+        graphics.fill(centerX - hubSize/2, centerY - hubSize/2,
+                centerX + hubSize/2, centerY + hubSize/2, 0xFF2D4A5A);
+
+        // Inner core
+        int coreSize = hubSize / 3;
+        graphics.fill(centerX - coreSize, centerY - coreSize,
+                centerX + coreSize, centerY + coreSize,
+                interpolateColor(0xFF4A8FB8, 0xFF8BB8D8, pulse));
+    }
+
+    // Floating tech particles
+    private void drawTechParticles(GuiGraphics graphics, int centerX, int centerY, long elapsed) {
+        Random random = new Random(elapsed / 1000); // Stable seed for consistent particles
+
+        for (int i = 0; i < 20; i++) {
+            float particleTime = (elapsed + i * 200) * 0.001f;
+            float x = centerX + (float)(Math.sin(particleTime) * (100 + i * 10));
+            float y = centerY + (float)(Math.cos(particleTime * 1.3) * (80 + i * 8));
+
+            float alpha = (float)(Math.sin(particleTime * 2) * 0.3 + 0.4);
+            int particleColor = 0xFF4A8FB8 | ((int)(alpha * 255) << 24);
+
+            graphics.fill((int)x, (int)y, (int)x + 2, (int)y + 2, particleColor);
+        }
+    }
+
+    private void playLoadingSounds(long elapsed) {
+        try {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.player == null) return;
+
+            // Startup sound at 0.5 seconds
+            if (elapsed >= 500 && !startupSoundPlayed) {
+                mc.getSoundManager().play(SimpleSoundInstance.forUI(
+                        ModSoundEvents.QUARTZ_STARTUP.get(),
+                        1.0f, // pitch
+                        0.7f  // volume
+                ));
+                startupSoundPlayed = true;
+            }
+
+            // Processing sound at 1.5 seconds
+            else if (elapsed >= 1500 && !processingSoundPlayed) {
+                mc.getSoundManager().play(SimpleSoundInstance.forUI(
+                        ModSoundEvents.QUARTZ_PROCESSING.get(),
+                        1.0f, // pitch
+                        0.8f  // volume
+                ));
+                processingSoundPlayed = true;
+            }
+
+            // Completion sound at 2.8 seconds
+            else if (elapsed >= 2800 && !completeSoundPlayed) {
+                mc.getSoundManager().play(SimpleSoundInstance.forUI(
+                        ModSoundEvents.QUARTZ_COMPLETE.get(),
+                        1.0f, // pitch
+                        0.9f  // volume
+                ));
+                completeSoundPlayed = true;
+            }
+
+        } catch (Exception e) {
+            System.out.println("Error playing loading sound: " + e.getMessage());
+        }
+    }
+    private void resetLoadingSounds() {
+        startupSoundPlayed = false;
+        processingSoundPlayed = false;
+        completeSoundPlayed = false;
+    }
+    // Utility: Color interpolation
+    private int interpolateColor(int color1, int color2, float ratio) {
+        ratio = Math.max(0, Math.min(1, ratio));
+
+        int a1 = (color1 >> 24) & 0xFF;
+        int r1 = (color1 >> 16) & 0xFF;
+        int g1 = (color1 >> 8) & 0xFF;
+        int b1 = color1 & 0xFF;
+
+        int a2 = (color2 >> 24) & 0xFF;
+        int r2 = (color2 >> 16) & 0xFF;
+        int g2 = (color2 >> 8) & 0xFF;
+        int b2 = color2 & 0xFF;
+
+        int a = (int)(a1 + (a2 - a1) * ratio);
+        int r = (int)(r1 + (r2 - r1) * ratio);
+        int g = (int)(g1 + (g2 - g1) * ratio);
+        int b = (int)(b1 + (b2 - b1) * ratio);
+
+        return (a << 24) | (r << 16) | (g << 8) | b;
+    }
+    // Add this method for animated circuit graphics:
+    private void drawCircuitPattern(GuiGraphics graphics, int centerX, int centerY, long elapsed) {
+        float pulse = (float)(Math.sin(elapsed * 0.01) * 0.5 + 0.5);
+        int glowColor = (int)(pulse * 255) << 16 | 0x4400AA; // Pulsing blue
+
+        // Draw animated circuits around the loading area
+        for (int i = 0; i < 8; i++) {
+            double angle = (elapsed * 0.002) + (i * Math.PI / 4);
+            int radius = 80;
+            int x = centerX + (int)(Math.cos(angle) * radius);
+            int y = centerY + (int)(Math.sin(angle) * radius);
+
+            // Draw small circuit nodes
+            graphics.fill(x - 2, y - 2, x + 2, y + 2, glowColor);
+
+            // Draw connecting lines to center
+            drawLine(graphics, centerX, centerY, x, y, glowColor | 0x80000000);
+        }
+    }
+    // Background version of circuit ring with lower opacity
+    private void drawBackgroundCircuitRing(GuiGraphics graphics, int centerX, int centerY, int radius, double rotation, int baseColor, float intensity) {
+        int nodeCount = 16; // More nodes for denser pattern
+        for (int i = 0; i < nodeCount; i++) {
+            double angle = rotation + (i * 2 * Math.PI / nodeCount);
+            int x = centerX + (int)(Math.cos(angle) * radius) + viewOffsetX; // Apply view offset
+            int y = centerY + (int)(Math.sin(angle) * radius) + viewOffsetY; // Apply view offset
+
+            // Draw background nodes with very low opacity
+            drawBackgroundHexagonalNode(graphics, x, y, 2, baseColor, intensity * 0.3f);
+
+            // Draw connecting lines with even lower opacity
+            if (i < nodeCount - 1) {
+                double nextAngle = rotation + ((i + 1) * 2 * Math.PI / nodeCount);
+                int nextX = centerX + (int)(Math.cos(nextAngle) * radius) + viewOffsetX;
+                int nextY = centerY + (int)(Math.sin(nextAngle) * radius) + viewOffsetY;
+
+                int lineColor = (int)(baseColor & 0x00FFFFFF) | ((int)(intensity * 30) << 24); // Very low alpha
+                drawTechLine(graphics, x, y, nextX, nextY, lineColor);
+            }
+        }
+    }
+
+    private void drawBackgroundHexagonalNode(GuiGraphics graphics, int centerX, int centerY, int size, int color, float intensity) {
+        int glowColor = (int)((color & 0x00FFFFFF) | ((int)(intensity * 60) << 24)); // Very low alpha
+
+        // Draw smaller hexagon for background
+        for (int i = 0; i < 6; i++) {
+            double angle1 = i * Math.PI / 3;
+            double angle2 = (i + 1) * Math.PI / 3;
+
+            int x1 = centerX + (int)(Math.cos(angle1) * size);
+            int y1 = centerY + (int)(Math.sin(angle1) * size);
+            int x2 = centerX + (int)(Math.cos(angle2) * size);
+            int y2 = centerY + (int)(Math.sin(angle2) * size);
+
+            drawTechLine(graphics, x1, y1, x2, y2, glowColor);
+        }
+
+        // Very subtle central glow
+        graphics.fill(centerX, centerY, centerX + 1, centerY + 1, glowColor);
+    }
+
+    private void drawBackgroundTechHub(GuiGraphics graphics, int centerX, int centerY, float pulse) {
+        int hubSize = (int)(12 + pulse * 3); // Smaller hub
+
+        // Apply view offset to hub position
+        int adjustedX = centerX + viewOffsetX;
+        int adjustedY = centerY + viewOffsetY;
+
+        // Very subtle outer glow ring
+        drawCircle(graphics, adjustedX, adjustedY, hubSize + 2, (int)(0x10304050 | ((int)(pulse * 40) << 24)));
+
+        // Subtle main hub body
+        graphics.fill(adjustedX - hubSize/2, adjustedY - hubSize/2,
+                adjustedX + hubSize/2, adjustedY + hubSize/2, 0x20304050);
+
+        // Very subtle inner core
+        int coreSize = hubSize / 3;
+        graphics.fill(adjustedX - coreSize, adjustedY - coreSize,
+                adjustedX + coreSize, adjustedY + coreSize, 0x30405060);
+    }
+    // Update your onRecipeChanged method to handle loading state:
     public void onRecipeChanged() {
+        // Always update node positions when recipe changes, regardless of loading state
         updateNodePositions();
     }
     // 5. Add this new method to draw inventory tabs:
@@ -923,14 +1449,20 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
     // In QuartzMachineScreen.java
 
     private void drawCategoryDropdowns(GuiGraphics graphics) {
+        // Don't draw anything during loading
         // Calculate total lines needed
         int totalLines = 0;
         for (String category : elementalCategories) {
             totalLines++; // Category header
-            if (categoryExpanded.get(category)) {
-                totalLines += categoryRecipes.get(category).size();
+            Boolean expanded = categoryExpanded.get(category);
+            if (expanded != null && expanded) {
+                List<QuartzCraftingRecipe> recipes = categoryRecipes.get(category);
+                if (recipes != null) {
+                    totalLines += recipes.size();
+                }
             }
         }
+
 
         // Update max scroll offset with more generous scrolling
         int availableLines = Math.min(VISIBLE_LINES, (this.height - 40) / 12); // Dynamic based on screen height
@@ -957,14 +1489,15 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
         int drawY = panelY - (scrollOffset * 12);
 
         for (String category : elementalCategories) {
-            boolean isExpanded = categoryExpanded.get(category);
+            Boolean expanded = categoryExpanded.get(category);
+            boolean isExpanded = expanded != null && expanded;
 
             // Draw category header if it's visible
             if (currentLine >= scrollOffset && currentLine < scrollOffset + availableLines) {
                 String indicator = isExpanded ? "▼ " : "► ";
                 Component categoryText = Component.literal(indicator + category);
-                graphics.drawString(this.font, categoryText, 4, drawY + 2, 0xFFFFFFFF, true); // Moved left and down
-                }
+                graphics.drawString(this.font, categoryText, 4, drawY + 2, 0xFFFFFFFF, true);
+            }
 
             drawY += 12;
             currentLine++;
@@ -972,34 +1505,35 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
             // Draw recipes if expanded
             if (isExpanded) {
                 List<QuartzCraftingRecipe> recipes = categoryRecipes.get(category);
-                for (QuartzCraftingRecipe recipe : recipes) {
-                    if (currentLine >= scrollOffset && currentLine < scrollOffset + availableLines) {
-                        String resultId = recipe.getResult();
-                        String displayName = resultId.substring(resultId.lastIndexOf(':') + 1);
-                        Component name = Component.literal("    " + displayName);
+                if (recipes != null) {
+                    for (QuartzCraftingRecipe recipe : recipes) {
+                        if (currentLine >= scrollOffset && currentLine < scrollOffset + availableLines) {
+                            String resultId = recipe.getResult();
+                            String displayName = resultId.substring(resultId.lastIndexOf(':') + 1);
+                            Component name = Component.literal("    " + displayName);
 
-                        QuartzMachineBlockEntity blockEntity = this.menu.getBlockEntity();
-                        boolean isUnlocked = isRecipeUnlocked(recipe);
-                        int color;
+                            QuartzMachineBlockEntity blockEntity = this.menu.getBlockEntity();
+                            boolean isUnlocked = isRecipeUnlocked(recipe);
+                            int color;
 
-                        if (!isUnlocked) {
-                            color = 0xFF666666;
-                            name = Component.literal("  🔒 " + displayName);
-                        } else if (blockEntity != null && recipe.getId().equals(blockEntity.getActiveRecipeId())) {
-                            color = 0xFFFFAA00; // Orange for selected
-                            name = Component.literal("  ★ " + displayName); // Star for active
-                        } else {
-                            color = 0xFF88FF88; // Light green for unlocked
-                            name = Component.literal("  ✓ " + displayName); // Checkmark for unlocked
+                            if (!isUnlocked) {
+                                color = 0xFF666666;
+                                name = Component.literal("  🔒 " + displayName);
+                            } else if (blockEntity != null && recipe.getId().equals(blockEntity.getActiveRecipeId())) {
+                                color = 0xFFFFAA00; // Orange for selected
+                                name = Component.literal("  ★ " + displayName); // Star for active
+                            } else {
+                                color = 0xFF88FF88; // Light green for unlocked
+                                name = Component.literal("  ✓ " + displayName); // Checkmark for unlocked
+                            }
+                            graphics.drawString(this.font, name, 8, drawY + 2, color, false); // Moved left and down
                         }
-                        graphics.drawString(this.font, name, 8, drawY + 2, color, false); // Moved left and down
-                        }
-                    drawY += 12;
-                    currentLine++;
+                        drawY += 12;
+                        currentLine++;
+                    }
                 }
             }
         }
-
         // Disable scissor test
         graphics.disableScissor();
 
@@ -1223,8 +1757,8 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
     }
     private boolean handleItemInsertion(double pMouseX, double pMouseY) {
         long currentTime = System.currentTimeMillis();
-        if (currentTime - lastInventoryClickTime < 200) { // Increased from CLICK_COOLDOWN to 200ms
-            return true; // Ignore rapid clicks
+        if (currentTime - lastInventoryClickTime < 200) {
+            return true;
         }
 
         int invPanelX = this.width / 2 - 140;
@@ -1245,17 +1779,16 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
             if (actualSlot != null && selectedNodeId != null && selectedMaterialType != null) {
                 QuartzMachineBlockEntity blockEntity = this.menu.getBlockEntity();
                 if (blockEntity != null) {
-                    // CRITICAL: Double-check item still exists and matches before sending packet
                     ItemStack itemInSlot = minecraft.player.getInventory().getItem(actualSlot);
                     if (!itemInSlot.isEmpty() && itemMatchesSelectedTab(itemInSlot)) {
+                        // Play item insertion sound
+                        playUISound(ModSoundEvents.UI_SPIRAL_TICK.get(), 1.3f, 0.6f);
+
                         lastInventoryClickTime = currentTime;
                         System.out.println("Sending insert packet - slot: " + actualSlot + ", item: " + itemInSlot);
 
-                        // Send packet
                         NetworkHandler.sendToServer(new InsertMaterialPacket(
                                 blockEntity.getBlockPos(), selectedNodeId, actualSlot, selectedMaterialType));
-
-                        // IMPORTANT: Don't modify client inventory here - let server handle it
                     } else {
                         System.out.println("Item validation failed - empty: " + itemInSlot.isEmpty() +
                                 ", matches: " + itemMatchesSelectedTab(itemInSlot));
@@ -1266,6 +1799,7 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
         }
         return false;
     }
+
     private boolean handleNodeClicks(double pMouseX, double pMouseY, int pButton) {
         QuartzMachineBlockEntity blockEntity = this.menu.getBlockEntity();
         if (blockEntity != null && blockEntity.getActiveRecipeId() != null) {
@@ -1285,6 +1819,9 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
                     if (nodeDistance <= 20) {
                         QuartzCraftingRecipe.Node nodeData = recipe.getNode(nodeId);
                         if (nodeData != null && !nodeData.getMaterialRequirements().isEmpty()) {
+                            // Play node selection sound
+                            playUISound(ModSoundEvents.UI_RINGS_ENGAGE.get(), 1.1f, 0.7f);
+
                             String firstMaterialType = nodeData.getMaterialRequirements().keySet().iterator().next();
                             selectedNodeId = nodeId;
                             selectedMaterialType = firstMaterialType;
@@ -1298,6 +1835,7 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
         return false;
     }
 
+
     private boolean handleCategoryClick(double pMouseX, double pMouseY, int pButton) {
         // Define the clickable area for the recipe list
         int panelX = 10;
@@ -1309,7 +1847,7 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
         int availableLines = Math.min(VISIBLE_LINES, (this.height - 40) / 12);
         int dynamicPanelHeight = availableLines * 12;
 
-// Ignore clicks outside the recipe panel
+        // Ignore clicks outside the recipe panel
         if (pMouseX < panelX || pMouseX > panelX + panelWidth || pMouseY < panelY || pMouseY > panelY + dynamicPanelHeight) {
             return false;
         }
@@ -1321,6 +1859,9 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
         for (String category : elementalCategories) {
             // Check for click on the category header itself
             if (currentLine == clickedLine) {
+                // Play category expand/collapse sound
+                playUISound(ModSoundEvents.UI_ELEMENT_HOVER_TICK.get(), 1.2f, 0.5f);
+
                 categoryExpanded.put(category, !categoryExpanded.get(category));
                 return true;
             }
@@ -1334,10 +1875,14 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
                         // This is the clicked recipe
                         QuartzMachineBlockEntity blockEntity = this.menu.getBlockEntity();
                         if (blockEntity != null && isRecipeUnlocked(recipe)) {
+                            // Play recipe selection sound
+                            playUISound(ModSoundEvents.UI_ART_SELECT_CHIME.get(), 1.0f, 0.8f);
+
                             // Send the selection packet to the server.
-                            // The server will handle the logic and send a sync packet back.
                             NetworkHandler.sendToServer(new SelectQuartzRecipePacket(recipe.getId(), blockEntity.getBlockPos()));
-                            // DO NOT call init() here. Let the server's response update the GUI.
+                        } else {
+                            // Play locked sound for locked recipes
+                            playUISound(ModSoundEvents.QUARTZ_ERROR.get(), 0.8f, 0.6f);
                         }
                         return true;
                     }
@@ -1346,6 +1891,15 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
             }
         }
         return false;
+    }
+    private void onSynthesisButtonPressed(Button button) {
+        QuartzMachineBlockEntity blockEntity = this.menu.getBlockEntity();
+        if (blockEntity != null) {
+            // Play synthesis start sound
+            playUISound(ModSoundEvents.QUARTZ_PROCESSING.get(), 1.0f, 1.0f);
+
+            NetworkHandler.sendToServer(new StartSynthesisPacket(blockEntity.getBlockPos()));
+        }
     }
     private boolean handleTabClicks(double pMouseX, double pMouseY, int pButton) {
         int invPanelX = this.width / 2 - 140;
@@ -1642,6 +2196,9 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
         if (recipe == null) {
             return;
         }
+
+        drawBackgroundCircuitPattern(graphics, this.width / 2, this.height / 2, System.currentTimeMillis());
+
         Set<String> unlocked = blockEntity.getUnlockedNodes();
         CompoundTag allProgress = blockEntity.getStoredItems();
 
@@ -1736,13 +2293,29 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
     public boolean keyPressed(int pKeyCode, int pScanCode, int pModifiers) {
         // Close material insertion panel with Escape key (but stay in recipe view)
         if (pKeyCode == 256 && currentState == ScreenState.INSERTING_MATERIAL) { // 256 is Escape key
+            // Play close sound
+            playUISound(ModSoundEvents.UI_CLOCK_CLOSE.get(), 1.0f, 0.5f);
+
             currentState = ScreenState.SELECTING_RECIPE;
             selectedNodeId = null;
             selectedMaterialType = null;
             return true;
         }
         return super.keyPressed(pKeyCode, pScanCode, pModifiers);
-
+    }
+    private void playUISound(SoundEvent soundEvent, float pitch, float volume) {
+        try {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.getSoundManager() != null) {
+                mc.getSoundManager().play(SimpleSoundInstance.forUI(
+                        soundEvent,
+                        pitch,
+                        volume
+                ));
+            }
+        } catch (Exception e) {
+            System.out.println("Error playing UI sound: " + e.getMessage());
+        }
     }
     private void drawLine(GuiGraphics graphics, int x1, int y1, int x2, int y2, int color) {
         // Calculate the differences

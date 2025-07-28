@@ -37,6 +37,14 @@ public class ModSoundEvents {
     public static final RegistryObject<SoundEvent> ORBMENT_SLOT_LOCKED = registerSoundEvent("ui.orbment.locked");
 
 
+    // Loading screen sounds
+    public static final RegistryObject<SoundEvent> QUARTZ_STARTUP = registerSoundEvent("quartz_startup");
+    public static final RegistryObject<SoundEvent> QUARTZ_PROCESSING = registerSoundEvent("quartz_processing");
+    public static final RegistryObject<SoundEvent> QUARTZ_COMPLETE = registerSoundEvent("quartz_complete");
+    public static final RegistryObject<SoundEvent> QUARTZ_ERROR = registerSoundEvent("quartz_error");
+
+
+
     private static RegistryObject<SoundEvent> registerSoundEvent(String name) {
         return SOUND_EVENTS.register(name, () -> SoundEvent.createVariableRangeEvent(
                 ResourceLocation.fromNamespaceAndPath(KisekiLegend.MOD_ID, name)));

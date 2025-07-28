@@ -17,5 +17,45 @@
   "ui.orbment.open": { "subtitle": "subtitles.kiseki_legend.ui.orbment.open", "sounds": [ "kisekilegend:ui/orbment/open" ] },
   "ui.orbment.close": { "subtitle": "subtitles.kiseki_legend.ui.orbment.close", "sounds": [ "kisekilegend:ui/orbment/close" ] },
   "ui.orbment.unlock": { "subtitle": "subtitles.kiseki_legend.ui.orbment.unlock", "sounds": [ "kisekilegend:ui/orbment/unlock" ] },
-  "ui.orbment.locked": { "subtitle": "subtitles.kiseki_legend.ui.orbment.locked", "sounds": [ "kisekilegend:ui/orbment/locked" ] }
+  "ui.orbment.locked": { "subtitle": "subtitles.kiseki_legend.ui.orbment.locked", "sounds": [ "kisekilegend:ui/orbment/locked" ] },
+  "quartz_startup": {
+    "subtitle": "subtitles.kiseki_legend.quartz_startup",
+    "sounds": [
+      {
+        "name": "kisekilegend:quartz_startup",
+        "volume": 0.7,
+        "pitch": 1.0
+      }
+    ]
+  },
+  "quartz_processing": {
+    "subtitle": "subtitles.kiseki_legend.quartz_processing",
+    "sounds": [
+      {
+        "name": "kisekilegend:quartz_processing",
+        "volume": 0.8,
+        "pitch": 1.0
+      }
+    ]
+  },
+  "quartz_error": {
+    "subtitle": "subtitles.kiseki_legend.quartz_error",
+    "sounds": [
+      {
+        "name": "kisekilegend:quartz_error",
+        "volume": 0.8,
+        "pitch": 1.0
+      }
+    ]
+  },
+  "quartz_complete": {
+    "subtitle": "subtitles.kiseki_legend.quartz_complete",
+    "sounds": [
+      {
+        "name": "kisekilegend:quartz_complete",
+        "volume": 0.9,
+        "pitch": 1.0
+      }
+    ]
+  }
 }
