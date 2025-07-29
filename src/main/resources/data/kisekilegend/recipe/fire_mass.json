@@ -1,12 +1,18 @@
 {
-  "type": "minecraft:smelting",
-  "category": "misc",
-  "cookingtime": 200,
-  "experience": 0.25,
-  "ingredient": {
-    "item": "kisekilegend:fire"
-  },
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "kisekilegend:fire" },
+    { "item":"kisekilegend:fire" },
+    { "item": "kisekilegend:fire" },
+    { "item": "kisekilegend:fire" },
+    { "item":"kisekilegend:fire" },
+    { "item": "kisekilegend:fire" },
+    { "item": "kisekilegend:fire" },
+    { "item":"kisekilegend:fire" },
+    { "item": "kisekilegend:fire" }
+  ],
   "result": {
-    "id": "kisekilegend:fire_mass"
+    "id": "kisekilegend:fire_mass",
+    "count": 1
   }
 }

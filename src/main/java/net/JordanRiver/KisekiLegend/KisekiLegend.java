@@ -6,7 +6,7 @@ import net.JordanRiver.KisekiLegend.block.ModBlockEntities;
 import net.JordanRiver.KisekiLegend.block.ModBlocks;
 import net.JordanRiver.KisekiLegend.client.ArtInputHandler;
 import net.JordanRiver.KisekiLegend.client.ClientSetup;
-import net.JordanRiver.KisekiLegend.client.screen.OrbmentMachineRenderer;
+import net.JordanRiver.KisekiLegend.client.screen.*;
 import net.JordanRiver.KisekiLegend.client.AuraRenderer;
 import net.JordanRiver.KisekiLegend.commands.RecipeProgressCommand;
 import net.JordanRiver.KisekiLegend.crafting.QuartzRecipeManager;
@@ -14,7 +14,6 @@ import net.JordanRiver.KisekiLegend.datagen.ModItemTagProvider;
 import net.JordanRiver.KisekiLegend.init.ModSoundEvents;
 import net.JordanRiver.KisekiLegend.network.NetworkHandler;
 import net.JordanRiver.KisekiLegend.particle.ModParticles;
-import net.JordanRiver.KisekiLegend.client.screen.OrbmentScreen;
 import net.JordanRiver.KisekiLegend.datagen.ModDatapackEntries;
 import net.JordanRiver.KisekiLegend.entity.ModEntities;
 import net.JordanRiver.KisekiLegend.item.ModCreativeModeTabs;
@@ -23,14 +22,13 @@ import net.JordanRiver.KisekiLegend.menu.ModMenuTypes;
 import net.JordanRiver.KisekiLegend.util.ModTags;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.JordanRiver.KisekiLegend.menu.QuartzMachineMenu;
-import net.JordanRiver.KisekiLegend.client.screen.QuartzMachineScreen;
-import net.JordanRiver.KisekiLegend.client.screen.OrbmentMachineScreen;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.tags.TagsProvider;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.data.DatapackBuiltinEntriesProvider;
 import net.minecraftforge.data.event.GatherDataEvent;
@@ -68,13 +66,15 @@ public class KisekiLegend {
         bus.addListener(this::commonSetup);
         bus.addListener(this::addCreative);
         ModSoundEvents.register(bus);
+        ModBlocks.ITEMS.register(bus);   // ADD this line
+
+        ModBlocks.BLOCKS.register(bus); // Fixed the typo
 
         ModBlockEntities.register(bus);
         ModEntities.register(bus);
         ModParticles.PARTICLES.register(bus);
         ModCreativeModeTabs.register(bus);
         ModItems.register(bus);
-        ModBlocks.register(bus);
         ModMenuTypes.register(bus);
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC);
         MinecraftForge.EVENT_BUS.register(this);
@@ -196,7 +196,6 @@ public class KisekiLegend {
             event.enqueueWork(() -> {
                 // Register GUIs
 
-
                 MenuScreens.register(ModMenuTypes.QUARTZ_MACHINE_MENU.get(), QuartzMachineScreen::new);
                 MenuScreens.register(ModMenuTypes.ORBMENT_MACHINE.get(), OrbmentMachineScreen::new);
                 MenuScreens.register(ModMenuTypes.ORBMENT_MENU.get(), OrbmentScreen::new);
@@ -204,7 +203,6 @@ public class KisekiLegend {
 
                 // Register Block Entity Renderers
                 BlockEntityRenderers.register(ModBlockEntities.QUARTZ_MACHINE_BLOCK_ENTITY.get(), QuartzMachineRenderer::new);
-                BlockEntityRenderers.register(ModBlockEntities.ORBMENT_MACHINE.get(), OrbmentMachineRenderer::new);
 
                 // Register Entity Renderers - CRITICAL: This must be in enqueueWork!
                 EntityRenderers.register(ModEntities.AURA_ENTITY.get(), AuraRenderer::new);

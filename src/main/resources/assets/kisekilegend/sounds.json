@@ -1,23 +1,100 @@
 {
-  "cast_start": { "subtitle": "subtitles.kiseki_legend.cast_start", "sounds": [ "kisekilegend:cast_start" ] },
-  "cast_loop": { "subtitle": "subtitles.kiseki_legend.cast_loop", "sounds": [ "kisekilegend:cast_loop" ] },
-  "cast_complete": { "subtitle": "subtitles.kiseki_legend.cast_complete", "sounds": [ "kisekilegend:cast_complete" ] },
-  "cast_fail": { "subtitle": "subtitles.kiseki_legend.cast_fail", "sounds": [ "kisekilegend:cast_fail" ] },
-
-  "ui.clock_open": { "subtitle": "subtitles.kiseki_legend.ui.clock_open", "sounds": [ "kisekilegend:ui/clock_open" ] },
-  "ui.clock_close": { "subtitle": "subtitles.kiseki_legend.ui.clock_close", "sounds": [ "kisekilegend:ui/clock_close" ] },
-  "ui.element_tick": { "subtitle": "subtitles.kiseki_legend.ui.element_tick", "sounds": [ "kisekilegend:ui/element_tick" ] },
-  "ui.rings_engage": { "subtitle": "subtitles.kiseki_legend.ui.rings_engage", "sounds": [ "kisekilegend:ui/rings_engage" ] },
-  "ui.spiral_tick": { "subtitle": "subtitles.kiseki_legend.ui.spiral_tick", "sounds": [ "kisekilegend:ui/spiral_tick" ] },
-  "ui.art_select": { "subtitle": "subtitles.kiseki_legend.ui.art_select", "sounds": [ "kisekilegend:ui/art_select" ] },
-  "ui.favorite_set": { "subtitle": "subtitles.kiseki_legend.ui.favorite_set", "sounds": [ "kisekilegend:ui/favorite_set" ] },
-
-  "art_select": { "subtitle": "subtitles.kiseki_legend.art_select", "sounds": [ "kisekilegend:art_select" ] },
-
-  "ui.orbment.open": { "subtitle": "subtitles.kiseki_legend.ui.orbment.open", "sounds": [ "kisekilegend:ui/orbment/open" ] },
-  "ui.orbment.close": { "subtitle": "subtitles.kiseki_legend.ui.orbment.close", "sounds": [ "kisekilegend:ui/orbment/close" ] },
-  "ui.orbment.unlock": { "subtitle": "subtitles.kiseki_legend.ui.orbment.unlock", "sounds": [ "kisekilegend:ui/orbment/unlock" ] },
-  "ui.orbment.locked": { "subtitle": "subtitles.kiseki_legend.ui.orbment.locked", "sounds": [ "kisekilegend:ui/orbment/locked" ] },
+  "cast_start": {
+    "subtitle": "subtitles.kiseki_legend.cast_start",
+    "sounds": [
+      "kisekilegend:cast_start"
+    ]
+  },
+  "cast_loop": {
+    "subtitle": "subtitles.kiseki_legend.cast_loop",
+    "sounds": [
+      "kisekilegend:cast_loop"
+    ]
+  },
+  "cast_complete": {
+    "subtitle": "subtitles.kiseki_legend.cast_complete",
+    "sounds": [
+      "kisekilegend:cast_complete"
+    ]
+  },
+  "cast_fail": {
+    "subtitle": "subtitles.kiseki_legend.cast_fail",
+    "sounds": [
+      "kisekilegend:cast_fail"
+    ]
+  },
+  "ui.clock_open": {
+    "subtitle": "subtitles.kiseki_legend.ui.clock_open",
+    "sounds": [
+      "kisekilegend:ui/clock_open"
+    ]
+  },
+  "ui.clock_close": {
+    "subtitle": "subtitles.kiseki_legend.ui.clock_close",
+    "sounds": [
+      "kisekilegend:ui/clock_close"
+    ]
+  },
+  "ui.element_tick": {
+    "subtitle": "subtitles.kiseki_legend.ui.element_tick",
+    "sounds": [
+      "kisekilegend:ui/element_tick"
+    ]
+  },
+  "ui.rings_engage": {
+    "subtitle": "subtitles.kiseki_legend.ui.rings_engage",
+    "sounds": [
+      "kisekilegend:ui/rings_engage"
+    ]
+  },
+  "ui.spiral_tick": {
+    "subtitle": "subtitles.kiseki_legend.ui.spiral_tick",
+    "sounds": [
+      "kisekilegend:ui/spiral_tick"
+    ]
+  },
+  "ui.art_select": {
+    "subtitle": "subtitles.kiseki_legend.ui.art_select",
+    "sounds": [
+      "kisekilegend:ui/art_select"
+    ]
+  },
+  "ui.favorite_set": {
+    "subtitle": "subtitles.kiseki_legend.ui.favorite_set",
+    "sounds": [
+      "kisekilegend:ui/favorite_set"
+    ]
+  },
+  "art_select": {
+    "subtitle": "subtitles.kiseki_legend.art_select",
+    "sounds": [
+      "kisekilegend:art_select"
+    ]
+  },
+  "ui.orbment.open": {
+    "subtitle": "subtitles.kiseki_legend.ui.orbment.open",
+    "sounds": [
+      "kisekilegend:ui/orbment/open"
+    ]
+  },
+  "ui.orbment.close": {
+    "subtitle": "subtitles.kiseki_legend.ui.orbment.close",
+    "sounds": [
+      "kisekilegend:ui/orbment/close"
+    ]
+  },
+  "ui.orbment.unlock": {
+    "subtitle": "subtitles.kiseki_legend.ui.orbment.unlock",
+    "sounds": [
+      "kisekilegend:ui/orbment/unlock"
+    ]
+  },
+  "ui.orbment.locked": {
+    "subtitle": "subtitles.kiseki_legend.ui.orbment.locked",
+    "sounds": [
+      "kisekilegend:ui/orbment/locked"
+    ]
+  },
   "quartz_startup": {
     "subtitle": "subtitles.kiseki_legend.quartz_startup",
     "sounds": [
@@ -53,6 +130,126 @@
     "sounds": [
       {
         "name": "kisekilegend:quartz_complete",
+        "volume": 0.9,
+        "pitch": 1.0
+      }
+    ]
+  },
+  "synthesis.tier1.start": {
+    "subtitle": "subtitles.kiseki_legend.synthesis.tier1.start",
+    "sounds": [
+      {
+        "name": "kisekilegend:synthesis/tier1/start",
+        "volume": 0.8,
+        "pitch": 1.0
+      }
+    ]
+  },
+  "synthesis.tier1.loop": {
+    "subtitle": "subtitles.kiseki_legend.synthesis.tier1.loop",
+    "sounds": [
+      {
+        "name": "kisekilegend:synthesis/tier1/loop",
+        "volume": 0.6,
+        "pitch": 1.0
+      }
+    ]
+  },
+  "synthesis.tier1.complete": {
+    "subtitle": "subtitles.kiseki_legend.synthesis.tier1.complete",
+    "sounds": [
+      {
+        "name": "kisekilegend:synthesis/tier1/complete",
+        "volume": 0.9,
+        "pitch": 1.0
+      }
+    ]
+  },
+  "synthesis.tier2.start": {
+    "subtitle": "subtitles.kiseki_legend.synthesis.tier2.start",
+    "sounds": [
+      {
+        "name": "kisekilegend:synthesis/tier2/start",
+        "volume": 0.8,
+        "pitch": 1.0
+      }
+    ]
+  },
+  "synthesis.tier2.loop": {
+    "subtitle": "subtitles.kiseki_legend.synthesis.tier2.loop",
+    "sounds": [
+      {
+        "name": "kisekilegend:synthesis/tier2/loop",
+        "volume": 0.6,
+        "pitch": 1.0
+      }
+    ]
+  },
+  "synthesis.tier2.complete": {
+    "subtitle": "subtitles.kiseki_legend.synthesis.tier2.complete",
+    "sounds": [
+      {
+        "name": "kisekilegend:synthesis/tier2/complete",
+        "volume": 0.9,
+        "pitch": 1.0
+      }
+    ]
+  },
+  "synthesis.tier3.start": {
+    "subtitle": "subtitles.kiseki_legend.synthesis.tier3.start",
+    "sounds": [
+      {
+        "name": "kisekilegend:synthesis/tier3/start",
+        "volume": 0.8,
+        "pitch": 1.0
+      }
+    ]
+  },
+  "synthesis.tier3.loop": {
+    "subtitle": "subtitles.kiseki_legend.synthesis.tier3.loop",
+    "sounds": [
+      {
+        "name": "kisekilegend:synthesis/tier3/loop",
+        "volume": 0.6,
+        "pitch": 1.0
+      }
+    ]
+  },
+  "synthesis.tier3.complete": {
+    "subtitle": "subtitles.kiseki_legend.synthesis.tier3.complete",
+    "sounds": [
+      {
+        "name": "kisekilegend:synthesis/tier3/complete",
+        "volume": 0.9,
+        "pitch": 1.0
+      }
+    ]
+  },
+  "synthesis.effect.start": {
+    "subtitle": "subtitles.kiseki_legend.synthesis.effect.start",
+    "sounds": [
+      {
+        "name": "kisekilegend:synthesis/effect/start",
+        "volume": 0.8,
+        "pitch": 1.0
+      }
+    ]
+  },
+  "synthesis.effect.loop": {
+    "subtitle": "subtitles.kiseki_legend.synthesis.effect.loop",
+    "sounds": [
+      {
+        "name": "kisekilegend:synthesis/effect/loop",
+        "volume": 0.6,
+        "pitch": 1.0
+      }
+    ]
+  },
+  "synthesis.effect.complete": {
+    "subtitle": "subtitles.kiseki_legend.synthesis.effect.complete",
+    "sounds": [
+      {
+        "name": "kisekilegend:synthesis/effect/complete",
         "volume": 0.9,
         "pitch": 1.0
       }

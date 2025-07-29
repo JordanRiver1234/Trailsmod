@@ -1,12 +1,18 @@
 {
-  "type": "minecraft:smelting",
-  "category": "misc",
-  "cookingtime": 200,
-  "experience": 0.25,
-  "ingredient": {
-    "item": "kisekilegend:earth"
-  },
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "kisekilegend:earth" },
+    { "item":"kisekilegend:earth" },
+    { "item": "kisekilegend:earth" },
+    { "item": "kisekilegend:earth" },
+    { "item":"kisekilegend:earth" },
+    { "item": "kisekilegend:earth" },
+    { "item": "kisekilegend:earth" },
+    { "item":"kisekilegend:earth" },
+    { "item": "kisekilegend:earth" }
+  ],
   "result": {
-    "id": "kisekilegend:earth_mass"
+    "id": "kisekilegend:earth_mass",
+    "count": 1
   }
 }

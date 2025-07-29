@@ -27,16 +27,52 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
-
+import software.bernie.geckolib.animatable.GeoBlockEntity;
+import software.bernie.geckolib.animatable.GeoBlockEntity;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.*;
+import software.bernie.geckolib.animation.PlayState;
+import software.bernie.geckolib.util.GeckoLibUtil;
 import javax.annotation.Nullable;
 
-public class OrbmentMachineBlockEntity extends BlockEntity implements MenuProvider {
+public class OrbmentMachineBlockEntity extends BlockEntity implements MenuProvider, GeoBlockEntity {
     private ItemStack orbment = ItemStack.EMPTY;
+    // ADD THESE LINES:
+    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+    private boolean isOpen = false;
 
     public OrbmentMachineBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.ORBMENT_MACHINE.get(), pos, state);
     }
 
+    // ADD THESE METHODS:
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return cache;
+    }
+
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>(this, "controller", 0, this::predicate));
+    }
+
+    private PlayState predicate(AnimationState<OrbmentMachineBlockEntity> animationState) {
+        if (isOpen) {
+            animationState.getController().setAnimation(RawAnimation.begin().then("animation.orbment_machine.open", Animation.LoopType.HOLD_ON_LAST_FRAME));
+        } else {
+            animationState.getController().setAnimation(RawAnimation.begin().then("animation.orbment_machine.close", Animation.LoopType.HOLD_ON_LAST_FRAME));
+        }
+        return PlayState.CONTINUE;
+    }
+
+    public boolean isOpen() {
+        return isOpen;
+    }
+
+    public void setOpen(boolean open) {
+        this.isOpen = open;
+        setChangedAndSync();
+    }
     // --- Core Data Management ---
 
     public boolean hasOrbment() {
@@ -273,6 +309,7 @@ public class OrbmentMachineBlockEntity extends BlockEntity implements MenuProvid
         if (hasOrbment()) {
             tag.put("Orbment", orbment.save(provider));
         }
+        tag.putBoolean("IsOpen", isOpen);
     }
 
     @Override
@@ -281,9 +318,9 @@ public class OrbmentMachineBlockEntity extends BlockEntity implements MenuProvid
         if (tag.contains("Orbment")) {
             orbment = ItemStack.parse(provider, tag.getCompound("Orbment")).orElse(ItemStack.EMPTY);
         } else {
-            // This is crucial for visual updates when the orbment is removed.
             orbment = ItemStack.EMPTY;
         }
+        isOpen = tag.getBoolean("IsOpen");
     }
 
     private void setChangedAndSync() {

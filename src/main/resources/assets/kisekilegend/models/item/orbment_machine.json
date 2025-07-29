@@ -1,6 +1,6 @@
 {
-  "parent": "kisekilegend:block/orbment_machine",
+  "parent": "minecraft:item/generated",
   "textures": {
-    "all": "kisekilegend:block/orbment_machine"
+    "layer0": "kisekilegend:item/orbment_machine_icon"
   }
 }

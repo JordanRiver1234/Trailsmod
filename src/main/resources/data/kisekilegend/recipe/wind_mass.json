@@ -1,12 +1,18 @@
 {
-  "type": "minecraft:smelting",
-  "category": "misc",
-  "cookingtime": 200,
-  "experience": 0.25,
-  "ingredient": {
-    "item": "kisekilegend:wind"
-  },
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "kisekilegend:wind" },
+    { "item":"kisekilegend:wind" },
+    { "item": "kisekilegend:wind" },
+    { "item": "kisekilegend:wind" },
+    { "item":"kisekilegend:wind" },
+    { "item": "kisekilegend:wind" },
+    { "item": "kisekilegend:wind" },
+    { "item":"kisekilegend:wind" },
+    { "item": "kisekilegend:wind" }
+  ],
   "result": {
-    "id": "kisekilegend:wind_mass"
+    "id": "kisekilegend:wind_mass",
+    "count": 1
   }
 }

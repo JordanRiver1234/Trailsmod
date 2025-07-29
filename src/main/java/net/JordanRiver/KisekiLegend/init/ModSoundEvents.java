@@ -42,7 +42,23 @@ public class ModSoundEvents {
     public static final RegistryObject<SoundEvent> QUARTZ_PROCESSING = registerSoundEvent("quartz_processing");
     public static final RegistryObject<SoundEvent> QUARTZ_COMPLETE = registerSoundEvent("quartz_complete");
     public static final RegistryObject<SoundEvent> QUARTZ_ERROR = registerSoundEvent("quartz_error");
+    // Item merge and convergence sounds
+// Synthesis sounds for different tiers
+    public static final RegistryObject<SoundEvent> SYNTHESIS_TIER1_START = registerSoundEvent("synthesis.tier1.start");
+    public static final RegistryObject<SoundEvent> SYNTHESIS_TIER1_LOOP = registerSoundEvent("synthesis.tier1.loop");
+    public static final RegistryObject<SoundEvent> SYNTHESIS_TIER1_COMPLETE = registerSoundEvent("synthesis.tier1.complete");
 
+    public static final RegistryObject<SoundEvent> SYNTHESIS_TIER2_START = registerSoundEvent("synthesis.tier2.start");
+    public static final RegistryObject<SoundEvent> SYNTHESIS_TIER2_LOOP = registerSoundEvent("synthesis.tier2.loop");
+    public static final RegistryObject<SoundEvent> SYNTHESIS_TIER2_COMPLETE = registerSoundEvent("synthesis.tier2.complete");
+
+    public static final RegistryObject<SoundEvent> SYNTHESIS_TIER3_START = registerSoundEvent("synthesis.tier3.start");
+    public static final RegistryObject<SoundEvent> SYNTHESIS_TIER3_LOOP = registerSoundEvent("synthesis.tier3.loop");
+    public static final RegistryObject<SoundEvent> SYNTHESIS_TIER3_COMPLETE = registerSoundEvent("synthesis.tier3.complete");
+
+    public static final RegistryObject<SoundEvent> SYNTHESIS_EFFECT_START = registerSoundEvent("synthesis.effect.start");
+    public static final RegistryObject<SoundEvent> SYNTHESIS_EFFECT_LOOP = registerSoundEvent("synthesis.effect.loop");
+    public static final RegistryObject<SoundEvent> SYNTHESIS_EFFECT_COMPLETE = registerSoundEvent("synthesis.effect.complete");
 
 
     private static RegistryObject<SoundEvent> registerSoundEvent(String name) {

@@ -17,10 +17,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.EntityBlock;
-import net.minecraft.world.level.block.Mirror;
-import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -40,6 +37,11 @@ public class OrbmentMachineBlock extends Block implements EntityBlock {
         super(props);
         registerDefaultState(this.defaultBlockState().setValue(FACING, Direction.NORTH));
     }
+    @Override
+    public RenderShape getRenderShape(BlockState state) {
+        return RenderShape.ENTITYBLOCK_ANIMATED;
+    }
+
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext ctx) {
@@ -107,10 +109,34 @@ public class OrbmentMachineBlock extends Block implements EntityBlock {
             return InteractionResult.CONSUME;
         }
 
-        // (2) Insert Orbment on first right‐click
+        // (2) Toggle machine open/close with empty hand (no orbment present)
+        if (!player.isShiftKeyDown() && held.isEmpty() && !machine.hasOrbment()) {
+            machine.setOpen(!machine.isOpen());
+
+            if (player instanceof ServerPlayer srv) {
+                srv.sendSystemMessage(Component.literal(machine.isOpen() ? "Machine opened" : "Machine closed"));
+            }
+            level.playSound(
+                    null, pos,
+                    machine.isOpen() ? SoundEvents.CHEST_OPEN : SoundEvents.CHEST_CLOSE,
+                    SoundSource.BLOCKS,
+                    0.5f, machine.isOpen() ? 0.9f : 0.8f
+            );
+            return InteractionResult.CONSUME;
+        }
+
+// (2.5) Insert Orbment - only if machine is open
         if (!player.isShiftKeyDown()
                 && held.getItem() instanceof OrbmentItem
                 && !machine.hasOrbment()) {
+
+            // Check if machine is open before allowing insertion
+            if (!machine.isOpen()) {
+                if (player instanceof ServerPlayer srv) {
+                    srv.sendSystemMessage(Component.literal("Machine must be open to insert Orbment"));
+                }
+                return InteractionResult.CONSUME;
+            }
 
             // Create a single copy for the machine
             ItemStack orbmentCopy = held.copy();
@@ -141,14 +167,21 @@ public class OrbmentMachineBlock extends Block implements EntityBlock {
             }
             return InteractionResult.CONSUME;
         }
-
-        // (3) Open GUI on second right‐click
+        // (3) Open GUI when orbment is present and machine is open
         if (!player.isShiftKeyDown() && machine.hasOrbment()) {
+            // Check if machine is open before allowing GUI access
+            if (!machine.isOpen()) {
+                if (player instanceof ServerPlayer srv) {
+                    srv.sendSystemMessage(Component.literal("Machine must be open to access Orbment"));
+                }
+                return InteractionResult.CONSUME;
+            }
+
             if (player instanceof ServerPlayer srv) {
                 srv.openMenu(machine, pos);
                 level.playSound(
                         null, pos,
-                        ModSoundEvents.ORBMENT_MENU_OPEN.get(), // <-- MODIFIED
+                        ModSoundEvents.ORBMENT_MENU_OPEN.get(),
                         SoundSource.BLOCKS,
                         0.8f, 1.2f
                 );

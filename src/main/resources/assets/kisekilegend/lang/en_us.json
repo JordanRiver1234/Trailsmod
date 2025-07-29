@@ -76,6 +76,18 @@
 
   "itemGroup.kisekilegend.orbment_equipment": "Orbment Equipment",
 
+  "subtitles.kiseki_legend.synthesis.tier1.start": "Tier 1 Synthesis begins",
+  "subtitles.kiseki_legend.synthesis.tier1.loop": "Tier 1 Synthesis processing",
+  "subtitles.kiseki_legend.synthesis.tier1.complete": "Tier 1 Synthesis complete",
+  "subtitles.kiseki_legend.synthesis.tier2.start": "Tier 2 Synthesis begins",
+  "subtitles.kiseki_legend.synthesis.tier2.loop": "Tier 2 Synthesis processing",
+  "subtitles.kiseki_legend.synthesis.tier2.complete": "Tier 2 Synthesis complete",
+  "subtitles.kiseki_legend.synthesis.tier3.start": "Tier 3 Synthesis begins",
+  "subtitles.kiseki_legend.synthesis.tier3.loop": "Tier 3 Synthesis processing",
+  "subtitles.kiseki_legend.synthesis.tier3.complete": "Tier 3 Synthesis complete",
+  "subtitles.kiseki_legend.synthesis.effect.start": "Effect Synthesis begins",
+  "subtitles.kiseki_legend.synthesis.effect.loop": "Effect Synthesis processing",
+  "subtitles.kiseki_legend.synthesis.effect.complete": "Effect Synthesis complete",
 
   "block.kisekilegend.earthvein_block": "Earth Vein Block",
   "block.kisekilegend.firevein_block": "Fire Vein Block",

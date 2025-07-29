@@ -1,12 +1,18 @@
 {
-  "type": "minecraft:smelting",
-  "category": "misc",
-  "cookingtime": 200,
-  "experience": 0.25,
-  "ingredient": {
-    "item": "kisekilegend:space"
-  },
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "kisekilegend:space" },
+    { "item":"kisekilegend:space" },
+    { "item": "kisekilegend:space" },
+    { "item": "kisekilegend:space" },
+    { "item":"kisekilegend:space" },
+    { "item": "kisekilegend:space" },
+    { "item": "kisekilegend:space" },
+    { "item":"kisekilegend:space" },
+    { "item": "kisekilegend:space" }
+  ],
   "result": {
-    "id": "kisekilegend:space_mass"
+    "id": "kisekilegend:space_mass",
+    "count": 1
   }
 }

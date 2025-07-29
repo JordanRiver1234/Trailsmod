@@ -51,6 +51,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import net.minecraft.core.Registry;
 import net.minecraft.world.item.Item;
+import net.JordanRiver.KisekiLegend.init.ModSoundEvents;
 import net.minecraft.core.registries.Registries;
 import java.util.*;
 
@@ -332,7 +333,7 @@ public class QuartzMachineBlockEntity extends BlockEntity implements MenuProvide
                     case "quality" -> {
                         // Quality nodes boost the base quality
                         int currentQuality = ItemEnhancementSystem.Quality.getQuality(result);
-                        ItemEnhancementSystem.Quality.setQuality(result, currentQuality + 50);
+                        ItemEnhancementSystem.Quality.setQuality(result, currentQuality + 150);
                     }
                     case "trait" -> {
                         // Trait nodes enhance existing traits or add new ones
@@ -1042,7 +1043,7 @@ public class QuartzMachineBlockEntity extends BlockEntity implements MenuProvide
 
             // Apply quality bonus (10% per match, max 50%)
             int currentQuality = ItemEnhancementSystem.Quality.getQuality(result);
-            int qualityBonus = Math.min(50, thematicMatches * 10);
+            int qualityBonus = Math.min(150, thematicMatches * 25);
             ItemEnhancementSystem.Quality.setQuality(result, currentQuality + qualityBonus);
             System.out.println("Applied quality bonus: +" + qualityBonus + " (total: " + (currentQuality + qualityBonus) + ")");
 
@@ -1245,8 +1246,6 @@ public class QuartzMachineBlockEntity extends BlockEntity implements MenuProvide
         }
     }
 
-    // In QuartzMachineBlockEntity.java
-
     public void insertMaterialFromSlot(Player player, String nodeId, String requiredMaterialType, int slotIndex) {
         // Server-side only check
         if (level == null || level.isClientSide() || !(player instanceof ServerPlayer serverPlayer)) {
@@ -1424,9 +1423,12 @@ public class QuartzMachineBlockEntity extends BlockEntity implements MenuProvide
 
         // Set synthesis state but DON'T clear stored items yet - let completeSynthesis do it
         this.isSynthesizing = true;
+        // Play start sound
+        playSynthesisSound("start");
         this.synthesisStartTime = level.getGameTime();
 
         setChanged();
+
         syncToClient();
     }
     public boolean isSynthesizing() {
@@ -1441,18 +1443,17 @@ public class QuartzMachineBlockEntity extends BlockEntity implements MenuProvide
         return this.synthesisStartTime;
     }
     public static void tick(Level level, BlockPos blockPos, BlockState blockState, QuartzMachineBlockEntity entity) {
-        // Handle synthesis particles and completion
         if (entity.isSynthesizing) {
             long currentTime = level.getGameTime();
             long elapsed = currentTime - entity.synthesisStartTime;
 
-            // Spawn particles every 10 ticks ONLY while synthesizing
-            if (elapsed % 10 == 0 && level.isClientSide) {
-                entity.spawnSynthesisParticles();
+            // Spawn particles on CLIENT side only
+            if (elapsed % 5 == 0 && level.isClientSide) {
+                entity.spawnEnhancedSynthesisEffects();
             }
 
-            // Complete synthesis after 120 ticks
-            if (elapsed >= 120) {
+            // Complete synthesis on SERVER side only
+            if (elapsed >= 120 && !level.isClientSide) {
                 entity.completeSynthesis();
             }
         }
@@ -1467,6 +1468,399 @@ public class QuartzMachineBlockEntity extends BlockEntity implements MenuProvide
                 level.addParticle(net.minecraft.core.particles.ParticleTypes.ENCHANT, x, y, z, 0, -0.1, 0);
             }
         }
+    }
+    private void spawnEnhancedSynthesisEffects() {
+        if (level == null || !level.isClientSide || !this.isSynthesizing) return;
+
+        long elapsed = level.getGameTime() - synthesisStartTime;
+        float progress = Math.min(1.0f, elapsed / 120.0f);
+
+        // Determine synthesis tier and element
+        SynthesisTier tier = getSynthesisTier();
+        ElementType element = getElementType();
+
+        // Spawn tier-specific effects
+        switch (tier) {
+            case TIER_1 -> spawnTier1Effects(progress, element, elapsed);
+            case TIER_2 -> spawnTier2Effects(progress, element, elapsed);
+            case TIER_3 -> spawnTier3Effects(progress, element, elapsed);
+            case EFFECT -> spawnEffectTypeEffects(progress, element, elapsed);
+        }
+
+        // Convergence effect in final 20 ticks
+        if (elapsed >= 100) {
+            spawnConvergenceEffect(progress, element, elapsed);
+        }
+    }
+
+    private void spawnTier1Effects(float progress, ElementType element, long elapsed) {
+        // Simple steam-punk glow with gentle particles
+        int particleCount = 3 + (int)(progress * 2);
+
+        for (int i = 0; i < particleCount; i++) {
+            double angle = (elapsed * 0.1 + i * Math.PI / 3) % (2 * Math.PI);
+            double radius = 0.8 + Math.sin(elapsed * 0.05) * 0.2;
+
+            double x = worldPosition.getX() + 0.5 + Math.cos(angle) * radius;
+            double y = worldPosition.getY() + 1.2 + Math.sin(elapsed * 0.03) * 0.1;
+            double z = worldPosition.getZ() + 0.5 + Math.sin(angle) * radius;
+
+            // Element-colored particles
+            spawnElementParticle(element, x, y, z, 0, 0.02, 0, 0.8f);
+        }
+
+        // Steam effects
+        if (elapsed % 15 == 0) {
+            spawnSteamParticles(element);
+        }
+    }
+
+    private void spawnTier2Effects(float progress, ElementType element, long elapsed) {
+        // Enhanced magitech effects with rotating rings
+        int ringCount = 2;
+
+        for (int ring = 0; ring < ringCount; ring++) {
+            double ringRadius = 1.0 + ring * 0.3;
+            int particlesPerRing = 8 + ring * 4;
+
+            for (int i = 0; i < particlesPerRing; i++) {
+                double angle = (elapsed * 0.15 * (ring + 1) + i * 2 * Math.PI / particlesPerRing) % (2 * Math.PI);
+
+                double x = worldPosition.getX() + 0.5 + Math.cos(angle) * ringRadius;
+                double y = worldPosition.getY() + 1.2 + Math.sin(elapsed * 0.04 + ring) * 0.15;
+                double z = worldPosition.getZ() + 0.5 + Math.sin(angle) * ringRadius;
+
+                spawnElementParticle(element, x, y, z, 0, 0.03, 0, 1.0f);
+            }
+        }
+
+        // Electrical arcs
+        if (elapsed % 10 == 0) {
+            spawnElectricalArcs(element);
+        }
+
+        // Enhanced steam with element colors
+        if (elapsed % 12 == 0) {
+            spawnEnhancedSteam(element);
+        }
+    }
+
+    private void spawnTier3Effects(float progress, ElementType element, long elapsed) {
+        // Premium gacha-style effects with multiple layers
+
+        // Outer ring - slow rotation
+        spawnEffectRing(1.5, 12, elapsed * 0.1, element, 1.2f, 0.04);
+
+        // Middle ring - medium rotation
+        spawnEffectRing(1.0, 16, elapsed * -0.15, element, 1.0f, 0.03);
+
+        // Inner ring - fast rotation
+        spawnEffectRing(0.6, 8, elapsed * 0.2, element, 0.8f, 0.02);
+
+        // Vertical energy pillars
+        if (elapsed % 8 == 0) {
+            spawnEnergyPillars(element);
+        }
+
+        // Runic circles
+        if (elapsed % 20 == 0) {
+            spawnRunicCircles(element);
+        }
+
+        // Premium burst effects
+        if (elapsed % 25 == 0) {
+            spawnPremiumBurst(element);
+        }
+    }
+
+    private void spawnEffectTypeEffects(float progress, ElementType element, long elapsed) {
+        // Special morph-type effects - chaotic and mystical
+
+        // Chaotic particle spiral
+        for (int i = 0; i < 6; i++) {
+            double spiralHeight = Math.sin(elapsed * 0.08 + i) * 0.5;
+            double angle = elapsed * 0.2 + i * Math.PI / 3;
+            double radius = 0.9 + Math.sin(elapsed * 0.12 + i) * 0.3;
+
+            double x = worldPosition.getX() + 0.5 + Math.cos(angle) * radius;
+            double y = worldPosition.getY() + 1.2 + spiralHeight;
+            double z = worldPosition.getZ() + 0.5 + Math.sin(angle) * radius;
+
+            // Mixed element particles for morph effects
+            spawnMorphParticle(element, x, y, z);
+        }
+
+        // Unstable energy fluctuations
+        if (elapsed % 6 == 0) {
+            spawnUnstableEnergy(element);
+        }
+    }
+
+    private void spawnConvergenceEffect(float progress, ElementType element, long elapsed) {
+        // Final convergence - items merge together
+        float convergenceProgress = (elapsed - 100) / 20.0f; // Last 20 ticks
+
+        // Intense convergence beam
+        for (int i = 0; i < 8; i++) {
+            double angle = i * Math.PI / 4;
+            double distance = (1.0 - convergenceProgress) * 1.2;
+
+            double x = worldPosition.getX() + 0.5 + Math.cos(angle) * distance;
+            double y = worldPosition.getY() + 1.2;
+            double z = worldPosition.getZ() + 0.5 + Math.sin(angle) * distance;
+
+            // Particles moving toward center
+            level.addParticle(getElementParticle(element), x, y, z,
+                    -Math.cos(angle) * 0.1, 0, -Math.sin(angle) * 0.1);
+        }
+
+        // Final burst at convergence
+        if (convergenceProgress >= 0.9f) {
+            spawnFinalBurst(element);
+        }
+    }
+
+    private void spawnElementParticle(ElementType element, double x, double y, double z, double vx, double vy, double vz, float intensity) {
+        net.minecraft.core.particles.ParticleOptions particle = getElementParticle(element);
+
+        // Add some randomness
+        x += (level.random.nextDouble() - 0.5) * 0.1;
+        y += (level.random.nextDouble() - 0.5) * 0.1;
+        z += (level.random.nextDouble() - 0.5) * 0.1;
+
+        level.addParticle(particle, x, y, z, vx, vy, vz);
+
+        // Add secondary particles for enhanced effect
+        if (level.random.nextFloat() < intensity) {
+            level.addParticle(net.minecraft.core.particles.ParticleTypes.ENCHANT, x, y, z, vx * 0.5, vy * 0.5, vz * 0.5);
+        }
+    }
+
+    private net.minecraft.core.particles.ParticleOptions getElementParticle(ElementType element) {
+        return switch (element) {
+            case FIRE -> net.minecraft.core.particles.ParticleTypes.FLAME;
+            case WATER -> net.minecraft.core.particles.ParticleTypes.DRIPPING_WATER;
+            case EARTH -> net.minecraft.core.particles.ParticleTypes.DUST_PLUME;
+            case WIND -> net.minecraft.core.particles.ParticleTypes.CLOUD;
+            case TIME -> net.minecraft.core.particles.ParticleTypes.PORTAL;
+            case SPACE -> net.minecraft.core.particles.ParticleTypes.END_ROD;
+            case MIRAGE -> net.minecraft.core.particles.ParticleTypes.ENCHANT;
+            default -> net.minecraft.core.particles.ParticleTypes.ENCHANT;
+        };
+    }
+
+    private SynthesisTier getSynthesisTier() {
+        if (activeRecipeId == null) return SynthesisTier.TIER_1;
+
+        String recipeId = activeRecipeId.getPath();
+
+        // Effect types (morph recipes)
+        if (recipeId.matches("(poison|mute|petrify|freeze|heal|seal|confuse|strike|sleep|scent|blind|eagle_eye|information|haze|cloak)")) {
+            return SynthesisTier.EFFECT;
+        }
+
+        // Tier determination
+        if (recipeId.endsWith("_3")) return SynthesisTier.TIER_3;
+        if (recipeId.endsWith("_2")) return SynthesisTier.TIER_2;
+        return SynthesisTier.TIER_1;
+    }
+
+    private ElementType getElementType() {
+        if (activeRecipeId == null) return ElementType.MIRAGE;
+
+        String recipeId = activeRecipeId.getPath();
+
+        // Determine element from recipe prefix
+        if (recipeId.startsWith("hp_") || recipeId.startsWith("mind_") || recipeId.equals("freeze") || recipeId.equals("heal")) {
+            return ElementType.WATER;
+        } else if (recipeId.startsWith("attack_") || recipeId.equals("seal") || recipeId.equals("confuse") || recipeId.equals("strike")) {
+            return ElementType.FIRE;
+        } else if (recipeId.startsWith("defense_") || recipeId.equals("poison") || recipeId.equals("mute") || recipeId.equals("petrify")) {
+            return ElementType.EARTH;
+        } else if (recipeId.startsWith("shield_") || recipeId.startsWith("evade_") || recipeId.startsWith("impede_") || recipeId.equals("sleep") || recipeId.equals("scent")) {
+            return ElementType.WIND;
+        } else if (recipeId.startsWith("action_") || recipeId.equals("blind") || recipeId.startsWith("cast_") || recipeId.startsWith("deathblow_")) {
+            return ElementType.TIME;
+        } else if (recipeId.startsWith("move_") || recipeId.startsWith("ep_cut_") || recipeId.equals("range_1") || recipeId.equals("eagle_eye")) {
+            return ElementType.SPACE;
+        } else {
+            return ElementType.MIRAGE;
+        }
+    }
+
+    // Helper enums
+    private enum SynthesisTier {
+        TIER_1, TIER_2, TIER_3, EFFECT
+    }
+
+    private enum ElementType {
+        FIRE, WATER, EARTH, WIND, TIME, SPACE, MIRAGE
+    }
+
+    // Additional effect methods (add these as well)
+    private void spawnSteamParticles(ElementType element) {
+        for (int i = 0; i < 3; i++) {
+            double x = worldPosition.getX() + 0.3 + level.random.nextDouble() * 0.4;
+            double y = worldPosition.getY() + 1.1;
+            double z = worldPosition.getZ() + 0.3 + level.random.nextDouble() * 0.4;
+            level.addParticle(net.minecraft.core.particles.ParticleTypes.CLOUD, x, y, z, 0, 0.05, 0);
+        }
+    }
+
+    private void spawnElectricalArcs(ElementType element) {
+        // Spawn electrical particle lines
+        for (int i = 0; i < 5; i++) {
+            double angle = level.random.nextDouble() * Math.PI * 2;
+            double x = worldPosition.getX() + 0.5 + Math.cos(angle) * 0.8;
+            double y = worldPosition.getY() + 1.2;
+            double z = worldPosition.getZ() + 0.5 + Math.sin(angle) * 0.8;
+            level.addParticle(net.minecraft.core.particles.ParticleTypes.ELECTRIC_SPARK, x, y, z, 0, 0, 0);
+        }
+    }
+
+    private void spawnEnhancedSteam(ElementType element) {
+        spawnSteamParticles(element);
+        // Add colored steam based on element
+        net.minecraft.core.particles.ParticleOptions particle = getElementParticle(element);
+        for (int i = 0; i < 2; i++) {
+            double x = worldPosition.getX() + 0.4 + level.random.nextDouble() * 0.2;
+            double y = worldPosition.getY() + 1.0;
+            double z = worldPosition.getZ() + 0.4 + level.random.nextDouble() * 0.2;
+            level.addParticle(particle, x, y, z, 0, 0.03, 0);
+        }
+    }
+
+    private void spawnEffectRing(double radius, int particleCount, double angleOffset, ElementType element, float intensity, double upwardVelocity) {
+        for (int i = 0; i < particleCount; i++) {
+            double angle = angleOffset + i * 2 * Math.PI / particleCount;
+            double x = worldPosition.getX() + 0.5 + Math.cos(angle) * radius;
+            double y = worldPosition.getY() + 1.2;
+            double z = worldPosition.getZ() + 0.5 + Math.sin(angle) * radius;
+
+            spawnElementParticle(element, x, y, z, 0, upwardVelocity, 0, intensity);
+        }
+    }
+
+    private void spawnEnergyPillars(ElementType element) {
+        for (int i = 0; i < 4; i++) {
+            double angle = i * Math.PI / 2;
+            double x = worldPosition.getX() + 0.5 + Math.cos(angle) * 1.0;
+            double z = worldPosition.getZ() + 0.5 + Math.sin(angle) * 1.0;
+
+            for (int j = 0; j < 5; j++) {
+                double y = worldPosition.getY() + 0.8 + j * 0.1;
+                spawnElementParticle(element, x, y, z, 0, 0.05, 0, 1.2f);
+            }
+        }
+    }
+
+    private void spawnRunicCircles(ElementType element) {
+        // Create runic circle pattern
+        for (int ring = 0; ring < 3; ring++) {
+            double radius = 0.4 + ring * 0.2;
+            int points = 6 + ring * 2;
+
+            for (int i = 0; i < points; i++) {
+                double angle = i * 2 * Math.PI / points;
+                double x = worldPosition.getX() + 0.5 + Math.cos(angle) * radius;
+                double y = worldPosition.getY() + 0.9 + ring * 0.1;
+                double z = worldPosition.getZ() + 0.5 + Math.sin(angle) * radius;
+
+                level.addParticle(net.minecraft.core.particles.ParticleTypes.ENCHANT, x, y, z, 0, 0, 0);
+            }
+        }
+    }
+
+    private void spawnPremiumBurst(ElementType element) {
+        // Intense burst effect for tier 3
+        for (int i = 0; i < 12; i++) {
+            double angle = i * Math.PI / 6;
+            double x = worldPosition.getX() + 0.5 + Math.cos(angle) * 0.3;
+            double y = worldPosition.getY() + 1.2;
+            double z = worldPosition.getZ() + 0.5 + Math.sin(angle) * 0.3;
+
+            double vx = Math.cos(angle) * 0.15;
+            double vz = Math.sin(angle) * 0.15;
+
+            spawnElementParticle(element, x, y, z, vx, 0.08, vz, 1.5f);
+        }
+    }
+
+    private void spawnMorphParticle(ElementType element, double x, double y, double z) {
+        // Mixed particles for morph effects
+        level.addParticle(getElementParticle(element), x, y, z, 0, 0.02, 0);
+        level.addParticle(net.minecraft.core.particles.ParticleTypes.WITCH, x, y, z, 0, 0.02, 0);
+        level.addParticle(net.minecraft.core.particles.ParticleTypes.ENCHANT, x, y, z, 0, 0.02, 0);
+    }
+
+    private void spawnUnstableEnergy(ElementType element) {
+        // Chaotic energy bursts
+        for (int i = 0; i < 4; i++) {
+            double x = worldPosition.getX() + 0.2 + level.random.nextDouble() * 0.6;
+            double y = worldPosition.getY() + 1.0 + level.random.nextDouble() * 0.4;
+            double z = worldPosition.getZ() + 0.2 + level.random.nextDouble() * 0.6;
+
+            double vx = (level.random.nextDouble() - 0.5) * 0.2;
+            double vy = level.random.nextDouble() * 0.1;
+            double vz = (level.random.nextDouble() - 0.5) * 0.2;
+
+            level.addParticle(net.minecraft.core.particles.ParticleTypes.WITCH, x, y, z, vx, vy, vz);
+        }
+    }
+
+    private void spawnFinalBurst(ElementType element) {
+        // Ultimate convergence burst
+        for (int i = 0; i < 20; i++) {
+            double angle = level.random.nextDouble() * Math.PI * 2;
+            double distance = level.random.nextDouble() * 0.5;
+
+            double x = worldPosition.getX() + 0.5 + Math.cos(angle) * distance;
+            double y = worldPosition.getY() + 1.2;
+            double z = worldPosition.getZ() + 0.5 + Math.sin(angle) * distance;
+
+            spawnElementParticle(element, x, y, z, 0, 0.15, 0, 2.0f);
+        }
+    }
+    private void playSynthesisSound(String phase) {
+        // Play sounds on SERVER side, particles on CLIENT side
+        if (level == null || level.isClientSide()) return;
+
+        SynthesisTier tier = getSynthesisTier();
+        net.minecraft.sounds.SoundEvent soundEvent = getSynthesisSound(tier, phase);
+
+        if (soundEvent != null) {
+            level.playSound(null, worldPosition, soundEvent,
+                    net.minecraft.sounds.SoundSource.BLOCKS, 0.8f, 1.0f);
+        }
+    }
+
+    private net.minecraft.sounds.SoundEvent getSynthesisSound(SynthesisTier tier, String phase) {
+        return switch (tier) {
+            case TIER_1 -> switch (phase) {
+                case "start" -> ModSoundEvents.SYNTHESIS_TIER1_START.get();
+                case "loop" -> ModSoundEvents.SYNTHESIS_TIER1_LOOP.get();
+                case "complete" -> ModSoundEvents.SYNTHESIS_TIER1_COMPLETE.get();
+                default -> null;
+            };
+            case TIER_2 -> switch (phase) {
+                case "start" -> ModSoundEvents.SYNTHESIS_TIER2_START.get();
+                case "loop" -> ModSoundEvents.SYNTHESIS_TIER2_LOOP.get();
+                case "complete" -> ModSoundEvents.SYNTHESIS_TIER2_COMPLETE.get();
+                default -> null;
+            };
+            case TIER_3 -> switch (phase) {
+                case "start" -> ModSoundEvents.SYNTHESIS_TIER3_START.get();
+                case "loop" -> ModSoundEvents.SYNTHESIS_TIER3_LOOP.get();
+                case "complete" -> ModSoundEvents.SYNTHESIS_TIER3_COMPLETE.get();
+                default -> null;
+            };
+            case EFFECT -> switch (phase) {
+                case "start" -> ModSoundEvents.SYNTHESIS_EFFECT_START.get();
+                case "loop" -> ModSoundEvents.SYNTHESIS_EFFECT_LOOP.get();
+                case "complete" -> ModSoundEvents.SYNTHESIS_EFFECT_COMPLETE.get();
+                default -> null;
+            };
+        };
     }
 
     private void completeSynthesis() {
@@ -1579,6 +1973,8 @@ public class QuartzMachineBlockEntity extends BlockEntity implements MenuProvide
         this.resultSlot = ItemStack.EMPTY;
 
         setChanged();
+        // Play completion sound
+        playSynthesisSound("complete");
         syncToClient();
     }
     public void setActiveRecipe(@Nullable ResourceLocation recipeId) {
@@ -1765,11 +2161,11 @@ public class QuartzMachineBlockEntity extends BlockEntity implements MenuProvide
 // For 2-block tall machine, animate in the middle of the upper block
             double startX = worldPosition.getX() + 0.5 + Math.cos(angle) * 1.2;
             double startZ = worldPosition.getZ() + 0.5 + Math.sin(angle) * 1.2;
-            double startY = worldPosition.getY() + 1.5; // Middle of upper block (1.5 from bottom)
+            double startY = worldPosition.getY() + 1.2; // Middle of upper block (1.5 from bottom)
 
             double endX = worldPosition.getX() + 0.5;
             double endZ = worldPosition.getZ() + 0.5;
-            double endY = worldPosition.getY() + 1.5; // Same level, or 1.6 for sl ghtly higher convergence
+            double endY = worldPosition.getY() + 1.2; // Same level, or 1.6 for sl ghtly higher convergence
 
             double currentX = startX + (endX - startX) * progress;
             double currentZ = startZ + (endZ - startZ) * progress;

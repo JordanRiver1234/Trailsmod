@@ -846,7 +846,7 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
             int invPanelWidth = 200;
             int invPanelHeight = 120;
 
-            pGuiGraphics.fill(invPanelX, invPanelY, invPanelX + invPanelWidth, invPanelY + invPanelHeight, 0xE0000000);
+            pGuiGraphics.fill(invPanelX, invPanelY, invPanelX + invPanelWidth, invPanelY + invPanelHeight, 0xE01A3A4A);
             pGuiGraphics.renderOutline(invPanelX, invPanelY, invPanelWidth, invPanelHeight, 0xFFFFFFFF);
 
             // Draw inventory tabs
@@ -1620,7 +1620,7 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
         this.topPos = this.height / 2 - panelHeight / 2 - 20;
 
         // Draw dark brown background with higher alpha for visibility
-        graphics.fill(this.leftPos, this.topPos, this.leftPos + panelWidth, this.topPos + panelHeight, 0xE0000000);
+        graphics.fill(this.leftPos, this.topPos, this.leftPos + panelWidth, this.topPos + panelHeight, 0xE01A3A4A);
         graphics.renderOutline(this.leftPos, this.topPos, panelWidth, panelHeight, 0xFFFFFFFF);
 
         this.imageWidth = panelWidth;
@@ -1987,7 +1987,7 @@ public class QuartzMachineScreen extends AbstractContainerScreen<QuartzMachineMe
         int slotPanelY = this.topPos + 25;
 
         // Draw slot panel background
-        graphics.fill(slotPanelX, slotPanelY, slotPanelX + slotPanelWidth, slotPanelY + slotPanelHeight, 0xE04A3426);
+        graphics.fill(slotPanelX, slotPanelY, slotPanelX + slotPanelWidth, slotPanelY + slotPanelHeight, 0xE01A3A4A);
         graphics.renderOutline(slotPanelX, slotPanelY, slotPanelWidth, slotPanelHeight, 0xFF2D1F15);
 
         // Draw material type label

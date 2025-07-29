@@ -161,7 +161,7 @@ public class ItemEnhancementSystem {
     public static void applyNodeEnhancements(ItemStack item, String nodeType, Map<String, Integer> materialContributions) {
         switch (nodeType.toLowerCase()) {
             case "quality" -> {
-                int qualityBonus = materialContributions.values().stream().mapToInt(Integer::intValue).sum() * 50;
+                int qualityBonus = materialContributions.values().stream().mapToInt(Integer::intValue).sum() * 100;
                 int currentQuality = Quality.getQuality(item);
                 Quality.setQuality(item, Math.max(Quality.DEFAULT_QUALITY, currentQuality + qualityBonus));
             }

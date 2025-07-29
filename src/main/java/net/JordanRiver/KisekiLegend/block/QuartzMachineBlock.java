@@ -35,7 +35,7 @@ public class QuartzMachineBlock extends DoubleHighBlock {
 
     @Override
     public RenderShape getRenderShape(BlockState pState) {
-        return RenderShape.INVISIBLE;
+        return RenderShape.ENTITYBLOCK_ANIMATED; // This allows custom rendering
     }
 
     @Nullable

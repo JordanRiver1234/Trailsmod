@@ -1,12 +1,18 @@
 {
-  "type": "minecraft:smelting",
-  "category": "misc",
-  "cookingtime": 200,
-  "experience": 0.25,
-  "ingredient": {
-    "item": "kisekilegend:water"
-  },
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "kisekilegend:water" },
+    { "item":"kisekilegend:water" },
+    { "item": "kisekilegend:water" },
+    { "item": "kisekilegend:water" },
+    { "item":"kisekilegend:water" },
+    { "item": "kisekilegend:water" },
+    { "item": "kisekilegend:water" },
+    { "item":"kisekilegend:water" },
+    { "item": "kisekilegend:water" }
+  ],
   "result": {
-    "id": "kisekilegend:water_mass"
+    "id": "kisekilegend:water_mass",
+    "count": 1
   }
 }
