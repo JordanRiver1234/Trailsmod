@@ -2,6 +2,7 @@ package net.JordanRiver.KisekiLegend.menu;
 
 import net.JordanRiver.KisekiLegend.KisekiLegend;
 import net.JordanRiver.KisekiLegend.block.OrbmentMachineBlockEntity;
+import net.JordanRiver.KisekiLegend.block.entity.OrbalTableBlockEntity;
 import net.JordanRiver.KisekiLegend.block.entity.QuartzMachineBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.inventory.MenuType;
@@ -34,6 +35,23 @@ public class ModMenuTypes {
                         if (inv.player.level().getBlockEntity(pos) instanceof OrbmentMachineBlockEntity be) {
                             return new OrbmentMachineMenu(windowId, inv, be);
                         }
+                        return null;
+                    })
+            );
+
+    public static final RegistryObject<MenuType<OrbalTableMenu>> ORBAL_TABLE_MENU =
+            MENUS.register("orbal_table_menu", () ->
+                    IForgeMenuType.create((windowId, inv, buf) -> {
+                        System.out.println("=== MENU TYPE FACTORY CALLED ===");
+                        BlockPos pos = buf.readBlockPos();
+                        System.out.println("Reading position: " + pos);
+                        BlockEntity be = inv.player.level().getBlockEntity(pos);
+                        System.out.println("Block entity at pos: " + be);
+                        if (be instanceof OrbalTableBlockEntity blockEntity) {
+                            System.out.println("Creating OrbalTableMenu");
+                            return new OrbalTableMenu(windowId, inv, blockEntity, pos);
+                        }
+                        System.out.println("ERROR: Block entity is not OrbalTableBlockEntity!");
                         return null;
                     })
             );

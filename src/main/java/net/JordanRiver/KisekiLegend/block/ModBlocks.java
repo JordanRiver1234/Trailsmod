@@ -34,7 +34,15 @@ public class ModBlocks {
                             .noOcclusion()
             )
     );
-
+    public static final RegistryObject<Block> ORBAL_TABLE = registerBlock(
+            "orbal_table",
+            () -> new OrbalTableBlock(
+                    BlockBehaviour.Properties
+                            .of()    // <- here!
+                            .strength(1f)
+                            .noOcclusion()
+            )
+    );
 
     public static final RegistryObject<Block> QUARTZ_MACHINE = registerBlock(
             "quartz_machine",

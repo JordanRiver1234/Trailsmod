@@ -36,6 +36,12 @@ public class NetworkHandler {
                 .consumerMainThread(QuartzMachineSyncPacket::handle) // Ensure this is consumerMainThread
                 .add();
         // ADD THESE THREE
+        // ADD THIS NEW PACKET:
+        INSTANCE.messageBuilder(OrbalTableRenderUpdatePacket.class, id++)
+                .encoder(OrbalTableRenderUpdatePacket::encode)
+                .decoder(OrbalTableRenderUpdatePacket::decode)
+                .consumerMainThread(OrbalTableRenderUpdatePacket::handle)
+                .add();
 
 
         // In your NetworkHandler class, replace the sync packet registration with:
@@ -63,6 +69,17 @@ public class NetworkHandler {
                 .encoder(ReturnStoredItemsPacket::encode)
                 .decoder(ReturnStoredItemsPacket::decode)
                 .consumerMainThread(ReturnStoredItemsPacket::handle)
+                .add();
+        INSTANCE.messageBuilder(OrbalTableSyncPacket.class, id++)
+                .encoder(OrbalTableSyncPacket::encode)
+                .decoder(OrbalTableSyncPacket::decode)
+                .consumerMainThread(OrbalTableSyncPacket::handle)
+                .add();
+
+        INSTANCE.messageBuilder(OrbalTableOperationPacket.class, id++)
+                .encoder(OrbalTableOperationPacket::encode)
+                .decoder(OrbalTableOperationPacket::decode)
+                .consumerMainThread(OrbalTableOperationPacket::handle)
                 .add();
     }
 

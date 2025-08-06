@@ -216,13 +216,14 @@ public class CastScheduler {
 
             int blockX = Mth.floor(spawnPos.x);
             int blockZ = Mth.floor(spawnPos.z);
-            int groundY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, blockX, blockZ);
+            int playerY = Mth.floor(player.getY()); // Use player's Y level instead of surface
 
-            spell.setPos(blockX + 0.5, groundY, blockZ + 0.5);
+            spell.setPos(blockX + 0.5, playerY, blockZ + 0.5);
             spell.setDeltaMovement(Vec3.ZERO);
             spell.setNoGravity(true);
 
             Vec3 playerPos = player.position();
+            int groundY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, blockX, blockZ);
             Vec3 spellPos = new Vec3(blockX + 0.5, groundY, blockZ + 0.5);
             Vec3 direction = spellPos.subtract(playerPos).normalize();
 

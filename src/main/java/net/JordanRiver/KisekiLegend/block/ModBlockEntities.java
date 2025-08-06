@@ -1,6 +1,7 @@
 package net.JordanRiver.KisekiLegend.block;
 
 import net.JordanRiver.KisekiLegend.KisekiLegend;
+import net.JordanRiver.KisekiLegend.block.entity.OrbalTableBlockEntity;
 import net.JordanRiver.KisekiLegend.block.entity.QuartzMachineBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -26,6 +27,12 @@ public class ModBlockEntities {
             BLOCK_ENTITIES.register("quartz_machine",
                     () -> BlockEntityType.Builder
                             .of(QuartzMachineBlockEntity::new, ModBlocks.QUARTZ_MACHINE.get())
+                            .build(null)
+            );
+    public static final RegistryObject<BlockEntityType<OrbalTableBlockEntity>> ORBAL_TABLE =
+            BLOCK_ENTITIES.register("orbal_table",
+                    () -> BlockEntityType.Builder
+                            .of(OrbalTableBlockEntity::new, ModBlocks.ORBAL_TABLE.get())
                             .build(null)
             );
 

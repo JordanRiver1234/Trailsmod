@@ -83,6 +83,8 @@ public class ModCreativeModeTabs {
                         pOutput.accept(ModBlocks.WIND_DEEPSLATE_ORE.get());
 
                         pOutput.accept(ModBlocks.ORBMENT_MACHINE.get());
+                        pOutput.accept(ModBlocks.ORBAL_TABLE.get());
+                        pOutput.accept(ModBlocks.QUARTZ_MACHINE.get());
 
 
 

@@ -1,6 +1,7 @@
 package net.JordanRiver.KisekiLegend;
 
 import com.mojang.logging.LogUtils;
+import net.JordanRiver.KisekiLegend.client.renderer.WeaponSlotRenderer;
 import net.JordanRiver.KisekiLegend.client.renderer.block.QuartzMachineRenderer;
 import net.JordanRiver.KisekiLegend.block.ModBlockEntities;
 import net.JordanRiver.KisekiLegend.block.ModBlocks;
@@ -11,6 +12,7 @@ import net.JordanRiver.KisekiLegend.client.AuraRenderer;
 import net.JordanRiver.KisekiLegend.commands.RecipeProgressCommand;
 import net.JordanRiver.KisekiLegend.crafting.QuartzRecipeManager;
 import net.JordanRiver.KisekiLegend.datagen.ModItemTagProvider;
+import net.JordanRiver.KisekiLegend.events.WeaponSyncHandler;
 import net.JordanRiver.KisekiLegend.init.ModSoundEvents;
 import net.JordanRiver.KisekiLegend.network.NetworkHandler;
 import net.JordanRiver.KisekiLegend.particle.ModParticles;
@@ -26,7 +28,9 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.tags.TagsProvider;
-import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.inventory.InventoryMenu;
+import net.minecraft.world.item.*;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import net.minecraftforge.common.MinecraftForge;
@@ -41,12 +45,13 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModLoadingContext;
-
+import net.JordanRiver.KisekiLegend.client.renderer.OrbalTableRenderer;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.slf4j.Logger;
 
 import java.util.Set;
@@ -66,9 +71,8 @@ public class KisekiLegend {
         bus.addListener(this::commonSetup);
         bus.addListener(this::addCreative);
         ModSoundEvents.register(bus);
-        ModBlocks.ITEMS.register(bus);   // ADD this line
-
-        ModBlocks.BLOCKS.register(bus); // Fixed the typo
+        ModBlocks.BLOCKS.register(bus); // Register blocks FIRST
+        ModBlocks.ITEMS.register(bus);  // Then register items
 
         ModBlockEntities.register(bus);
         ModEntities.register(bus);
@@ -158,6 +162,7 @@ public class KisekiLegend {
             ev.accept(ModBlocks.WINDVEIN_BLOCK);
             ev.accept(ModBlocks.ORBMENT_MACHINE);
             ev.accept(ModBlocks.QUARTZ_MACHINE); // Add the new machine
+            ev.accept(ModBlocks.ORBAL_TABLE);
         }
     }
 
@@ -188,6 +193,7 @@ public class KisekiLegend {
 
         }
     }
+
     @Mod.EventBusSubscriber(modid = KisekiLegend.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     public static class ClientEvents {
 
@@ -195,23 +201,29 @@ public class KisekiLegend {
         public static void onClientSetup(FMLClientSetupEvent event) {
             event.enqueueWork(() -> {
                 // Register GUIs
-
                 MenuScreens.register(ModMenuTypes.QUARTZ_MACHINE_MENU.get(), QuartzMachineScreen::new);
                 MenuScreens.register(ModMenuTypes.ORBMENT_MACHINE.get(), OrbmentMachineScreen::new);
                 MenuScreens.register(ModMenuTypes.ORBMENT_MENU.get(), OrbmentScreen::new);
                 MinecraftForge.EVENT_BUS.register(new ArtInputHandler());
+                MenuScreens.register(ModMenuTypes.ORBAL_TABLE_MENU.get(), OrbalTableScreen::new);
+                MinecraftForge.EVENT_BUS.register(WeaponSyncHandler.class);
+
 
                 // Register Block Entity Renderers
                 BlockEntityRenderers.register(ModBlockEntities.QUARTZ_MACHINE_BLOCK_ENTITY.get(), QuartzMachineRenderer::new);
+                BlockEntityRenderers.register(ModBlockEntities.ORBAL_TABLE.get(), OrbalTableRenderer::new);
 
                 // Register Entity Renderers - CRITICAL: This must be in enqueueWork!
                 EntityRenderers.register(ModEntities.AURA_ENTITY.get(), AuraRenderer::new);
+                LOGGER.info("Registered WeaponSlotRenderer");
 
                 LOGGER.info("Registered AuraRenderer for: " + ModEntities.AURA_ENTITY.get().getDescriptionId());
+
             });
 
             // Register input handler (this can be outside enqueueWork)
             MinecraftForge.EVENT_BUS.register(ArtInputHandler.class);
         }
     }
+
 }

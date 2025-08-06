@@ -5,6 +5,7 @@ import net.JordanRiver.KisekiLegend.block.ModBlockEntities;
 import net.JordanRiver.KisekiLegend.client.screen.OrbmentMachineRenderer;
 import net.JordanRiver.KisekiLegend.entity.ModEntities;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.resources.ResourceLocation;

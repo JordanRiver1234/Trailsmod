@@ -17,6 +17,7 @@ import software.bernie.geckolib.animatable.GeoItem;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 public class ModItems {
     public static final Map<String, RegistryObject<Item>> QUARTZ = new HashMap<>();
@@ -74,7 +75,6 @@ public class ModItems {
 
 
 
-
         public static final RegistryObject<Item> ORBMENT_ITEM =
                 ITEMS.register("orbment", () -> new OrbmentItem(new Item.Properties()));
 
@@ -91,7 +91,6 @@ public class ModItems {
         QUARTZ.put(name, item);
     }
 
-    // RESTORED: The original sepith data is back.
     private static void registerQuartzItems() {
         registerQuartz("defense_1", "earth", Map.of("earth", 1));
         registerQuartz("defense_2", "earth", Map.of("earth", 3));

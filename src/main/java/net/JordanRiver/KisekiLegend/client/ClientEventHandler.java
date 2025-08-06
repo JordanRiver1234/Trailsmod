@@ -2,6 +2,7 @@ package net.JordanRiver.KisekiLegend.client;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import net.JordanRiver.KisekiLegend.KisekiLegend;
+import net.JordanRiver.KisekiLegend.client.renderer.WeaponSlotRenderer;
 import net.JordanRiver.KisekiLegend.client.screen.ArtSelectionScreen;
 import net.JordanRiver.KisekiLegend.client.screen.OrbmentMachineScreen;
 import net.JordanRiver.KisekiLegend.client.screen.OrbmentScreen;
@@ -13,15 +14,20 @@ import net.JordanRiver.KisekiLegend.network.NetworkHandler;
 import net.JordanRiver.KisekiLegend.network.SetSelectedArtPacket;
 import net.JordanRiver.KisekiLegend.orbal.ArtsRegistry;
 import net.JordanRiver.KisekiLegend.orbal.OrbmentComponent;
+import net.JordanRiver.KisekiLegend.util.WeaponSlotData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.*;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -75,11 +81,30 @@ public class ClientEventHandler {
         }
     }
     @SubscribeEvent
+    public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
+        if (event.phase != TickEvent.Phase.END || !event.player.level().isClientSide()) return;
+
+        ItemStack mainHand = event.player.getMainHandItem();
+        if (!mainHand.isEmpty() && WeaponSlotRenderer.isWeaponOrTool(mainHand)) {
+            if (event.player.tickCount % 20 == 0) {
+                WeaponSlotData slotData = WeaponSlotData.getOrCreate(mainHand);
+                if (slotData.getActiveSlotCount() > 0) {
+                    System.out.println("Weapon in hand has " + slotData.getActiveSlotCount() + " active slots");
+                }
+            }
+        }
+    }
+
+
+
+
+    @SubscribeEvent
     public static void onItemTooltip(ItemTooltipEvent event) {
         ItemStack item = event.getItemStack();
         List<Component> tooltip = event.getToolTip();
 
         // Add enhancement information to tooltip
+
         List<Component> enhancements = ItemEnhancementSystem.getEnhancementTooltip(item);
         if (!enhancements.isEmpty()) {
             tooltip.addAll(enhancements);
@@ -99,11 +124,24 @@ public class ClientEventHandler {
         if (mc.screen == null) {
             handleRadialMenuInput(mc, player);
             handleInGameInput(player);
+
+            // Check for weapons with slots - FIXED: Remove problematic lines
+            ItemStack mainHand = player.getMainHandItem();
+            if (!mainHand.isEmpty() && WeaponSlotRenderer.isWeaponOrTool(mainHand)) {
+                WeaponSlotData slotData = WeaponSlotData.getOrCreate(mainHand);
+                if (slotData.getActiveSlotCount() > 0) {
+                    // Just log - don't try to update cache
+                    if (player.tickCount % 60 == 0) { // Every 3 seconds
+                        System.out.println("Weapon in hand has " + slotData.getActiveSlotCount() + " active slots");
+                    }
+                }
+            }
         }
 
         // Handle animation logic
         handleAnimationLogic(mc, player);
     }
+
 
     private static void handleCustomCursor(Minecraft mc) {
         boolean shouldShowCustomCursor = mc.screen instanceof OrbmentScreen || mc.screen instanceof OrbmentMachineScreen;
@@ -119,6 +157,7 @@ public class ClientEventHandler {
             }
         }
     }
+
 
     private static void handleRadialMenuInput(Minecraft mc, Player player) {
         // Only handle radial menu input when no screen is open
