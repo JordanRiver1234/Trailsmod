@@ -33,27 +33,34 @@ public class OrbalTableMenu extends AbstractContainerMenu {
         super(ModMenuTypes.ORBAL_TABLE_MENU.get(), containerId);
         this.blockEntity = blockEntity;
         this.access = ContainerLevelAccess.create(blockEntity.getLevel(), pos);
+        final int materialSlotY = 144;
 
-        // FIXED: Make elemental mass slots more visible - positioned below weapon display
-        this.addSlot(new ElementalMassSlot(blockEntity.getInventory() , SEPITH_MASS_SLOT, ModItems.SEPITH_MASS.get(), 0, 140)); // Far left position
+        // ADD WEAPON SLOT FIRST (this was missing!)
+        this.addSlot(new WeaponSlot(blockEntity.getInventory(), 0, -1000, -1000)); // Hidden position, rendered in 3D
 
-        this.addSlot(new ElementalMassSlot(blockEntity.getInventory(), EARTH_MASS_SLOT, ModItems.EARTH_MASS.get(), 20, 140));
-        this.addSlot(new ElementalMassSlot(blockEntity.getInventory(), WATER_MASS_SLOT, ModItems.WATER_MASS.get(), 40, 140));
-        this.addSlot(new ElementalMassSlot(blockEntity.getInventory(), FIRE_MASS_SLOT, ModItems.FIRE_MASS.get(), 60, 140));
-        this.addSlot(new ElementalMassSlot(blockEntity.getInventory(), WIND_MASS_SLOT, ModItems.WIND_MASS.get(), 80, 140));
-        this.addSlot(new ElementalMassSlot(blockEntity.getInventory(), TIME_MASS_SLOT, ModItems.TIME_MASS.get(), 100, 140));
-        this.addSlot(new ElementalMassSlot(blockEntity.getInventory(), SPACE_MASS_SLOT, ModItems.SPACE_MASS.get(), 120, 140));
-        this.addSlot(new ElementalMassSlot(blockEntity.getInventory(), MIRAGE_MASS_SLOT, ModItems.MIRAGE_MASS.get(), 140, 140));
+        // Material slots in correct visual order (SM, E, W, F, Wi, T, S, M)
+        this.addSlot(new ElementalMassSlot(blockEntity.getInventory(), SEPITH_MASS_SLOT, ModItems.SEPITH_MASS.get(), 20, materialSlotY));  // SM
+        this.addSlot(new ElementalMassSlot(blockEntity.getInventory(), EARTH_MASS_SLOT, ModItems.EARTH_MASS.get(), 43, materialSlotY));   // E
+        this.addSlot(new ElementalMassSlot(blockEntity.getInventory(), WATER_MASS_SLOT, ModItems.WATER_MASS.get(), 66, materialSlotY));   // W
+        this.addSlot(new ElementalMassSlot(blockEntity.getInventory(), FIRE_MASS_SLOT, ModItems.FIRE_MASS.get(), 89, materialSlotY));     // F
+        this.addSlot(new ElementalMassSlot(blockEntity.getInventory(), WIND_MASS_SLOT, ModItems.WIND_MASS.get(), 112, materialSlotY));    // Wi
+        this.addSlot(new ElementalMassSlot(blockEntity.getInventory(), TIME_MASS_SLOT, ModItems.TIME_MASS.get(), 135, materialSlotY));    // T
+        this.addSlot(new ElementalMassSlot(blockEntity.getInventory(), SPACE_MASS_SLOT, ModItems.SPACE_MASS.get(), 158, materialSlotY));  // S
+        this.addSlot(new ElementalMassSlot(blockEntity.getInventory(), MIRAGE_MASS_SLOT, ModItems.MIRAGE_MASS.get(), 181, materialSlotY)); // M
 
-        // Player inventory positioned more to the left for 256x240 layout
+        // Player inventory
+        int playerInvX = 17;
+        int playerInvY = 168;
         for (int i = 0; i < 3; ++i) {
             for (int j = 0; j < 9; ++j) {
-                this.addSlot(new Slot(playerInventory, j + i * 9 + 9, 17 + j * 18, 158 + i * 18)); // Changed from 48 to 28
+                this.addSlot(new Slot(playerInventory, j + i * 9 + 9, playerInvX + j * 18, playerInvY + i * 18));
             }
         }
 
+        // Player hotbar
+        int hotbarY = 226;
         for (int k = 0; k < 9; ++k) {
-            this.addSlot(new Slot(playerInventory, k, 17 + k * 18, 216)); // Changed from 48 to 28 7
+            this.addSlot(new Slot(playerInventory, k, playerInvX + k * 18, hotbarY));
         }
     }
     // Add this constructor to OrbalTableMenu for network creation
@@ -79,27 +86,36 @@ public class OrbalTableMenu extends AbstractContainerMenu {
             ItemStack stackInSlot = slot.getItem();
             itemStack = stackInSlot.copy();
 
-            // If clicking on block entity slots (0-8) - changed from 0-7
+            // Container slots: 0-8 (weapon + 8 material slots)
+            // Player inventory: 9-35 (27 slots)
+            // Player hotbar: 36-44 (9 slots)
+
             if (index < 9) {
-                // Try to move to player inventory
-                if (!this.moveItemStackTo(stackInSlot, 9, this.slots.size(), true)) { // Changed from 8 to 9
+                // Moving FROM container TO player inventory
+                if (!this.moveItemStackTo(stackInSlot, 9, this.slots.size(), true)) {
                     return ItemStack.EMPTY;
                 }
-
             } else {
-                // If clicking on player inventory
+                // Moving FROM player inventory TO container
+                boolean moved = false;
+
                 if (isWeaponOrTool(stackInSlot)) {
-                    // Move to weapon slot
-                    if (!this.moveItemStackTo(stackInSlot, WEAPON_SLOT, WEAPON_SLOT + 1, false)) {
-                        return ItemStack.EMPTY;
+                    // Try weapon slot (index 0)
+                    if (this.slots.get(0).mayPlace(stackInSlot) && !this.slots.get(0).hasItem()) {
+                        ItemStack toMove = stackInSlot.split(1); // Only move 1 weapon
+                        this.slots.get(0).set(toMove);
+                        moved = true;
                     }
                 } else if (isElementalMass(stackInSlot)) {
-                    // AUTO-MOVE elemental mass to correct slots
-                    if (!moveToElementalSlot(stackInSlot)) {
+                    // Try appropriate elemental slot
+                    moved = moveToElementalSlot(stackInSlot);
+                }
+
+                // If specific placement failed, try any available container slot
+                if (!moved) {
+                    if (!this.moveItemStackTo(stackInSlot, 0, 9, false)) {
                         return ItemStack.EMPTY;
                     }
-                } else {
-                    return ItemStack.EMPTY;
                 }
             }
 
@@ -114,23 +130,23 @@ public class OrbalTableMenu extends AbstractContainerMenu {
     }
 
     private boolean moveToElementalSlot(ItemStack stack) {
-        if (stack.is(ModItems.SEPITH_MASS.get())) {
-            return this.moveItemStackTo(stack, SEPITH_MASS_SLOT, SEPITH_MASS_SLOT + 1, false);
-        } else if (stack.is(ModItems.EARTH_MASS.get())) {
-            return this.moveItemStackTo(stack, EARTH_MASS_SLOT, EARTH_MASS_SLOT + 1, false);
-
-        } else if (stack.is(ModItems.WATER_MASS.get())) {
-            return this.moveItemStackTo(stack, WATER_MASS_SLOT, WATER_MASS_SLOT + 1, false);
-        } else if (stack.is(ModItems.FIRE_MASS.get())) {
-            return this.moveItemStackTo(stack, FIRE_MASS_SLOT, FIRE_MASS_SLOT + 1, false);
-        } else if (stack.is(ModItems.WIND_MASS.get())) {
-            return this.moveItemStackTo(stack, WIND_MASS_SLOT, WIND_MASS_SLOT + 1, false);
-        } else if (stack.is(ModItems.TIME_MASS.get())) {
-            return this.moveItemStackTo(stack, TIME_MASS_SLOT, TIME_MASS_SLOT + 1, false);
-        } else if (stack.is(ModItems.SPACE_MASS.get())) {
-            return this.moveItemStackTo(stack, SPACE_MASS_SLOT, SPACE_MASS_SLOT + 1, false);
-        } else if (stack.is(ModItems.MIRAGE_MASS.get())) {
-            return this.moveItemStackTo(stack, MIRAGE_MASS_SLOT, MIRAGE_MASS_SLOT + 1, false);
+        // Check if the target slot is empty before moving
+        if (stack.is(ModItems.SEPITH_MASS.get()) && !this.slots.get(1).hasItem()) {
+            return this.moveItemStackTo(stack, 1, 2, false);
+        } else if (stack.is(ModItems.EARTH_MASS.get()) && !this.slots.get(2).hasItem()) {
+            return this.moveItemStackTo(stack, 2, 3, false);
+        } else if (stack.is(ModItems.WATER_MASS.get()) && !this.slots.get(3).hasItem()) {
+            return this.moveItemStackTo(stack, 3, 4, false);
+        } else if (stack.is(ModItems.FIRE_MASS.get()) && !this.slots.get(4).hasItem()) {
+            return this.moveItemStackTo(stack, 4, 5, false);
+        } else if (stack.is(ModItems.WIND_MASS.get()) && !this.slots.get(5).hasItem()) {
+            return this.moveItemStackTo(stack, 5, 6, false);
+        } else if (stack.is(ModItems.TIME_MASS.get()) && !this.slots.get(6).hasItem()) {
+            return this.moveItemStackTo(stack, 6, 7, false);
+        } else if (stack.is(ModItems.SPACE_MASS.get()) && !this.slots.get(7).hasItem()) {
+            return this.moveItemStackTo(stack, 7, 8, false);
+        } else if (stack.is(ModItems.MIRAGE_MASS.get()) && !this.slots.get(8).hasItem()) {
+            return this.moveItemStackTo(stack, 8, 9, false);
         }
         return false;
     }

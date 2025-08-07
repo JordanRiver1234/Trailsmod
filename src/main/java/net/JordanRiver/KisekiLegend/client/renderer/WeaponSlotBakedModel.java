@@ -158,7 +158,7 @@ public class WeaponSlotBakedModel implements BakedModel {
             for (WeaponSlotData.WeaponSlot slot : slots) {
 
 
-                List<BakedQuad> slotQuads = WeaponSlotQuadBuilder.create3DSlotQuads(slot, context);
+                List<BakedQuad> slotQuads = WeaponSlotQuadBuilder.create3DSlotQuads(slot, context, 0.0f, 15.0f);
                 combinedQuads.addAll(slotQuads);
 
 

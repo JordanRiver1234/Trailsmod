@@ -201,26 +201,32 @@ public class WeaponSlotData {
     public boolean addSlot(float[] position, String elementType) {
         if (getActiveSlotCount() >= MAX_SLOTS) return false;
 
-        // FIXED: Check if we can reuse a closed slot first
+        // Ensure proper 3D positioning with slight randomization to avoid overlaps
+        float adjustedZ = position[2];
+        if (Math.abs(adjustedZ) < 0.001f) {
+            // Add slight Z variation if position is too flat
+            adjustedZ = 0.05f + ((float)Math.random() - 0.5f) * 0.02f;
+        }
+
+        // Check for reusable closed slots first
         for (int i = 0; i < slots.size(); i++) {
             WeaponSlot slot = slots.get(i);
             if (slot.isClosed) {
-                // Reuse this closed slot
                 slot.elementType = elementType;
                 slot.posX = position[0];
                 slot.posY = position[1];
-                slot.posZ = position[2];
+                slot.posZ = adjustedZ;
                 slot.isClosed = false;
                 slot.quartzItem = ItemStack.EMPTY;
-                System.out.println("Reused closed slot at index " + i);
+                System.out.println("Reused closed slot at 3D position: " + position[0] + ", " + position[1] + ", " + adjustedZ);
                 return true;
             }
         }
 
-        // No closed slots available, add new one
+        // Add new slot with proper 3D positioning
         if (slots.size() < MAX_SLOTS) {
-            slots.add(new WeaponSlot(elementType, position[0], position[1], position[2]));
-            System.out.println("Added new slot at index " + (slots.size() - 1));
+            slots.add(new WeaponSlot(elementType, position[0], position[1], adjustedZ));
+            System.out.println("Added new 3D slot at position: " + position[0] + ", " + position[1] + ", " + adjustedZ);
             return true;
         }
 
@@ -421,6 +427,7 @@ public class WeaponSlotData {
             return !quartzItem.isEmpty();
         }
     }
+
 
     private void save(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
         ListTag slotsTag = new ListTag();

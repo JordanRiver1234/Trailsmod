@@ -1,6 +1,7 @@
 package net.JordanRiver.KisekiLegend.client.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.math.Axis;
 import net.JordanRiver.KisekiLegend.KisekiLegend;
 import net.JordanRiver.KisekiLegend.block.entity.OrbalTableBlockEntity;
 import net.JordanRiver.KisekiLegend.client.renderer.WeaponSlotQuadBuilder;
@@ -13,6 +14,8 @@ import net.JordanRiver.KisekiLegend.util.WeaponSlotData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LightTexture;
@@ -21,14 +24,13 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.ItemDisplayContext;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.*;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
+import net.minecraft.sounds.SoundEvents;
+import org.joml.Vector3f;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.texture.OverlayTexture;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,10 +39,16 @@ public class OrbalTableScreen extends AbstractContainerScreen<OrbalTableMenu> {
             KisekiLegend.MOD_ID, "textures/gui/orbal_table.png");
     private final net.minecraft.client.renderer.entity.ItemRenderer itemRenderer;
 
+    // Add these new fields near the top of your class
+    private static final int GUI_WIDTH = 380;
+    private static final int GUI_HEIGHT = 252; // Increased height for more space
+
     private final OrbalTableBlockEntity blockEntity;
     private PoseStack poseStack;
     private MultiBufferSource bufferSource;
-
+    private final List<SteampunkClock> clocks = new ArrayList<>();
+    private final List<SteampunkValve> valves = new ArrayList<>();
+    private final List<BrassTubing> tubing = new ArrayList<>();
     // UI State
     private boolean weaponAnalysisMode = false;
     private ItemStack currentWeapon = ItemStack.EMPTY;
@@ -51,15 +59,40 @@ public class OrbalTableScreen extends AbstractContainerScreen<OrbalTableMenu> {
     private String selectedElementType = "earth";
     private OperationMode operationMode = OperationMode.ADD_SLOT;
     private SlotPosition clickMark = null; // Single click mark that moves when repositioned
-
+    // 3D Rotation and Animation
+    private float weaponRotationY = 0.0f;
+    private float weaponRotationX = 15.0f; // Slight tilt for better view
+    private boolean isDragging = false;
+    private double lastMouseX, lastMouseY;
+    private float targetRotationY = 0.0f;
+    private float targetRotationX = 15.0f;
+    private long animationStartTime = 0;
+    // Animation
+    private float animationProgress = 0.0f;
+    private static final long ANIMATION_DURATION = 500; // in milliseconds
+    // Visual Effects
+    // Enhanced Brown & Blue Steampunk Color Palette
+    private static final int STEAMPUNK_BROWN_DARK = 0xFF4A3429;
+    private static final int STEAMPUNK_BROWN_MEDIUM = 0xFF6B4C3A;
+    private static final int STEAMPUNK_BROWN_LIGHT = 0xFF8B6F47;
+    private static final int STEAMPUNK_BLUE_DARK = 0xFF1E3A5F;
+    private static final int STEAMPUNK_BLUE_MEDIUM = 0xFF2E4F7A;
+    private static final int STEAMPUNK_BLUE_LIGHT = 0xFF4A6FA5;
+    private static final int STEAMPUNK_COPPER = 0xFFB87333;
+    private static final int STEAMPUNK_BRASS = 0xFFD4AF37;
+    private static final int STEAMPUNK_STEAM = 0x40E6F3FF;
+    private final List<FloatingParticle> particles = new ArrayList<>();
+    private final List<CircuitLine> circuitLines = new ArrayList<>();
+    private long lastParticleSpawn = 0;
     // UI Elements
     private Button confirmButton;
-    private Button cancelButton;
     private Button addSlotButton;
     private Button removeSlotButton;
     private Button changeElementButton;
     private Button closeSlotButton;
-
+    private final List<SteampunkGear> gears = new ArrayList<>();
+    private final List<SteamPipe> steamPipes = new ArrayList<>();
+    private final List<PressureGauge> pressureGauges = new ArrayList<>();
     // Element buttons
     private Button earthButton, waterButton, fireButton, windButton;
     private Button timeButton, spaceButton, mirageButton;
@@ -82,82 +115,153 @@ public class OrbalTableScreen extends AbstractContainerScreen<OrbalTableMenu> {
     }
 
 
+    // === CONSTRUCTOR REPLACEMENT ===
+// Replace your constructor with:
     public OrbalTableScreen(OrbalTableMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
         this.blockEntity = menu.getBlockEntity();
-        this.imageWidth = 256;
-        this.imageHeight = 220; // Increased height for visible slots
+        // Full screen setup
+        this.imageWidth = 0; // Will be set in init()
+        this.imageHeight = 0;
         this.itemRenderer = Minecraft.getInstance().getItemRenderer();
-    }
 
+        // Initialize circuit lines
+        initializeCircuitLines();
+    }
+    // === METHOD REPLACEMENT: init() ===
     @Override
     protected void init() {
-        // FIXED: Use proper height for full texture display
-        this.imageWidth = 256;
-        this.imageHeight = 240; // Increased to prevent cutoff
+        // Fixed size
+        this.animationStartTime = System.currentTimeMillis();
+        this.imageWidth = GUI_WIDTH;
+        this.imageHeight = GUI_HEIGHT;
         this.leftPos = (this.width - this.imageWidth) / 2;
         this.topPos = (this.height - this.imageHeight) / 2;
 
-        super.init();
+        super.init(); // This now correctly sets up player inventory slots
         initializeButtons();
         checkWeaponStatus();
+        initializeParticles(); // Particles will still be fullscreen
+    }
+    // === NEW INITIALIZATION METHODS ===
+// Add these new methods:
+    private void initializeCircuitLines() {
+        circuitLines.clear();
+        // These will be properly positioned in init() when we have screen dimensions
     }
 
+    private void repositionCircuitLines() {
+        circuitLines.clear();
+        int centerX = width / 2;
+        int centerY = height / 2;
+
+        circuitLines.add(new CircuitLine(50, 50, centerX - 200, 50, 0xFFC07020)); // Bronze
+        circuitLines.add(new CircuitLine(width - 50, 50, centerX + 200, 50, 0xFFC07020)); // Bronze
+        circuitLines.add(new CircuitLine(50, height - 50, centerX - 200, height - 50, 0xFF8B4513)); // Dark Brown
+        circuitLines.add(new CircuitLine(width - 50, height - 50, centerX + 200, height - 50, 0xFF8B4513)); // Dark Brown
+        // Vertical lines
+        circuitLines.add(new CircuitLine(50, 100, 50, height - 100, 0xFF888888));
+        circuitLines.add(new CircuitLine(width - 50, 100, width - 50, height - 100, 0xFF888888));
+    }
+
+    private void initializeParticles() {
+        particles.clear();
+        // Spawn initial particles
+        for (int i = 0; i < 20; i++) {
+            spawnParticle();
+        }
+        initializeSteampunkDecorations();
+    }
+
+    private void initializeSteampunkDecorations() {
+        gears.clear();
+        steamPipes.clear();
+        pressureGauges.clear();
+        clocks.clear();
+        valves.clear();
+        tubing.clear();
+
+        // Add gears with new color palette
+        gears.add(new SteampunkGear(60, 60, 25, 0.01f, STEAMPUNK_BRASS, 12));
+        gears.add(new SteampunkGear(width - 80, 70, 30, -0.008f, STEAMPUNK_COPPER, 16));
+        gears.add(new SteampunkGear(40, height - 80, 20, 0.012f, STEAMPUNK_BROWN_MEDIUM, 10));
+        gears.add(new SteampunkGear(width - 60, height - 90, 28, -0.009f, STEAMPUNK_BLUE_MEDIUM, 14));
+
+        // Medium gears
+        gears.add(new SteampunkGear(width / 4, 40, 15, 0.015f, STEAMPUNK_BROWN_LIGHT, 8));
+        gears.add(new SteampunkGear(3 * width / 4, height - 50, 18, -0.011f, STEAMPUNK_BLUE_LIGHT, 9));
+
+        // Small accent gears
+        gears.add(new SteampunkGear(width / 6, height / 3, 12, 0.02f, STEAMPUNK_COPPER, 6));
+        gears.add(new SteampunkGear(5 * width / 6, 2 * height / 3, 14, -0.018f, STEAMPUNK_BRASS, 7));
+
+        // Steam pipes with new colors
+        steamPipes.add(new SteamPipe(20, 100, 20, height - 120, 8, STEAMPUNK_BROWN_DARK));
+        steamPipes.add(new SteamPipe(width - 25, 90, width - 25, height - 110, 6, STEAMPUNK_BLUE_DARK));
+        steamPipes.add(new SteamPipe(100, 30, width - 120, 30, 5, STEAMPUNK_BROWN_MEDIUM));
+
+        // Pressure gauges
+        pressureGauges.add(new PressureGauge(100, height - 60, 25, STEAMPUNK_BROWN_DARK));
+        pressureGauges.add(new PressureGauge(width - 100, 80, 20, STEAMPUNK_BLUE_DARK));
+
+        // Steampunk clocks
+        clocks.add(new SteampunkClock(width / 3, 50, 18, STEAMPUNK_BROWN_MEDIUM));
+        clocks.add(new SteampunkClock(2 * width / 3, height - 70, 16, STEAMPUNK_BLUE_MEDIUM));
+
+        // Valves
+        valves.add(new SteampunkValve(150, height - 120, 15, STEAMPUNK_COPPER));
+        valves.add(new SteampunkValve(width - 150, 120, 18, STEAMPUNK_BRASS));
+        valves.add(new SteampunkValve(width / 2, 60, 12, STEAMPUNK_BROWN_LIGHT));
+
+        // Brass tubing connections
+        tubing.add(new BrassTubing(80, 80, width - 100, 100, STEAMPUNK_BRASS));
+        tubing.add(new BrassTubing(60, height - 100, width - 80, height - 120, STEAMPUNK_COPPER));
+        tubing.add(new BrassTubing(width / 4, height / 2, 3 * width / 4, height / 2 + 40, STEAMPUNK_BROWN_LIGHT));
+    }
+
+    private void spawnParticle() {
+        if (particles.size() < 50) {
+            float x = (float)(Math.random() * width);
+            float y = height + 10;
+            particles.add(new FloatingParticle(x, y));
+        }
+    }
+
+    // === METHOD REPLACEMENT: initializeButtons() in OrbalTableScreen.java ===
     private void initializeButtons() {
-        int leftPos = this.leftPos;
-        int topPos = this.topPos;
+        repositionCircuitLines();
+        int panelX = this.leftPos + this.imageWidth - 170;
+        int panelY = this.topPos + 15;
+        int buttonWidth = 150;
+        int buttonHeight = 20;
+        int spacing = 24;
 
-        // FIXED: Move buttons higher to avoid inventory overlap
-        addSlotButton = Button.builder(Component.literal("Add Slot"),
-                        btn -> {
-                            System.out.println("=== ADD SLOT BUTTON CLICKED ===");
-                            setOperationMode(OperationMode.ADD_SLOT);
-                        })
-                .bounds(leftPos + 170, topPos + 15, 80, 18).build();
+        addSlotButton = createStyledButton(Component.literal("⚡ Add Slot"), btn -> setOperationMode(OperationMode.ADD_SLOT), panelX + 5, panelY + 45, buttonWidth, buttonHeight);
+        removeSlotButton = createStyledButton(Component.literal("Remove Quartz"), btn -> setOperationMode(OperationMode.REMOVE_SLOT), panelX + 5, panelY + 45 + spacing, buttonWidth, buttonHeight);
+        changeElementButton = createStyledButton(Component.literal("Change Element"), btn -> setOperationMode(OperationMode.CHANGE_ELEMENT), panelX + 5, panelY + 45 + spacing * 2, buttonWidth, buttonHeight);
+        closeSlotButton = createStyledButton(Component.literal("Close Slot"), btn -> setOperationMode(OperationMode.CLOSE_SLOT), panelX + 5, panelY + 45 + spacing * 3, buttonWidth, buttonHeight);
 
-        // Replace the button initialization:
-        removeSlotButton = Button.builder(Component.literal("Remove Quartz"),
-                        btn -> setOperationMode(OperationMode.REMOVE_SLOT))
-                .bounds(leftPos + 170, topPos + 35, 80, 18).build();
 
-        changeElementButton = Button.builder(Component.literal("Change Element"),
-                        btn -> setOperationMode(OperationMode.CHANGE_ELEMENT))
-                .bounds(leftPos + 170, topPos + 55, 80, 18).build();
+        // Element buttons grid - Mirage moved to right of Fire
+        int elementY = panelY + 45 + spacing * 4 + 5;
+        int elementButtonWidth = 32;
+        int elementButtonHeight = 20;
+        int elementSpacingX = 35;
+        int elementSpacingY = 22;
 
-        closeSlotButton = Button.builder(Component.literal("Close Slot"),
-                        btn -> setOperationMode(OperationMode.CLOSE_SLOT))
-                .bounds(leftPos + 170, topPos + 75, 80, 18).build();
+// Element buttons with new colors
+        earthButton = createElementButton(Component.literal("Earth"), btn -> setSelectedElement("earth"), panelX + 5, elementY, elementButtonWidth, elementButtonHeight, STEAMPUNK_BROWN_MEDIUM);
+        waterButton = createElementButton(Component.literal("Water"), btn -> setSelectedElement("water"), panelX + 5 + elementSpacingX, elementY, elementButtonWidth, elementButtonHeight, STEAMPUNK_BLUE_MEDIUM);
+        fireButton = createElementButton(Component.literal("Fire"), btn -> setSelectedElement("fire"), panelX + 5 + elementSpacingX * 2, elementY, elementButtonWidth, elementButtonHeight, STEAMPUNK_COPPER);
+        mirageButton = createElementButton(Component.literal("Mirage"), btn -> setSelectedElement("mirage"), panelX + 5 + elementSpacingX * 3, elementY, elementButtonWidth, elementButtonHeight, 0xFF888888);
 
-        // Element buttons - moved higher
-        earthButton = Button.builder(Component.literal("E"), btn -> {
-                    System.out.println("=== EARTH BUTTON CLICKED ===");
-                    setSelectedElement("earth");
-                })
-                .bounds(leftPos + 170, topPos + 95, 20, 16).build();
-        waterButton = Button.builder(Component.literal("W"), btn -> setSelectedElement("water"))
-                .bounds(leftPos + 192, topPos + 95, 20, 16).build();
-        fireButton = Button.builder(Component.literal("F"), btn -> setSelectedElement("fire"))
-                .bounds(leftPos + 214, topPos + 95, 20, 16).build();
-        windButton = Button.builder(Component.literal("Wi"), btn -> setSelectedElement("wind"))
-                .bounds(leftPos + 170, topPos + 113, 22, 16).build();
+        windButton = createElementButton(Component.literal("Wind"), btn -> setSelectedElement("wind"), panelX + 5, elementY + elementSpacingY, elementButtonWidth, elementButtonHeight, STEAMPUNK_BROWN_LIGHT);
+        timeButton = createElementButton(Component.literal("Time"), btn -> setSelectedElement("time"), panelX + 5 + elementSpacingX, elementY + elementSpacingY, elementButtonWidth, elementButtonHeight, STEAMPUNK_BRASS);
+        spaceButton = createElementButton(Component.literal("Space"), btn -> setSelectedElement("space"), panelX + 5 + elementSpacingX * 2, elementY + elementSpacingY, elementButtonWidth, elementButtonHeight, STEAMPUNK_BLUE_LIGHT);
 
-        timeButton = Button.builder(Component.literal("T"), btn -> setSelectedElement("time"))
-                .bounds(leftPos + 194, topPos + 113, 20, 16).build();
-        spaceButton = Button.builder(Component.literal("S"), btn -> setSelectedElement("space"))
-                .bounds(leftPos + 216, topPos + 113, 20, 16).build();
-        mirageButton = Button.builder(Component.literal("M"), btn -> setSelectedElement("mirage"))
-                .bounds(leftPos + 170, topPos + 131, 40, 16).build();
+        int actionY = this.topPos + this.imageHeight - 30;
+        confirmButton = createStyledButton(Component.literal("⚡ Start Operation"), btn -> confirmOperation(), panelX + 5, actionY - 5, buttonWidth, buttonHeight);
 
-        // Confirm/Cancel buttons - moved much higher
-        confirmButton = Button.builder(Component.literal("Start Operation"),
-                        btn -> confirmOperation())
-                .bounds(leftPos + 170, topPos + 155, 90, 18).build();
-
-        cancelButton = Button.builder(Component.literal("Cancel"),
-                        btn -> cancelOperation())
-                .bounds(leftPos + 190, topPos + 175, 50, 18).build();
-
-        // Add all buttons
         addRenderableWidget(addSlotButton);
         addRenderableWidget(removeSlotButton);
         addRenderableWidget(changeElementButton);
@@ -170,11 +274,213 @@ public class OrbalTableScreen extends AbstractContainerScreen<OrbalTableMenu> {
         addRenderableWidget(spaceButton);
         addRenderableWidget(mirageButton);
         addRenderableWidget(confirmButton);
-        addRenderableWidget(cancelButton);
-
         updateButtonStates();
     }
+    private Button createStyledButton(Component text, Button.OnPress onPress, int x, int y, int width, int height) {
+        return Button.builder(text, onPress).bounds(x, y, width, height).build();
+    }
 
+    private Button createElementButton(Component text, Button.OnPress onPress, int x, int y, int width, int height, int color) {
+        return Button.builder(text, onPress).bounds(x, y, width, height).build();
+    }
+    private static class SteampunkClock {
+        final int x, y, radius;
+        final int faceColor, handColor;
+        float hourAngle, minuteAngle;
+        final float hourSpeed, minuteSpeed;
+
+        SteampunkClock(int x, int y, int radius, int faceColor) {
+            this.x = x;
+            this.y = y;
+            this.radius = radius;
+            this.faceColor = faceColor;
+            this.handColor = STEAMPUNK_COPPER;
+            this.hourAngle = (float)(Math.random() * Math.PI * 2);
+            this.minuteAngle = (float)(Math.random() * Math.PI * 2);
+            this.hourSpeed = 0.001f;
+            this.minuteSpeed = 0.012f;
+        }
+
+        void update() {
+            hourAngle += hourSpeed;
+            minuteAngle += minuteSpeed;
+            if (hourAngle > Math.PI * 2) hourAngle -= (float)(Math.PI * 2);
+            if (minuteAngle > Math.PI * 2) minuteAngle -= (float)(Math.PI * 2);
+        }
+    }
+
+    private static class SteampunkValve {
+        final int x, y, size;
+        final int valveColor;
+        float wheelRotation;
+        final float rotationSpeed;
+        boolean isActive;
+
+        SteampunkValve(int x, int y, int size, int valveColor) {
+            this.x = x;
+            this.y = y;
+            this.size = size;
+            this.valveColor = valveColor;
+            this.wheelRotation = 0;
+            this.rotationSpeed = 0.02f + (float)(Math.random() * 0.01f);
+            this.isActive = Math.random() < 0.3f;
+        }
+
+        void update() {
+            if (isActive) {
+                wheelRotation += rotationSpeed;
+                if (wheelRotation > Math.PI * 2) wheelRotation -= (float)(Math.PI * 2);
+            }
+
+            // Randomly change activity
+            if (Math.random() < 0.001f) {
+                isActive = !isActive;
+            }
+        }
+    }
+
+    private static class BrassTubing {
+        final int startX, startY, endX, endY;
+        final int[] controlPoints;
+        final int tubeColor, highlightColor;
+        float flowProgress;
+        final float flowSpeed;
+
+        BrassTubing(int startX, int startY, int endX, int endY, int tubeColor) {
+            this.startX = startX;
+            this.startY = startY;
+            this.endX = endX;
+            this.endY = endY;
+            this.tubeColor = tubeColor;
+            this.highlightColor = (tubeColor & 0x00FFFFFF) | 0x80000000;
+            this.flowProgress = (float)(Math.random() * Math.PI * 2);
+            this.flowSpeed = 0.03f + (float)(Math.random() * 0.02f);
+
+            // Simple control points for curved tubes
+            int midX = (startX + endX) / 2;
+            int midY = (startY + endY) / 2;
+            int offsetX = (int)((Math.random() - 0.5) * 50);
+            int offsetY = (int)((Math.random() - 0.5) * 50);
+            this.controlPoints = new int[]{midX + offsetX, midY + offsetY};
+        }
+
+        void update() {
+            flowProgress += flowSpeed;
+            if (flowProgress > Math.PI * 2) flowProgress -= (float)(Math.PI * 2);
+        }
+    }
+    // Steam/Circuit Animation Classes
+    private static class FloatingParticle {
+        float x, y, size, speed, life, maxLife;
+        int color;
+
+        FloatingParticle(float x, float y) {
+            this.x = x;
+            this.y = y;
+            this.size = 1 + (float)Math.random() * 2;
+            this.speed = 0.5f + (float)Math.random() * 1.5f;
+            this.maxLife = this.life = 60 + (int)(Math.random() * 120);
+            this.color = Math.random() < 0.3 ? 0xFFC07020 : 0xFF888888; // Bronze or gray
+              }
+
+        void update() {
+            y -= speed;
+            life--;
+            float alpha = Math.max(0, life / maxLife);
+            color = (color & 0x00FFFFFF) | ((int)(alpha * 255) << 24);
+        }
+
+        boolean isAlive() { return life > 0; }
+    }
+
+    private static class CircuitLine {
+        final int startX, startY, endX, endY;
+        final int color;
+        float pulsePhase;
+
+        CircuitLine(int startX, int startY, int endX, int endY, int color) {
+            this.startX = startX;
+            this.startY = startY;
+            this.endX = endX;
+            this.endY = endY;
+            this.color = color;
+            this.pulsePhase = (float)(Math.random() * Math.PI * 2);
+        }
+    }
+    private static class SteampunkGear {
+        final float x, y, size, rotationSpeed;
+        float rotation;
+        final int color, strokeColor;
+        final int teeth;
+
+        SteampunkGear(float x, float y, float size, float rotationSpeed, int color, int teeth) {
+            this.x = x;
+            this.y = y;
+            this.size = size;
+            this.rotationSpeed = rotationSpeed;
+            this.color = color;
+            this.strokeColor = (color & 0x00FFFFFF) | 0xFF000000;
+            this.teeth = teeth;
+            this.rotation = (float)(Math.random() * Math.PI * 2);
+        }
+
+        void update() {
+            rotation += rotationSpeed;
+            if (rotation > Math.PI * 2) rotation -= (float)(Math.PI * 2);
+        }
+    }
+
+    private static class SteamPipe {
+        final int startX, startY, endX, endY, width;
+        final int pipeColor, steamColor;
+        float steamProgress;
+        final float steamSpeed;
+
+        SteamPipe(int startX, int startY, int endX, int endY, int width, int pipeColor) {
+            this.startX = startX;
+            this.startY = startY;
+            this.endX = endX;
+            this.endY = endY;
+            this.width = width;
+            this.pipeColor = pipeColor;
+            this.steamColor = 0x60FFFFFF;
+            this.steamProgress = (float)(Math.random() * Math.PI * 2);
+            this.steamSpeed = 0.02f + (float)(Math.random() * 0.03f);
+        }
+
+        void update() {
+            steamProgress += steamSpeed;
+            if (steamProgress > Math.PI * 2) steamProgress -= (float)(Math.PI * 2);
+        }
+    }
+
+    private static class PressureGauge {
+        final int x, y, radius;
+        final int faceColor, needleColor;
+        float needleAngle, targetAngle;
+        final float needleSpeed;
+
+        PressureGauge(int x, int y, int radius, int faceColor) {
+            this.x = x;
+            this.y = y;
+            this.radius = radius;
+            this.faceColor = faceColor;
+            this.needleColor = 0xFFFF6666;
+            this.needleAngle = -90;
+            this.targetAngle = -90 + (float)(Math.random() * 180);
+            this.needleSpeed = 0.5f + (float)(Math.random() * 1.0f);
+        }
+
+        void update() {
+            // Smooth needle movement
+            needleAngle += (targetAngle - needleAngle) * 0.02f;
+
+            // Occasionally change target
+            if (Math.random() < 0.005f) {
+                targetAngle = -90 + (float)(Math.random() * 180);
+            }
+        }
+    }
     private void checkWeaponStatus() {
         ItemStack weapon = blockEntity.getWeaponItem();
         System.out.println("=== CHECK WEAPON STATUS ===");
@@ -198,7 +504,6 @@ public class OrbalTableScreen extends AbstractContainerScreen<OrbalTableMenu> {
 
         updateButtonStates();
     }
-// Add this method to your OrbalTableScreen class for debugging quartz textures
 
     private void debugQuartzTextureIssue() {
         if (weaponSlotData != null) {
@@ -356,7 +661,6 @@ public class OrbalTableScreen extends AbstractContainerScreen<OrbalTableMenu> {
         }
 
         confirmButton.active = canConfirm;
-        cancelButton.active = hasWeapon;
     }
 
 
@@ -394,16 +698,21 @@ public class OrbalTableScreen extends AbstractContainerScreen<OrbalTableMenu> {
                         showMaterialError(selectedElementType + " mass", 10);
                         return;
                     } else {
+                        // DEBUG: Print the actual coordinates being sent
+                        System.out.println("=== SLOT CREATION DEBUG ===");
+                        System.out.println("Selected position Z: " + selectedPosition.modelZ);
+                        System.out.println("Position array: [" + selectedPosition.modelX + ", " + selectedPosition.modelY + ", " + selectedPosition.modelZ + "]");
+
                         packet = new OrbalTableOperationPacket(
                                 blockEntity.getBlockPos(),
                                 OrbalTableOperationPacket.OperationType.ADD_SLOT,
                                 selectedElementType,
                                 -1,
                                 new float[]{selectedPosition.modelX, selectedPosition.modelY, selectedPosition.modelZ}
-
                         );
                     }
                 }
+
             }
             case REMOVE_SLOT -> {
                 int slotIndex = findClickedSlot();
@@ -501,11 +810,21 @@ public class OrbalTableScreen extends AbstractContainerScreen<OrbalTableMenu> {
         updateButtonStates();
     }
 
+    // Replace your containerTick() method with:
     @Override
     public void containerTick() {
         super.containerTick();
 
-        // FIXED: Force GUI refresh when weapon changes
+        // Update animations
+        updateAnimations();
+
+        // Smooth rotation interpolation
+        if (!isDragging) {
+            weaponRotationY += (targetRotationY - weaponRotationY) * 0.1f;
+            weaponRotationX += (targetRotationX - weaponRotationX) * 0.1f;
+        }
+
+        // Check weapon changes
         ItemStack currentServerWeapon = blockEntity.getWeaponItem();
         if (!ItemStack.isSameItemSameComponents(currentServerWeapon, currentWeapon)) {
             System.out.println("=== WEAPON CHANGED IN CONTAINER TICK ===");
@@ -514,13 +833,45 @@ public class OrbalTableScreen extends AbstractContainerScreen<OrbalTableMenu> {
 
             checkWeaponStatus();
 
-            // Force immediate visual update
             if (weaponAnalysisMode && weaponSlotData != null) {
                 System.out.println("Forcing immediate GUI refresh with " + weaponSlotData.getSlots().size() + " slots");
             }
         }
     }
+    private void updateAnimations() {
+        long currentTime = System.currentTimeMillis();
 
+        // Update opening animation
+        if (this.animationProgress < 1.0f) {
+            long elapsedTime = System.currentTimeMillis() - this.animationStartTime;
+            float progress = Math.min((float)elapsedTime / ANIMATION_DURATION, 1.0f);
+            this.animationProgress = 1 - (float)Math.pow(1 - progress, 3);
+        }
+
+        // Update particles
+        particles.removeIf(particle -> !particle.isAlive());
+        particles.forEach(FloatingParticle::update);
+
+        // Spawn new particles occasionally
+        if (currentTime - lastParticleSpawn > 100) {
+            spawnParticle();
+            lastParticleSpawn = currentTime;
+        }
+
+        // Update circuit line pulses
+        for (CircuitLine line : circuitLines) {
+            line.pulsePhase += 0.05f;
+        }
+
+        // Update steampunk decorations
+        gears.forEach(SteampunkGear::update);
+        steamPipes.forEach(SteamPipe::update);
+        pressureGauges.forEach(PressureGauge::update);
+        // Add these lines at the end of updateAnimations():
+        clocks.forEach(SteampunkClock::update);
+        valves.forEach(SteampunkValve::update);
+        tubing.forEach(BrassTubing::update);
+    }
     @Override
     public void mouseMoved(double mouseX, double mouseY) {
         super.mouseMoved(mouseX, mouseY);
@@ -530,157 +881,519 @@ public class OrbalTableScreen extends AbstractContainerScreen<OrbalTableMenu> {
             this.hoveredSlot = null;
         }
     }
+    // === METHOD REPLACEMENT: renderBg() ===
     @Override
     protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, TEXTURE);
+        // This still renders the cool animated background fullscreen
+        renderSteampunkBackground(guiGraphics);
 
-        int x = (width - imageWidth) / 2;
-        int y = (height - imageHeight) / 2;
+        // Render the main UI panels within the GUI bounds
+        render3DWeaponAnalysis(guiGraphics, mouseX, mouseY, partialTick);
+        renderMaterialSlotsPanel(guiGraphics);
+        renderControlPanel(guiGraphics);
+        // Note: The player inventory background is drawn by super.render() using vanilla textures
+    }
+    // === NEW BACKGROUND RENDERING METHOD ===
+// Add this new method:
+    private void renderSteampunkBackground(GuiGraphics guiGraphics) {
+        // Dark gradient background
+// Replace the background gradient line:
+        guiGraphics.fillGradient(0, 0, width, height, STEAMPUNK_BROWN_DARK | 0xFF000000, STEAMPUNK_BLUE_DARK | 0xFF000000);
+        // Render animated particles
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(0, 0, 10);
+        for (FloatingParticle particle : particles) {
+            if (particle.isAlive()) {
+                int size = (int)particle.size;
+                guiGraphics.fill((int)particle.x - size/2, (int)particle.y - size/2,
+                        (int)particle.x + size/2, (int)particle.y + size/2, particle.color);
+            }
+        }
+        guiGraphics.pose().popPose();
 
-        // Render the main GUI texture
-        guiGraphics.blit(TEXTURE, x, y, 0, 0, imageWidth, imageHeight, 256, 240);
+        // Render circuit lines with pulsing effect
+        for (CircuitLine line : circuitLines) {
+            float pulse = (float)(Math.sin(line.pulsePhase) * 0.3 + 0.7);
+            int alpha = (int)(pulse * 128);
+            int pulseColor = (line.color & 0x00FFFFFF) | (alpha << 24);
 
-        // Render weapon analysis overlay if active
-        if (weaponAnalysisMode && weaponSlotData != null) {
-            renderWeaponAnalysis(guiGraphics, x, y, mouseX, mouseY);
+            // Draw line with glow effect
+            guiGraphics.fill(line.startX, line.startY, line.endX, line.startY + 1, pulseColor);
+            guiGraphics.fill(line.startX, line.startY, line.startX + 1, line.endY, pulseColor);
         }
 
-        // NEW: Render slot info in top right
-        renderSlotInfo(guiGraphics, x, y);
+        // Corner decorations
+        renderCornerDecorations(guiGraphics);
+        // Render steampunk decorations
+        renderSteampunkDecorations(guiGraphics);
+    }
+    // === NEW CORNER DECORATIONS METHOD ===
+// Add this new method:
+    private void renderCornerDecorations(GuiGraphics guiGraphics) {
+        int cornerSize = 40;
+        int glowColor = 0x40C07020; // Transparent Bronze
+        // Top-left corner
+        guiGraphics.fill(20, 20, 20 + cornerSize, 22, glowColor);
+        guiGraphics.fill(20, 20, 22, 20 + cornerSize, glowColor);
+
+        // Top-right corner
+        guiGraphics.fill(width - 20 - cornerSize, 20, width - 20, 22, glowColor);
+        guiGraphics.fill(width - 22, 20, width - 20, 20 + cornerSize, glowColor);
+
+        // Bottom-left corner
+        guiGraphics.fill(20, height - 22, 20 + cornerSize, height - 20, glowColor);
+        guiGraphics.fill(20, height - 20 - cornerSize, 22, height - 20, glowColor);
+
+        // Bottom-right corner
+        guiGraphics.fill(width - 20 - cornerSize, height - 22, width - 20, height - 20, glowColor);
+        guiGraphics.fill(width - 22, height - 20 - cornerSize, width - 20, height - 20, glowColor);
     }
 
-    private void renderWeaponAnalysis(GuiGraphics guiGraphics, int screenX, int screenY, int mouseX, int mouseY) {
-        int weaponDisplayX = screenX + 20;
-        int weaponDisplayY = screenY + 20;
-        int weaponDisplayWidth = 140;
-        int weaponDisplayHeight = 90;
+    private void renderSteampunkDecorations(GuiGraphics guiGraphics) {
+        // Render steam pipes first (background layer)
+        for (SteamPipe pipe : steamPipes) {
+            // Pipe body
+            guiGraphics.fill(pipe.startX - pipe.width/2, pipe.startY,
+                    pipe.startX + pipe.width/2, pipe.endY, pipe.pipeColor);
 
-        // Draw weapon display background with border
-        guiGraphics.fill(weaponDisplayX, weaponDisplayY, weaponDisplayX + weaponDisplayWidth, weaponDisplayY + weaponDisplayHeight, 0x88000000);
-        guiGraphics.hLine(weaponDisplayX, weaponDisplayX + weaponDisplayWidth, weaponDisplayY, 0xFFFFFFFF);
-        guiGraphics.hLine(weaponDisplayX, weaponDisplayX + weaponDisplayWidth, weaponDisplayY + weaponDisplayHeight, 0xFFFFFFFF);
-        guiGraphics.vLine(weaponDisplayX, weaponDisplayY, weaponDisplayY + weaponDisplayHeight, 0xFFFFFFFF);
-        guiGraphics.vLine(weaponDisplayX + weaponDisplayWidth, weaponDisplayY, weaponDisplayY + weaponDisplayHeight, 0xFFFFFFFF);
+            // Steam effect
+            float steamIntensity = (float)(Math.sin(pipe.steamProgress) * 0.3 + 0.7);
+            int steamAlpha = (int)(steamIntensity * 96);
+            int steamColor = (pipe.steamColor & 0x00FFFFFF) | (steamAlpha << 24);
 
+            // Steam segments
+            for (int i = 0; i < 5; i++) {
+                int steamY = pipe.startY + (pipe.endY - pipe.startY) * i / 5;
+                int steamWidth = pipe.width + (int)(Math.sin(pipe.steamProgress + i) * 3);
+                guiGraphics.fill(pipe.startX - steamWidth/2, steamY,
+                        pipe.startX + steamWidth/2, steamY + 10, steamColor);
+            }
+
+        }
+
+        // Render pressure gauges
+        for (PressureGauge gauge : pressureGauges) {
+            // Gauge face (circle)
+            drawCircle(guiGraphics, gauge.x, gauge.y, gauge.radius, gauge.faceColor);
+            drawCircle(guiGraphics, gauge.x, gauge.y, gauge.radius - 2, 0xFF1A1A1A);
+
+            // Gauge markings
+            for (int i = 0; i <= 10; i++) {
+                float angle = (float)Math.toRadians(-90 + i * 18); // 180 degrees total
+                int markLength = (i % 5 == 0) ? 8 : 4;
+                int startRadius = gauge.radius - 5;
+                int endRadius = startRadius - markLength;
+
+                int startX = gauge.x + (int)(Math.cos(angle) * startRadius);
+                int startY = gauge.y + (int)(Math.sin(angle) * startRadius);
+                int endX = gauge.x + (int)(Math.cos(angle) * endRadius);
+                int endY = gauge.y + (int)(Math.sin(angle) * endRadius);
+
+                drawLine(guiGraphics, startX, startY, endX, endY, 0xFFAAAAAA);
+            }
+
+            // Needle
+            float needleRad = (float)Math.toRadians(gauge.needleAngle);
+            int needleEndX = gauge.x + (int)(Math.cos(needleRad) * (gauge.radius - 8));
+            int needleEndY = gauge.y + (int)(Math.sin(needleRad) * (gauge.radius - 8));
+            drawLine(guiGraphics, gauge.x, gauge.y, needleEndX, needleEndY, gauge.needleColor);
+
+            // Center dot
+            guiGraphics.fill(gauge.x - 2, gauge.y - 2, gauge.x + 2, gauge.y + 2, 0xFFFFFFFF);
+        }
+
+        // Render gears (foreground layer)
+        for (SteampunkGear gear : gears) {
+            drawAnimatedGear(guiGraphics, gear);
+        }
+        // Add these at the end of renderSteampunkDecorations():
+
+// Render clocks
+        for (SteampunkClock clock : clocks) {
+            drawClock(guiGraphics, clock);
+        }
+
+// Render valves
+        for (SteampunkValve valve : valves) {
+            drawValve(guiGraphics, valve);
+        }
+
+// Render tubing
+        for (BrassTubing tube : tubing) {
+            drawTubing(guiGraphics, tube);
+        }
+    }
+    private void drawClock(GuiGraphics guiGraphics, SteampunkClock clock) {
+        // Clock face
+        drawCircle(guiGraphics, clock.x, clock.y, clock.radius, clock.faceColor);
+        drawCircle(guiGraphics, clock.x, clock.y, clock.radius - 2, STEAMPUNK_BROWN_LIGHT);
+
+        // Hour markers
+        for (int i = 0; i < 12; i++) {
+            float angle = (float)(i * Math.PI / 6 - Math.PI / 2);
+            int markRadius = clock.radius - 4;
+            int x = clock.x + (int)(Math.cos(angle) * markRadius);
+            int y = clock.y + (int)(Math.sin(angle) * markRadius);
+            guiGraphics.fill(x - 1, y - 1, x + 1, y + 1, STEAMPUNK_COPPER);
+        }
+
+        // Hour hand
+        int hourX = clock.x + (int)(Math.cos(clock.hourAngle - Math.PI / 2) * (clock.radius * 0.5f));
+        int hourY = clock.y + (int)(Math.sin(clock.hourAngle - Math.PI / 2) * (clock.radius * 0.5f));
+        drawLine(guiGraphics, clock.x, clock.y, hourX, hourY, clock.handColor);
+
+        // Minute hand
+        int minuteX = clock.x + (int)(Math.cos(clock.minuteAngle - Math.PI / 2) * (clock.radius * 0.8f));
+        int minuteY = clock.y + (int)(Math.sin(clock.minuteAngle - Math.PI / 2) * (clock.radius * 0.8f));
+        drawLine(guiGraphics, clock.x, clock.y, minuteX, minuteY, clock.handColor);
+
+        // Center
+        guiGraphics.fill(clock.x - 2, clock.y - 2, clock.x + 2, clock.y + 2, STEAMPUNK_BRASS);
+    }
+
+    private void drawValve(GuiGraphics guiGraphics, SteampunkValve valve) {
+        // Valve body
+        guiGraphics.fill(valve.x - valve.size/2, valve.y - valve.size/4,
+                valve.x + valve.size/2, valve.y + valve.size/4, valve.valveColor);
+
+        // Rotating wheel
+        for (int i = 0; i < 8; i++) {
+            float angle = valve.wheelRotation + (float)(i * Math.PI / 4);
+            int spokeX = valve.x + (int)(Math.cos(angle) * valve.size * 0.6f);
+            int spokeY = valve.y + (int)(Math.sin(angle) * valve.size * 0.6f);
+            drawLine(guiGraphics, valve.x, valve.y, spokeX, spokeY,
+                    valve.isActive ? STEAMPUNK_BRASS : STEAMPUNK_BROWN_MEDIUM);
+        }
+
+        // Center hub
+        drawCircle(guiGraphics, valve.x, valve.y, valve.size / 4, STEAMPUNK_BROWN_DARK);
+    }
+
+    private void drawTubing(GuiGraphics guiGraphics, BrassTubing tube) {
+        // Simple curved tube using multiple line segments
+        int segments = 20;
+        for (int i = 0; i < segments; i++) {
+            float t = (float)i / segments;
+            float nextT = (float)(i + 1) / segments;
+
+            // Simple quadratic curve
+            int x1 = (int)((1-t)*(1-t)*tube.startX + 2*(1-t)*t*tube.controlPoints[0] + t*t*tube.endX);
+            int y1 = (int)((1-t)*(1-t)*tube.startY + 2*(1-t)*t*tube.controlPoints[1] + t*t*tube.endY);
+            int x2 = (int)((1-nextT)*(1-nextT)*tube.startX + 2*(1-nextT)*nextT*tube.controlPoints[0] + nextT*nextT*tube.endX);
+            int y2 = (int)((1-nextT)*(1-nextT)*tube.startY + 2*(1-nextT)*nextT*tube.controlPoints[1] + nextT*nextT*tube.endY);
+
+            drawLine(guiGraphics, x1, y1, x2, y2, tube.tubeColor);
+
+            // Flow effect
+            if (Math.sin(tube.flowProgress + t * Math.PI * 4) > 0.5f) {
+                drawLine(guiGraphics, x1 - 1, y1 - 1, x2 - 1, y2 - 1, tube.highlightColor);
+            }
+        }
+    }
+    private void drawCircle(GuiGraphics guiGraphics, int centerX, int centerY, int radius, int color) {
+        for (int y = -radius; y <= radius; y++) {
+            for (int x = -radius; x <= radius; x++) {
+                if (x * x + y * y <= radius * radius) {
+                    guiGraphics.fill(centerX + x, centerY + y, centerX + x + 1, centerY + y + 1, color);
+                }
+            }
+        }
+    }
+
+    private void drawLine(GuiGraphics guiGraphics, int x1, int y1, int x2, int y2, int color) {
+        int dx = Math.abs(x2 - x1);
+        int dy = Math.abs(y2 - y1);
+        int sx = x1 < x2 ? 1 : -1;
+        int sy = y1 < y2 ? 1 : -1;
+        int err = dx - dy;
+
+        int x = x1, y = y1;
+        while (true) {
+            guiGraphics.fill(x, y, x + 1, y + 1, color);
+            if (x == x2 && y == y2) break;
+            int e2 = 2 * err;
+            if (e2 > -dy) { err -= dy; x += sx; }
+            if (e2 < dx) { err += dx; y += sy; }
+        }
+    }
+
+    private void drawAnimatedGear(GuiGraphics guiGraphics, SteampunkGear gear) {
+        float centerX = gear.x;
+        float centerY = gear.y;
+        float outerRadius = gear.size;
+        float innerRadius = gear.size * 0.6f;
+        float toothHeight = gear.size * 0.2f;
+
+        // Draw gear body (inner circle)
+        drawCircle(guiGraphics, (int)centerX, (int)centerY, (int)innerRadius, gear.color);
+        drawCircle(guiGraphics, (int)centerX, (int)centerY, (int)innerRadius - 2, gear.strokeColor);
+
+        // Draw teeth
+        for (int i = 0; i < gear.teeth; i++) {
+            float angle = gear.rotation + (float)(2 * Math.PI * i / gear.teeth);
+
+            // Tooth positions
+            float toothStartAngle = angle - 0.1f;
+            float toothEndAngle = angle + 0.1f;
+
+            // Draw tooth as a small rectangle
+            for (float a = toothStartAngle; a <= toothEndAngle; a += 0.02f) {
+                int x1 = (int)(centerX + Math.cos(a) * innerRadius);
+                int y1 = (int)(centerY + Math.sin(a) * innerRadius);
+                int x2 = (int)(centerX + Math.cos(a) * (innerRadius + toothHeight));
+                int y2 = (int)(centerY + Math.sin(a) * (innerRadius + toothHeight));
+
+                drawLine(guiGraphics, x1, y1, x2, y2, gear.color);
+            }
+        }
+
+        // Center hole
+        drawCircle(guiGraphics, (int)centerX, (int)centerY, (int)(gear.size * 0.15f), 0xFF000000);
+    }
+    // === METHOD REPLACEMENT: render3DWeaponAnalysis() ===
+    private void render3DWeaponAnalysis(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        // 3D weapon display area - Panel slightly narrower, moved left
+// Animate panel sliding in from the left
+        int baseWeaponX = this.leftPos + 15;
+        int weaponDisplayX = (int)(baseWeaponX - (1 - animationProgress) * (200 + baseWeaponX));
+        int weaponDisplayY = this.topPos + 15;
+        int weaponDisplayWidth = 180; // Reduced from 200
+        int weaponDisplayHeight = 120;
+
+        renderWeaponDisplayPanel(guiGraphics, weaponDisplayX, weaponDisplayY, weaponDisplayWidth, weaponDisplayHeight);
         ItemStack displayWeapon = blockEntity.getWeaponItem();
 
-        // FIRST: Render weapon at LOWEST Z-index (background)
         if (!displayWeapon.isEmpty()) {
             PoseStack poseStack = guiGraphics.pose();
             poseStack.pushPose();
+
             try {
                 int weaponCenterX = weaponDisplayX + weaponDisplayWidth / 2;
                 int weaponCenterY = weaponDisplayY + weaponDisplayHeight / 2;
 
-                poseStack.translate(weaponCenterX, weaponCenterY, 0);
-                poseStack.scale(4.5f, 4.5f, 1.0f);
+                poseStack.translate(weaponCenterX, weaponCenterY, 100);
 
-                guiGraphics.renderItem(displayWeapon, -8, -8);
+                // You can adjust the 28.0f value to make the weapon bigger or smaller
+                float scale = 70f * (weaponDisplayWidth / 180f);
+                poseStack.scale(scale, -scale, scale);
+
+                // Apply 3D rotations
+                poseStack.mulPose(Axis.XP.rotationDegrees(weaponRotationX));
+                poseStack.mulPose(Axis.YP.rotationDegrees(weaponRotationY));
+
+                // Render weapon
+                RenderSystem.enableDepthTest();
+                Minecraft.getInstance().getItemRenderer().render(displayWeapon, ItemDisplayContext.GUI, false, poseStack, guiGraphics.bufferSource(), LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, Minecraft.getInstance().getItemRenderer().getModel(displayWeapon, null, null, 0));
+                guiGraphics.flush();
+                RenderSystem.disableDepthTest();
+
             } finally {
                 poseStack.popPose();
             }
-
-            // Add weapon name below
-            String weaponName = displayWeapon.getDisplayName().getString();
-            int textWidth = minecraft.font.width(weaponName);
-            guiGraphics.drawString(minecraft.font, weaponName,
-                    weaponDisplayX + (weaponDisplayWidth - textWidth) / 2,
-                    weaponDisplayY + weaponDisplayHeight + 5, 0xFFFFFFFF, true);
+            renderWeaponInfo(guiGraphics, displayWeapon, weaponDisplayX, weaponDisplayY + weaponDisplayHeight - 15, weaponDisplayWidth);
         }
 
-        // SECOND: Render slots with FIXED positioning
         if (weaponSlotData != null) {
-            List<WeaponSlotData.WeaponSlot> activeSlots = new ArrayList<>();
-            for (WeaponSlotData.WeaponSlot slot : weaponSlotData.getSlots()) {
-                if (!slot.isClosed) {
-                    activeSlots.add(slot);
-                }
-            }
-
-            // RENDER SLOTS AT HIGH Z-INDEX with corrected positioning
-            guiGraphics.pose().pushPose();
-            guiGraphics.pose().translate(0, 0, 200);
-
-            for (int i = 0; i < activeSlots.size(); i++) {
-                WeaponSlotData.WeaponSlot slot = activeSlots.get(i);
-                // FIXED: Use consistent scaling with mouse clicking
-                int slotScreenX = weaponDisplayX + weaponDisplayWidth / 2 + (int) (slot.posX * 25);
-                int slotScreenY = weaponDisplayY + weaponDisplayHeight / 2 + (int) (slot.posY * 20);
-
-                // Render slot texture background
-                ResourceLocation slotTexture = getSlotTexture(slot.elementType);
-                int slotSize = 12;
-
-                guiGraphics.blit(slotTexture, slotScreenX - slotSize/2, slotScreenY - slotSize/2,
-                        0, 0, slotSize, slotSize, slotSize, slotSize);
-
-                if (slot.hasQuartz()) {
-                    // Render quartz texture on top
-                    if (slot.quartzItem.getItem() instanceof QuartzItem quartzItem) {
-                        ResourceLocation quartzTexture = getQuartzTexture(quartzItem.getQuartzId());
-                        if (quartzTexture != null) {
-                            int quartzSize = 8;
-
-                            // FIXED: Set shader color to white before rendering
-                            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-
-                            // Try rendering the actual item instead of the texture
-                            guiGraphics.pose().pushPose();
-                            guiGraphics.pose().translate(slotScreenX - quartzSize/2, slotScreenY - quartzSize/2, 0);
-                            guiGraphics.pose().scale(0.5f, 0.5f, 1.0f);
-
-                            // Render the actual quartz item instead of just the texture
-                            guiGraphics.renderItem(slot.quartzItem, 0, 0);
-
-                            guiGraphics.pose().popPose();
-
-                            // FIXED: Remove the glow effect that might be causing color issues
-                            // int glowColor = getElementColor(slot.elementType) | 0x40000000;
-                            // guiGraphics.fill(slotScreenX - quartzSize/2 - 1, slotScreenY - quartzSize/2 - 1,
-                            //         slotScreenX + quartzSize/2 + 1, slotScreenY + quartzSize/2 + 1, glowColor);
-                        }
-                    }
-                }
-
-                // Add slot number indicator below slot
-                String slotNumber = String.valueOf(i + 1);
-                int textX = slotScreenX - minecraft.font.width(slotNumber) / 2;
-                int textY = slotScreenY + slotSize/2 + 3;
-                guiGraphics.drawString(minecraft.font, slotNumber, textX, textY, 0xFFFFFFFF, true);
-            }
-            guiGraphics.pose().popPose();
+            renderEnhancedSlots(guiGraphics, weaponDisplayX, weaponDisplayY, weaponDisplayWidth, weaponDisplayHeight, mouseX, mouseY);
         }
+    }
+    // === NEW WEAPON DISPLAY PANEL METHOD ===
+// Add this new method:
+    private void renderWeaponDisplayPanel(GuiGraphics guiGraphics, int x, int y, int width, int height) {
+        // Main panel background
+        guiGraphics.fill(x, y, x + width, y + height, 0x88000000);
 
-        // FIXED: Crosshair rendering with proper positioning
+        int borderColor = 0xFFC07020; // Bronze
+        int innerBorder = 0x40C07020; // Transparent Bronze
+
+        // Outer border
+        guiGraphics.fill(x - 2, y - 2, x + width + 2, y, borderColor);
+        guiGraphics.fill(x - 2, y + height, x + width + 2, y + height + 2, borderColor);
+        guiGraphics.fill(x - 2, y, x, y + height, borderColor);
+        guiGraphics.fill(x + width, y, x + width + 2, y + height, borderColor);
+
+        // Inner glow
+        guiGraphics.fill(x, y, x + width, y + 4, innerBorder);
+        guiGraphics.fill(x, y + height - 4, x + width, y + height, innerBorder);
+        guiGraphics.fill(x, y, x + 4, y + height, innerBorder);
+        guiGraphics.fill(x + width - 4, y, x + width, y + height, innerBorder);
+
+        // Corner accents
+        int accentSize = 20;
+        guiGraphics.fill(x + 10, y + 10, x + 10 + accentSize, y + 12, borderColor);
+        guiGraphics.fill(x + 10, y + 10, x + 12, y + 10 + accentSize, borderColor);
+
+        guiGraphics.fill(x + width - 10 - accentSize, y + 10, x + width - 10, y + 12, borderColor);
+        guiGraphics.fill(x + width - 12, y + 10, x + width - 10, y + 10 + accentSize, borderColor);
+    }
+
+    // === NEW WEAPON INFO METHOD ===
+// Add this new method:
+    private void renderWeaponInfo(GuiGraphics guiGraphics, ItemStack weapon, int x, int y, int width) {
+        String weaponName = weapon.getDisplayName().getString();
+        int textWidth = minecraft.font.width(weaponName);
+        int centerX = x + (width - textWidth) / 2;
+
+        // Background for text
+        guiGraphics.fill(centerX - 5, y - 2, centerX + textWidth + 5, y + 12, 0x88000000);
+        guiGraphics.drawString(minecraft.font, weaponName, centerX, y, 0xFFC07020, true); // Bronze text
+
+
+    }
+    private void renderEnhancedSlots(GuiGraphics guiGraphics, int displayX, int displayY, int displayWidth, int displayHeight, int mouseX, int mouseY) {
+        // Remove all 2D slot rendering - slots will now be rendered directly on the 3D weapon model
+
+        // Only render crosshair for ADD_SLOT mode
+        renderEnhancedCrosshair(guiGraphics, displayX, displayY, displayWidth, displayHeight, mouseX, mouseY);
+
+        // Only render click mark for selected positions
+        renderEnhancedClickMark(guiGraphics, displayX, displayY, displayWidth, displayHeight);
+    }
+    // === NEW ENHANCED CROSSHAIR METHOD ===
+// Add this new method:
+    private void renderEnhancedCrosshair(GuiGraphics guiGraphics, int displayX, int displayY, int displayWidth, int displayHeight, int mouseX, int mouseY) {
         if (operationMode == OperationMode.ADD_SLOT && weaponSlotData != null && weaponSlotData.getSlotCount() < 3) {
-            if (mouseX >= weaponDisplayX && mouseX <= weaponDisplayX + weaponDisplayWidth &&
-                    mouseY >= weaponDisplayY && mouseY <= weaponDisplayY + weaponDisplayHeight) {
+            if (mouseX >= displayX && mouseX <= displayX + displayWidth &&
+                    mouseY >= displayY && mouseY <= displayY + displayHeight) {
 
                 int crosshairColor = getElementColor(selectedElementType);
                 guiGraphics.pose().pushPose();
                 guiGraphics.pose().translate(0, 0, 300);
-                guiGraphics.fill(mouseX - 6, mouseY - 1, mouseX + 6, mouseY + 1, crosshairColor | 0xFF000000);
-                guiGraphics.fill(mouseX - 1, mouseY - 6, mouseX + 1, mouseY + 6, crosshairColor | 0xFF000000);
+
+                // Enhanced crosshair with glow
+                guiGraphics.fill(mouseX - 12, mouseY - 2, mouseX + 12, mouseY + 2, crosshairColor | 0xFF000000);
+                guiGraphics.fill(mouseX - 2, mouseY - 12, mouseX + 2, mouseY + 12, crosshairColor | 0xFF000000);
+
+                // Outer glow
+                guiGraphics.fill(mouseX - 14, mouseY - 1, mouseX + 14, mouseY + 1, (crosshairColor | 0x40000000));
+                guiGraphics.fill(mouseX - 1, mouseY - 14, mouseX + 1, mouseY + 14, (crosshairColor | 0x40000000));
+
                 guiGraphics.pose().popPose();
             }
         }
-
-        // FIXED: Click mark rendering with corrected positioning
+    }
+    private void renderEnhancedClickMark(GuiGraphics guiGraphics, int displayX, int displayY, int displayWidth, int displayHeight) {
         if (clickMark != null) {
-            int markScreenX = weaponDisplayX + weaponDisplayWidth / 2 + (int) (clickMark.modelX * 25);
-            int markScreenY = weaponDisplayY + weaponDisplayHeight / 2 + (int) (clickMark.modelY * 20);
+            // Use SAME transformation as WeaponSlotQuadBuilder positioning
+            float cosY = (float)Math.cos(Math.toRadians(weaponRotationY));
+            float sinY = (float)Math.sin(Math.toRadians(weaponRotationY));
+
+            // Forward transform: model -> screen (same as quad builder)
+            float screenX = (clickMark.modelX * cosY - clickMark.modelZ * sinY) * 25.0f;
+            float screenY = clickMark.modelY * 25.0f;
+
+            int markScreenX = displayX + displayWidth / 2 + (int)screenX;
+            int markScreenY = displayY + displayHeight / 2 + (int)screenY;
             int markColor = getElementColor(selectedElementType);
 
             guiGraphics.pose().pushPose();
             guiGraphics.pose().translate(0, 0, 500);
-            guiGraphics.fill(markScreenX - 6, markScreenY - 6, markScreenX + 6, markScreenY + 6, 0xFFFFFFFF);
-            guiGraphics.fill(markScreenX - 5, markScreenY - 5, markScreenX + 5, markScreenY + 5, markColor | 0xFF000000);
-            guiGraphics.fill(markScreenX - 3, markScreenY - 3, markScreenX + 3, markScreenY + 3, 0xFFFFFFFF);
+
+            int size = 8;
+            guiGraphics.fill(markScreenX - size / 2, markScreenY - size / 2,
+                    markScreenX + size / 2, markScreenY + size / 2, markColor);
+            guiGraphics.renderOutline(markScreenX - size / 2 - 1, markScreenY - size / 2 - 1,
+                    size + 2, size + 2, 0xFFFFFFFF);
+
             guiGraphics.pose().popPose();
         }
     }
+    private void renderMaterialSlotsPanel(GuiGraphics guiGraphics) {
+        // Fixed slot indices to match container order - slot 1 is SEPITH_MASS_SLOT in the menu
+        final int[] materialSlotIndices = {1, 2, 3, 4, 5, 6, 7, 8}; // SM first, then E,W,F,Wi,T,S,M
+        final String[] slotLabels = {"SM", "E", "W", "F", "Wi", "T", "S", "M"};
+
+        // Find the bounding box of all material slots
+        int minX = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE;
+        for (int index : materialSlotIndices) {
+            Slot slot = this.menu.getSlot(index);
+            minX = Math.min(minX, slot.x);
+            maxX = Math.max(maxX, slot.x);
+        }
+
+        int panelY = this.topPos + 138;
+        int panelHeight = 28;
+        int panelX = this.leftPos + minX - 4;
+        int panelWidth = (maxX - minX) + 16 + 8;
+
+        int outerBorderColor = 0xFF8B4513;
+        guiGraphics.fill(panelX, panelY, panelX + panelWidth, panelY + panelHeight, 0x88000000);
+        guiGraphics.renderOutline(panelX, panelY, panelWidth, panelHeight, outerBorderColor);
+
+        for (int i = 0; i < materialSlotIndices.length; i++) {
+            int slotIndex = materialSlotIndices[i];
+            Slot slot = this.menu.getSlot(slotIndex);
+            int slotCenterX = this.leftPos + slot.x + 8;
+            int slotCenterY = this.topPos + slot.y + 8;
+
+            guiGraphics.renderOutline(this.leftPos + slot.x - 1, this.topPos + slot.y - 1, 18, 18, 0xFF444444);
+
+            String label = slotLabels[i];
+            int labelX = slotCenterX - minecraft.font.width(label) / 2;
+            guiGraphics.drawString(minecraft.font, label, labelX, slotCenterY + 10, 0xFF888888, false);
+        }
+    }
+
+    // === METHOD REPLACEMENT: renderControlPanel() ===
+    private void renderControlPanel(GuiGraphics guiGraphics) {
+        // Right side control panel
+        int basePanelX = this.leftPos + this.imageWidth - 175;
+        int panelX = (int)(basePanelX + (1 - animationProgress) * (this.width - basePanelX));
+        int panelY = this.topPos + 10;
+        int panelWidth = 165;
+        int panelHeight = this.imageHeight - 20;
+
+        guiGraphics.fill(panelX, panelY, panelX + panelWidth, panelY + panelHeight, 0x88000000);
+
+        // Steampunk border styling
+        int borderColor = 0xFFC07020; // Brownish/Bronze steampunk color
+        guiGraphics.renderOutline(panelX, panelY, panelWidth, panelHeight, borderColor);
+        guiGraphics.renderOutline(panelX + 1, panelY + 1, panelWidth - 2, panelHeight - 2, 0x40000000 | borderColor);
+
+        String title = "ORBAL OPERATIONS";
+        int titleWidth = minecraft.font.width(title);
+        int titleX = panelX + (panelWidth - titleWidth) / 2;
+        guiGraphics.drawString(minecraft.font, title, titleX, panelY + 10, borderColor, true);
+
+        if (operationMode != null) {
+            String modeText = "MODE: " + operationMode.name().replace("_", " ");
+            guiGraphics.fill(panelX + 5, panelY + 25, panelX + panelWidth - 5, panelY + 40, 0x66000000 | borderColor);
+            guiGraphics.drawString(minecraft.font, modeText, panelX + 10, panelY + 28, 0xFFFFFFFF, true);
+        }
+
+        // REMOVED the "ELEMENT: ..." text rendering block to create more space
+    }
+    // === CONTROL PANEL CIRCUITS METHOD ===
+    private void renderControlPanelCircuits(GuiGraphics guiGraphics, int panelX, int panelY, int panelWidth, int panelHeight) {
+        long time = System.currentTimeMillis();
+        float pulse = (float)(Math.sin(time * 0.005) * 0.3 + 0.7);
+        int pulseAlpha = (int)(pulse * 128);
+        int circuitColor = (0xFF00FF & 0x00FFFFFF) | (pulseAlpha << 24);
+
+        // Vertical circuit lines
+        int lineSpacing = 15;
+        for (int i = 0; i < panelHeight / lineSpacing; i++) {
+            int lineY = panelY + i * lineSpacing;
+            if (i % 3 == 0) { // Every third line
+                guiGraphics.fill(panelX + 5, lineY, panelX + 15, lineY + 1, circuitColor);
+                guiGraphics.fill(panelX + panelWidth - 15, lineY, panelX + panelWidth - 5, lineY + 1, circuitColor);
+            }
+        }
+
+        // Connection nodes
+        int nodeSize = 2;
+        for (int i = 0; i < 5; i++) {
+            int nodeY = panelY + 60 + i * 40;
+            // Left nodes
+            guiGraphics.fill(panelX + 8 - nodeSize, nodeY - nodeSize,
+                    panelX + 8 + nodeSize, nodeY + nodeSize, 0xFFFF00FF);
+            // Right nodes
+            guiGraphics.fill(panelX + panelWidth - 8 - nodeSize, nodeY - nodeSize,
+                    panelX + panelWidth - 8 + nodeSize, nodeY + nodeSize, 0xFFFF00FF);
+        }
+    }
+
     private ResourceLocation getSlotTexture(String elementType) {
         return switch (elementType.toLowerCase()) {
             case "earth" -> ResourceLocation.fromNamespaceAndPath(KisekiLegend.MOD_ID, "textures/slot/earth_slot.png");
@@ -743,180 +1456,212 @@ public class OrbalTableScreen extends AbstractContainerScreen<OrbalTableMenu> {
             // REMOVED: Quartz indicator code
         }
     }
+    // === MOUSE RELEASE HANDLING ===
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (button == 1) { // Right click release
+            isDragging = false;
+        }
+
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    // === METHOD REPLACEMENT: isMouseOverWeaponShape() ===
     private boolean isMouseOverWeaponShape(int mouseX, int mouseY, int weaponDisplayX, int weaponDisplayY, int weaponDisplayWidth, int weaponDisplayHeight) {
-        // Basic rectangular bounds check first
         if (mouseX < weaponDisplayX || mouseX > weaponDisplayX + weaponDisplayWidth ||
                 mouseY < weaponDisplayY || mouseY > weaponDisplayY + weaponDisplayHeight) {
             return false;
         }
-
         if (currentWeapon.isEmpty()) return false;
-
-        int relativeX = mouseX - weaponDisplayX;
-        int relativeY = mouseY - weaponDisplayY;
-
-        // FIXED: More precise weapon shape detection
-        float centerX = weaponDisplayWidth * 0.5f;
-        float centerY = weaponDisplayHeight * 0.5f;
-        float distFromCenterX = Math.abs(relativeX - centerX) / centerX;
-        float distFromCenterY = Math.abs(relativeY - centerY) / centerY;
-
-        // WEAPON-SPECIFIC SHAPE DETECTION with modded weapon support
-        String itemName = currentWeapon.getItem().toString().toLowerCase();
-
-        if (currentWeapon.getItem() instanceof net.minecraft.world.item.SwordItem || itemName.contains("sword")) {
-            // Sword shape - long and narrow
-            if (relativeY < weaponDisplayHeight * 0.75) { // Blade area
-                return distFromCenterX < 0.3f; // Narrow blade
-            } else { // Hilt area
-                return distFromCenterX < 0.4f; // Slightly wider hilt
-            }
-        } else if (currentWeapon.getItem() instanceof net.minecraft.world.item.AxeItem || itemName.contains("axe")) {
-            // Axe shape - wider head, narrow handle
-            if (relativeY < weaponDisplayHeight * 0.4) { // Axe head
-                return distFromCenterX < 0.6f;
-            } else { // Handle
-                return distFromCenterX < 0.2f;
-            }
-        } else if (currentWeapon.getItem() instanceof net.minecraft.world.item.BowItem || itemName.contains("bow")) {
-            // Bow shape - curved
-            float bowWidth = 0.3f + 0.4f * (1 - distFromCenterY); // Wider in center
-            return distFromCenterX < bowWidth * 0.5f;
-        } else {
-            // FIXED: Default shape for modded weapons - conservative rectangular area
-            return distFromCenterX < 0.6f && distFromCenterY < 0.8f;
-        }
+        // Generous circular hit detection for the larger 3D view
+        int centerX = weaponDisplayX + weaponDisplayWidth / 2;
+        int centerY = weaponDisplayY + weaponDisplayHeight / 2;
+        double distance = Math.sqrt(Math.pow(mouseX - centerX, 2) + Math.pow(mouseY - centerY, 2));
+        double maxDistance = Math.min(weaponDisplayWidth, weaponDisplayHeight) * 0.45; // 45% of smaller dimension
+        return distance <= maxDistance;
     }
+
+
 
     private int getElementColor(String element) {
         return switch (element.toLowerCase()) {
-            case "earth" -> 0x8B4513; // Brown
-            case "water" -> 0x0066CC; // Blue
-            case "fire" -> 0xFFD92222;  // Red-Orange
-            case "wind" -> 0x90EE90;  // Light Green
-            case "time" -> 0x9370DB;  // Purple
-            case "space" -> 0xFFD9D522; // yellow
-            case "mirage" -> 0xFF888888; // grey
-            default -> 0xFF404040;      // Gray
+            case "earth" -> 0x8B4513;      // Brown (Unchanged)
+            case "water" -> 0xFF336699;      // Desaturated Blue
+            case "fire" -> 0xFFCC5500;       // Burnt Orange
+            case "wind" -> 0xFF808000;       // Olive Green
+            case "time" -> 0xFFAAAAAA;      // Light Grey/Silver
+            case "space" -> 0xFFDAA520;      // Goldenrod
+            case "mirage" -> 0xFF888888;     // Grey (Unchanged)
+            default -> 0xFF404040;          // Gray (Unchanged)
         };
     }
-
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0 && weaponAnalysisMode) { // Left click
-            int weaponDisplayX = leftPos + 20;
-            int weaponDisplayY = topPos + 20;
-            int weaponDisplayWidth = 140;
-            int weaponDisplayHeight = 90;
+        if (weaponAnalysisMode && !currentWeapon.isEmpty()) {
+            int weaponDisplayX = this.leftPos + 15;
+            int weaponDisplayY = this.topPos + 15;
+            int weaponDisplayWidth = 180;
+            int weaponDisplayHeight = 120;
 
             if (mouseX >= weaponDisplayX && mouseX <= weaponDisplayX + weaponDisplayWidth &&
                     mouseY >= weaponDisplayY && mouseY <= weaponDisplayY + weaponDisplayHeight) {
 
-                if (currentWeapon.isEmpty() || !isMouseOverWeaponShape((int)mouseX, (int)mouseY,
-                        weaponDisplayX, weaponDisplayY, weaponDisplayWidth, weaponDisplayHeight)) {
-                    return true;
-                }
+                if (button == 0) { // Left click
+                    if (isMouseOverWeaponShape((int)mouseX, (int)mouseY,
+                            weaponDisplayX, weaponDisplayY, weaponDisplayWidth, weaponDisplayHeight)) {
 
-                if (operationMode == OperationMode.ADD_SLOT && weaponSlotData.getSlotCount() < 3) {
-                    // FIXED: Corrected coordinate mapping for proper positioning
-                    float relativeX = (float)(mouseX - weaponDisplayX - weaponDisplayWidth/2);
-                    float relativeY = (float)(mouseY - weaponDisplayY - weaponDisplayHeight/2);
+                        if (operationMode == OperationMode.ADD_SLOT && weaponSlotData.getSlotCount() < 3) {
+                            float relativeX = (float)(mouseX - (weaponDisplayX + weaponDisplayWidth/2));
+                            float relativeY = (float)(mouseY - (weaponDisplayY + weaponDisplayHeight/2));
 
-                    // Convert to model coordinates with proper scaling
-                    float modelX = relativeX / 25.0f;  // Matches the render scaling
-                    float modelY = relativeY / 20.0f;  // Matches the render scaling
+                            float cosY = (float)Math.cos(Math.toRadians(weaponRotationY));
+                            float sinY = (float)Math.sin(Math.toRadians(weaponRotationY));
 
-                    selectedPosition = new SlotPosition(modelX, modelY, 0.0f,
-                            (int)(mouseX - leftPos), (int)(mouseY - topPos));
+                            // Better depth calculation - keep slots on weapon surface
+                            float modelX = (relativeX * cosY) / 25.0f;
+                            float modelY = relativeY / 25.0f;
+                            // Z-depth based on weapon rotation and click position
+                            // Simple front/back determination
+// Default to front unless specifically clicking back area or holding shift
+                            float modelZ = 0.3f; // Default front
 
-                    // FIXED: Click mark positioning to match rendering
-                    clickMark = new SlotPosition(modelX, modelY, 0.0f,
-                            weaponDisplayX + weaponDisplayWidth/2 + (int)(modelX * 25),
-                            weaponDisplayY + weaponDisplayHeight/2 + (int)(modelY * 20));
+// Back area detection: consider weapon rotation
+                            float normalizedRotation = ((weaponRotationY % 360) + 360) % 360; // Normalize to 0-360
 
-                    System.out.println("=== SLOT POSITION SET ===");
-                    System.out.println("Click at screen: " + mouseX + ", " + mouseY);
-                    System.out.println("Relative: " + relativeX + ", " + relativeY);
-                    System.out.println("Model coordinates: " + modelX + ", " + modelY);
-                    System.out.println("Click mark at: " + clickMark.screenX + ", " + clickMark.screenY);
+                            if (normalizedRotation > 90 && normalizedRotation < 270) {
+                                // Weapon is rotated to show back, so normal clicks create back slots
+                                modelZ = -0.5f;
+                            } else if (relativeX < -20) {
+                                // Left side of screen when weapon facing forward = back
+                                modelZ = -0.5f;
+                            }
 
-                    updateButtonStates();
-                    return true;
-                }
+// Force back placement if holding SHIFT key
+                            if (Screen.hasShiftDown()) {
+                                modelZ = -0.5f;
+                                System.out.println("SHIFT held - forcing back placement with Z: " + modelZ);
+                            }
 
-                // FIXED: Existing slot clicking with corrected coordinate mapping
-                if (operationMode != OperationMode.ADD_SLOT && weaponSlotData != null) {
-                    List<WeaponSlotData.WeaponSlot> activeSlots = new ArrayList<>();
-                    for (WeaponSlotData.WeaponSlot slot : weaponSlotData.getSlots()) {
-                        if (!slot.isClosed) {
-                            activeSlots.add(slot);
-                        }
-                    }
+                            System.out.println("Created slot with Z: " + modelZ + " (rotation: " + normalizedRotation + ", relativeX: " + relativeX + ")");
 
-                    for (int i = 0; i < activeSlots.size(); i++) {
-                        WeaponSlotData.WeaponSlot slot = activeSlots.get(i);
-                        // FIXED: Use same scaling as rendering for consistency
-                        int slotScreenX = weaponDisplayX + weaponDisplayWidth / 2 + (int) (slot.posX * 25);
-                        int slotScreenY = weaponDisplayY + weaponDisplayHeight / 2 + (int) (slot.posY * 20);
 
-                        // FIXED: Proper hit detection area
-                        if (mouseX >= slotScreenX - 12 && mouseX <= slotScreenX + 12 &&
-                                mouseY >= slotScreenY - 12 && mouseY <= slotScreenY + 12) {
-
-                            selectedPosition = new SlotPosition(slot.posX, slot.posY, slot.posZ,
-                                    slotScreenX - leftPos, slotScreenY - topPos);
-
-                            clickMark = new SlotPosition(slot.posX, slot.posY, slot.posZ,
-                                    slotScreenX, slotScreenY);
+                            selectedPosition = new SlotPosition(modelX, modelY, modelZ, (int)mouseX, (int)mouseY);
+                            clickMark = new SlotPosition(modelX, modelY, modelZ, 0, 0);
 
                             updateButtonStates();
-                            System.out.println("Selected existing slot " + (i+1) + " at position: " + slot.posX + ", " + slot.posY);
                             return true;
                         }
+
+                        if (operationMode != OperationMode.ADD_SLOT && weaponSlotData != null) {
+                            // Use 3D ray casting to detect slot clicks
+                            int slotIndex = detect3DSlotClick(mouseX, mouseY, weaponDisplayX, weaponDisplayY, weaponDisplayWidth, weaponDisplayHeight);
+
+                            if (slotIndex >= 0) {
+                                WeaponSlotData.WeaponSlot slot = weaponSlotData.getSlot(slotIndex);
+                                if (slot != null) {
+                                    selectedPosition = new SlotPosition(slot.posX, slot.posY, slot.posZ, 0, 0);
+                                    clickMark = new SlotPosition(slot.posX, slot.posY, slot.posZ, 0, 0);
+                                    updateButtonStates();
+                                    System.out.println("Selected 3D slot " + slotIndex);
+                                    return true;
+                                }
+                            }
+                        }
                     }
+                } else if (button == 1) { // Right click - start rotation
+                    isDragging = true;
+                    lastMouseX = mouseX;
+                    lastMouseY = mouseY;
+                    return true;
                 }
-                return true;
             }
         }
 
         return super.mouseClicked(mouseX, mouseY, button);
     }
-    @Override
-    protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        guiGraphics.drawString(this.font, this.title, this.titleLabelX, this.titleLabelY, 4210752, false);
 
-        guiGraphics.drawString(this.font, "S", 4, 130, 0xFFFFFFFF, false); // Sepith (white)
+    private int detect3DSlotClick(double mouseX, double mouseY, int displayX, int displayY, int displayWidth, int displayHeight) {
+        if (weaponSlotData == null) return -1;
 
-        guiGraphics.drawString(this.font, "E", 24, 130, 0x8B4513, false); // Earth
-        guiGraphics.drawString(this.font, "W", 44, 130, 0x0066CC, false); // Water
-        guiGraphics.drawString(this.font, "F", 64, 130, 0xFF2222, false); // Fire
-        guiGraphics.drawString(this.font, "Wi", 83, 130, 0x90EE90, false); // Wind
-        guiGraphics.drawString(this.font, "T", 104, 130, 0x9370DB, false); // Time
-        guiGraphics.drawString(this.font, "S", 124, 130, 0xFFD922, false); // Space
-        guiGraphics.drawString(this.font, "M", 143, 130, 0x888888, false); // Mirage
+        List<WeaponSlotData.WeaponSlot> slots = weaponSlotData.getSlots();
+
+        for (int i = 0; i < slots.size(); i++) {
+            WeaponSlotData.WeaponSlot slot = slots.get(i);
+            if (slot.isClosed) continue;
+
+            // Use SAME transformation as click mark rendering
+            float cosY = (float)Math.cos(Math.toRadians(weaponRotationY));
+            float sinY = (float)Math.sin(Math.toRadians(weaponRotationY));
+
+            float screenX = (slot.posX * cosY - slot.posZ * sinY) * 25.0f;
+            float screenY = slot.posY * 25.0f;
+
+            float slotScreenX = displayX + displayWidth / 2 + screenX;
+            float slotScreenY = displayY + displayHeight / 2 + screenY;
+
+            float distance = (float)Math.sqrt(
+                    Math.pow(mouseX - slotScreenX, 2) +
+                            Math.pow(mouseY - slotScreenY, 2)
+            );
+
+            if (distance < 20.0f) {
+                return i;
+            }
+        }
+        return -1;
     }
+    // === METHOD REPLACEMENT: mouseDragged() ===
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        if (isDragging && button == 1) { // Right click drag
+            double rotationSpeed = 4.0; // Increased from 2.0 for more sensitivity
+            targetRotationY += (float)((mouseX - lastMouseX) * rotationSpeed);
+            targetRotationX += (float)((mouseY - lastMouseY) * rotationSpeed);
+
+            targetRotationX = Math.max(-60, Math.min(60, targetRotationX));
+
+            lastMouseX = mouseX;
+            lastMouseY = mouseY;
+            return true;
+        }
+        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+    }
+    // === METHOD REPLACEMENT: renderLabels() ===
+    @Override
+    protected void renderLabels(GuiGraphics guiGraphics, int pMouseX, int pMouseY) {
+        // This method is now empty to hide the "Inventory" title text.
+    }
+
+    // === METHOD REPLACEMENT: render() ===
+// This replaces your entire existing render method.
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(guiGraphics, mouseX, mouseY, partialTick);
-
-
+        // Call the default render method. It handles:
+        // 1. Calling renderBackground(renderBg) to draw our custom UI
+        // 2. Drawing all the container slots (including player inventory) and the items in them
+        // 3. Rendering all buttons and widgets
+        // 4. Calling renderTooltip to draw tooltips
         super.render(guiGraphics, mouseX, mouseY, partialTick);
 
-        // Only render custom tooltips for element buttons - NOT in weapon area
+        // We only need to add our custom tooltips after the fact.
+        renderElementTooltips(guiGraphics, mouseX, mouseY);
+    }
+    // === ELEMENT TOOLTIPS METHOD ===
+    private void renderElementTooltips(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         if (earthButton.isHoveredOrFocused()) {
-            guiGraphics.renderTooltip(this.font, Component.literal("Earth Element"), mouseX, mouseY);
+            guiGraphics.renderTooltip(this.font, Component.literal("Earth Element - Requires Earth Mass"), mouseX, mouseY);
         } else if (waterButton.isHoveredOrFocused()) {
-            guiGraphics.renderTooltip(this.font, Component.literal("Water Element"), mouseX, mouseY);
+            guiGraphics.renderTooltip(this.font, Component.literal("Water Element - Requires Water Mass"), mouseX, mouseY);
         } else if (fireButton.isHoveredOrFocused()) {
-            guiGraphics.renderTooltip(this.font, Component.literal("Fire Element"), mouseX, mouseY);
+            guiGraphics.renderTooltip(this.font, Component.literal("Fire Element - Requires Fire Mass"), mouseX, mouseY);
         } else if (windButton.isHoveredOrFocused()) {
-            guiGraphics.renderTooltip(this.font, Component.literal("Wind Element"), mouseX, mouseY);
+            guiGraphics.renderTooltip(this.font, Component.literal("Wind Element - Requires Wind Mass"), mouseX, mouseY);
         } else if (timeButton.isHoveredOrFocused()) {
-            guiGraphics.renderTooltip(this.font, Component.literal("Time Element"), mouseX, mouseY);
+            guiGraphics.renderTooltip(this.font, Component.literal("Time Element - Requires Time Mass"), mouseX, mouseY);
         } else if (spaceButton.isHoveredOrFocused()) {
-            guiGraphics.renderTooltip(this.font, Component.literal("Space Element"), mouseX, mouseY);
+            guiGraphics.renderTooltip(this.font, Component.literal("Space Element - Requires Space Mass"), mouseX, mouseY);
         } else if (mirageButton.isHoveredOrFocused()) {
-            guiGraphics.renderTooltip(this.font, Component.literal("Mirage Element"), mouseX, mouseY);
+            guiGraphics.renderTooltip(this.font, Component.literal("Mirage Element - Requires Mirage Mass"), mouseX, mouseY);
         }
     }
 
