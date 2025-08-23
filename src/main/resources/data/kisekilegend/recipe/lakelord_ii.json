@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "kisekilegend:sepith_mass" },
+    { "item": "kisekilegend:metal_trident_rod" },
+    { "item": "kisekilegend:carp" },
+    { "item": "kisekilegend:salmon" },
+    { "item": "kisekilegend:sea_bass" },
+    { "item": "kisekilegend:trout" }
+
+
+  ],
+  "result": {
+    "id": "kisekilegend:lakelord_ii",
+    "count": 1
+  }
+}

@@ -10,11 +10,12 @@ import net.minecraftforge.server.command.ConfigCommand;
 public class ModCommands {
     @SubscribeEvent
     public static void onCommandsRegister(RegisterCommandsEvent event) {
-        // Register your command here
+        // Register your commands here
         FillEpCommand.register(event.getDispatcher());
         ResetQuartzMachineCommand.register(event.getDispatcher());
+        SpawnFishCommand.register(event.getDispatcher()); // ADD THIS LINE
 
-        // This is for the default /config command, you can leave it
+        // This is for the default /config command
         ConfigCommand.register(event.getDispatcher());
     }
 }

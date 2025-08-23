@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "kisekilegend:sepith_mass" },
+    { "item": "kisekilegend:pisces_heart" },
+    { "item": "kisekilegend:red_flies" },
+    { "item": "kisekilegend:river_bug" },
+    { "item": "kisekilegend:roe" }
+
+
+  ],
+  "result": {
+    "id": "kisekilegend:bamboo_fishing_rod",
+    "count": 1
+  }
+}

@@ -3,24 +3,27 @@
 	"animations": {
 		"animation.orbment_machine.close": {
 			"loop": "hold_on_last_frame",
-			"animation_length": 0.625,
+			"animation_length": 0.5833,
 			"bones": {
 				"bone": {
 					"rotation": {
 						"0.0": {
 							"vector": [0, 0, 0]
 						},
-						"0.5": {
-							"vector": [77.5, 0, 0]
+						"0.4167": {
+							"vector": [107.5, 0, 0]
 						}
 					},
 					"position": {
 						"0.0": {
 							"vector": [0, 0, 0]
 						},
-						"0.5": {
-							"vector": [0, -5.5, -2]
+						"0.4167": {
+							"vector": [0, 0, -2]
 						}
+					},
+					"scale": {
+						"vector": [1, 1, 1]
 					}
 				}
 			}
@@ -32,17 +35,17 @@
 				"bone": {
 					"rotation": {
 						"0.0": {
-							"vector": [77.5, 0, 0]
+							"vector": [107.5, 0, 0]
 						},
-						"0.5": {
+						"0.4167": {
 							"vector": [0, 0, 0]
 						}
 					},
 					"position": {
 						"0.0": {
-							"vector": [0, -5.5, -2]
+							"vector": [0, 0, -2]
 						},
-						"0.5": {
+						"0.4167": {
 							"vector": [0, 0, 0]
 						}
 					}

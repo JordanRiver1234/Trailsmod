@@ -43,8 +43,12 @@ public class NetworkHandler {
                 .consumerMainThread(OrbalTableRenderUpdatePacket::handle)
                 .add();
 
+        INSTANCE.messageBuilder(FishingGamePacket.class, id++)
+                .encoder(FishingGamePacket::encode)
+                .decoder(FishingGamePacket::decode)
+                .consumerMainThread(FishingGamePacket::handle)
+                .add();
 
-        // In your NetworkHandler class, replace the sync packet registration with:
         INSTANCE.messageBuilder(SyncRecipeProgressPacket.class, id++)
                 .decoder(SyncRecipeProgressPacket::decode)
                 .encoder(SyncRecipeProgressPacket::encode)

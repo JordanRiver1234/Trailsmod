@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "kisekilegend:sepith_mass" },
+    { "item": "kisekilegend:marine_star_rod" },
+    { "item": "kisekilegend:polychaete" },
+    { "item": "kisekilegend:shrimplet" },
+    { "item": "kisekilegend:crab" },
+    { "item": "kisekilegend:kasago" }
+
+  ],
+  "result": {
+    "id": "kisekilegend:pisces_heart",
+    "count": 1
+  }
+}

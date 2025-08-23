@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "kisekilegend:sepith_mass" },
+    { "item": "kisekilegend:lakelord_ii" },
+    { "item": "kisekilegend:carp" },
+    { "item": "kisekilegend:eel" },
+    { "item": "kisekilegend:frog" },
+    { "item": "kisekilegend:trout" },
+    { "item": "kisekilegend:yamany" }
+
+  ],
+  "result": {
+    "id": "kisekilegend:aqua_master",
+    "count": 1
+  }
+}

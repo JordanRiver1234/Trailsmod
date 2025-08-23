@@ -254,5 +254,47 @@
         "pitch": 1.0
       }
     ]
+  },
+  "fishing.exclamation": {
+    "subtitle": "subtitles.kiseki_legend.fishing.exclamation",
+    "sounds": [
+      "kisekilegend:fishing/exclamation"
+    ]
+  },
+  "fishing.tension_start": {
+    "subtitle": "subtitles.kiseki_legend.fishing.tension_start",
+    "sounds": [
+      "kisekilegend:fishing/tension_start"
+    ]
+  },
+  "fishing.tension_end": {
+    "subtitle": "subtitles.kiseki_legend.fishing.tension_end",
+    "sounds": [
+      "kisekilegend:fishing/tension_end"
+    ]
+  },
+  "fishing.reel": {
+    "subtitle": "subtitles.kiseki_legend.fishing.reel",
+    "sounds": [
+      "kisekilegend:fishing/reel"
+    ]
+  },
+  "fishing.hit_effect": {
+    "subtitle": "subtitles.kiseki_legend.fishing.hit_effect",
+    "sounds": [
+      "kisekilegend:fishing/hit_effect"
+    ]
+  },
+  "fishing.success": {
+    "subtitle": "subtitles.kiseki_legend.fishing.success",
+    "sounds": [
+      "kisekilegend:fishing/success"
+    ]
+  },
+  "fishing.fail": {
+    "subtitle": "subtitles.kiseki_legend.fishing.fail",
+    "sounds": [
+      "kisekilegend:fishing/fail"
+    ]
   }
 }

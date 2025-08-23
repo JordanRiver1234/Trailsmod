@@ -22,6 +22,7 @@ public class ClientEntityRenderers {
         event.registerEntityRenderer(ModEntities.SPELL.get(), GeckoSpellRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.ORBMENT_MACHINE.get(),
                 context -> new OrbmentMachineRenderer());
+
     }
 
 

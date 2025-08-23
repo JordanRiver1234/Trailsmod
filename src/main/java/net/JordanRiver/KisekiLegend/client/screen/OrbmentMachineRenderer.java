@@ -36,7 +36,7 @@ public class OrbmentMachineRenderer extends GeoBlockRenderer<OrbmentMachineBlock
         poseStack.pushPose();
 
         // Center the orbment on the machine block - adjust these values based on your model
-        poseStack.translate(0.5, 0.3, 0.44);
+        poseStack.translate(0.5, 0.5, 0.44); // y = 0.3 ->0.5
 
         // Rotate to lay flat and face block direction
         Direction facing = entity.getBlockState().getValue(OrbmentMachineBlock.FACING);
@@ -51,7 +51,7 @@ public class OrbmentMachineRenderer extends GeoBlockRenderer<OrbmentMachineBlock
         poseStack.mulPose(com.mojang.math.Axis.XP.rotationDegrees(90));
         poseStack.mulPose(com.mojang.math.Axis.YP.rotationDegrees(90));
 
-        poseStack.scale(0.5f, 0.5f, 0.5f);
+        poseStack.scale(0.5f, 0.5f, 0.5f); // middle = 0.5->0.7 left | right = 0.5 => 0.7
 
         Minecraft.getInstance().getItemRenderer().renderStatic(
                 stack,

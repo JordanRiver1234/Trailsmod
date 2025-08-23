@@ -60,6 +60,14 @@ public class ModSoundEvents {
     public static final RegistryObject<SoundEvent> SYNTHESIS_EFFECT_LOOP = registerSoundEvent("synthesis.effect.loop");
     public static final RegistryObject<SoundEvent> SYNTHESIS_EFFECT_COMPLETE = registerSoundEvent("synthesis.effect.complete");
 
+    // Add these lines to the existing ModSoundEvents class
+    public static final RegistryObject<SoundEvent> FISHING_EXCLAMATION = registerSoundEvent("fishing.exclamation");
+    public static final RegistryObject<SoundEvent> FISHING_TENSION_START = registerSoundEvent("fishing.tension_start");
+    public static final RegistryObject<SoundEvent> FISHING_TENSION_END = registerSoundEvent("fishing.tension_end");
+    public static final RegistryObject<SoundEvent> FISHING_REEL = registerSoundEvent("fishing.reel");
+    public static final RegistryObject<SoundEvent> FISHING_HIT_EFFECT = registerSoundEvent("fishing.hit_effect");
+    public static final RegistryObject<SoundEvent> FISHING_SUCCESS = registerSoundEvent("fishing.success");
+    public static final RegistryObject<SoundEvent> FISHING_FAIL = registerSoundEvent("fishing.fail");
 
     private static RegistryObject<SoundEvent> registerSoundEvent(String name) {
         return SOUND_EVENTS.register(name, () -> SoundEvent.createVariableRangeEvent(

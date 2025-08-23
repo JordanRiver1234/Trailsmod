@@ -1,0 +1,23 @@
+{
+  "credit": "Made with Blockbench",
+  "parent": "builtin/entity",
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [
+        7,
+        -60,
+        3
+      ],
+      "scale": [
+        2.05,
+        1,
+        1
+      ]
+    }
+  },
+
+
+  "textures": {
+    "particle": "item/metal_trident_rod"
+  }
+}

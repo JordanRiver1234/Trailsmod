@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "kisekilegend:sepith_mass" },
+    { "item": "kisekilegend:progress_rod" },
+    { "item": "kisekilegend:earthworm" },
+    { "item": "kisekilegend:polychaete" },
+    { "item": "kisekilegend:shrimplet" },
+    { "item": "kisekilegend:dace" },
+    { "item": "kisekilegend:yamany" }
+  ],
+  "result": {
+    "id": "kisekilegend:marine_star_rod",
+    "count": 1
+  }
+}

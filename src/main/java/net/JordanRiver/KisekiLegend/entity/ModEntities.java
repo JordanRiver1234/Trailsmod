@@ -1,6 +1,8 @@
 package net.JordanRiver.KisekiLegend.entity;
 
 import net.JordanRiver.KisekiLegend.KisekiLegend;
+import net.JordanRiver.KisekiLegend.entities.KisekiFishingHook;
+import net.JordanRiver.KisekiLegend.fishing.FishTypeRegistry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
@@ -29,6 +31,14 @@ public class ModEntities {
                     .setShouldReceiveVelocityUpdates(false) // Aura doesn't need velocity updates
                     .build(ResourceLocation.fromNamespaceAndPath(KisekiLegend.MOD_ID, "aura_entity").toString()));
 
+    public static final RegistryObject<EntityType<KisekiFishingHook>> KISEKI_FISHING_HOOK = ENTITIES.register("kiseki_fishing_hook",
+            () -> EntityType.Builder.<KisekiFishingHook>of(KisekiFishingHook::new, MobCategory.MISC)
+                    .sized(0.25F, 0.25F)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .setShouldReceiveVelocityUpdates(true)
+                    .fireImmune()
+                    .build("kiseki_fishing_hook"));
 
     public static void register(IEventBus bus) {
         ENTITIES.register(bus);
